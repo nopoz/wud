@@ -1,6 +1,6 @@
 ![logo](wud_logo.png)
 
-# **WUD** (aka What's up Docker?)
+# **WUD**
 
 > Get notified when a new version of your Docker Container is available.
 
