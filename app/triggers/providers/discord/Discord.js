@@ -15,7 +15,7 @@ class Discord extends Trigger {
             url: this.joi.string().uri({
                 scheme: ['https'],
             }).required(),
-            botusername: this.joi.string().default("WUD"),
+            botusername: this.joi.string().default('WUD'),
             cardcolor: this.joi.number().default(65280),
             cardlabel: this.joi.string().default(''),
         });
