@@ -1,8 +1,13 @@
 # Changelog
 
-# 6.6.2 (wip)
+# 7.0.0
 - :star: [UI] - Add support for [Selfh.st](https://selfh.st/icons/) icons
 - :star: [Docker watcher] - Add new `watchatstart` option to disable automatic watch during startup
+
+!> **Breaking changes!** \
+**WUD** is moving to its own organization! \
+- Github project is now located at [https://github.com/getwud/wud](https://github.com/getwud/wud)
+- Docker image is now located at [https://hub.docker.com/r/getwud/wud](https://hub.docker.com/r/getwud/wud)
 
 # 6.6.1
 - :fire: [UI] - Fix container view (mobile layout)
