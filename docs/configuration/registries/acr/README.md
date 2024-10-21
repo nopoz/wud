@@ -19,7 +19,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_REGISTRY_ACR_CLIENTID=7c0195aa-112d-4ac3-be24-6664a13f3d2b
@@ -31,7 +31,7 @@ docker run \
   -e WUD_REGISTRY_ACR_CLIENTID=7c0195aa-112d-4ac3-be24-6664a13f3d2b \
   -e WUD_REGISTRY_ACR_CLIENTSECRET=SBgHNi3zA5K.f9.f9ft~_hpqbS~.pk.t_i \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 

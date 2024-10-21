@@ -22,7 +22,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_REGISTRY_QUAY
@@ -32,7 +32,7 @@ services:
 docker run \
   -e WUD_REGISTRY_QUAY= \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 
@@ -45,7 +45,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_REGISTRY_QUAY_NAMESPACE=mynamespace
@@ -59,7 +59,7 @@ docker run \
   -e WUD_REGISTRY_QUAY_ACCOUNT="myaccount" \
   -e WUD_REGISTRY_QUAY_TOKEN="BA8JI3Y2BWQDH849RYT3YD5J0J6CYEORYTQMMJK364B4P88VPTJIAI704L0BBP8D6CYE4P88V" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 

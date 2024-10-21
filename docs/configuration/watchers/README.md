@@ -53,7 +53,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
         - WUD_WATCHER_LOCAL_CRON=0 1 * * *
@@ -64,7 +64,7 @@ services:
 docker run \
     -e WUD_WATCHER_LOCAL_CRON="0 1 * * *" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 
@@ -77,7 +77,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
         - WUD_WATCHER_LOCAL_WATCHALL=true
@@ -88,7 +88,7 @@ services:
 docker run \
     -e WUD_WATCHER_LOCAL_WATCHALL="true" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 
@@ -101,7 +101,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
         - WUD_WATCHER_MYREMOTEHOST_HOST=myremotehost 
@@ -112,7 +112,7 @@ services:
 docker run \
     -e WUD_WATCHER_MYREMOTEHOST_HOST="myremotehost" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 
@@ -125,7 +125,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
         - WUD_WATCHER_MYREMOTEHOST_HOST=myremotehost
@@ -151,7 +151,7 @@ docker run \
     -v /my-host/my-certs/ca.pem:/certs/cert.pem:ro \
     -v /my-host/my-certs/ca.pem:/certs/key.pem:ro \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 
@@ -166,7 +166,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
         -  WUD_WATCHER_LOCAL_SOCKET=/var/run/docker.sock
@@ -181,7 +181,7 @@ docker run \
     -e  WUD_WATCHER_MYREMOTEHOST1_HOST="myremotehost1" \
     -e  WUD_WATCHER_MYREMOTEHOST2_HOST="myremotehost2" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 
@@ -211,7 +211,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_WATCHER_LOCAL_WATCHBYDEFAULT=false
@@ -222,7 +222,7 @@ services:
 docker run \
     -e WUD_WATCHER_LOCAL_WATCHBYDEFAULT="false" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 

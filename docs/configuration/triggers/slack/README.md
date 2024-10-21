@@ -23,7 +23,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
         - WUD_TRIGGER_SLACK_TEST_TOKEN=xoxp-743817063446-xxx
@@ -36,6 +36,6 @@ docker run \
     -e WUD_TRIGGER_SLACK_TEST_TOKEN="xoxp-743817063446-xxx" \
     -e WUD_TRIGGER_SLACK_TEST_CHANNEL="wud" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->

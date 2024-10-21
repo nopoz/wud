@@ -29,7 +29,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_AUTH_BASIC_JOHN_USER=john
@@ -49,7 +49,7 @@ docker run \
   -e WUD_AUTH_BASIC_JANE_USER="bob" \
   -e WUD_AUTH_BASIC_JANE_HASH='$apr1$aefKbZEa$ZSA5Y3zv9vDQOxr283NGx/' \    
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 

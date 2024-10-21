@@ -36,7 +36,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_TRIGGER_MQTT_MOSQUITTO_URL=mqtt://localhost:1883
@@ -47,7 +47,7 @@ services:
 docker run \
     -e WUD_TRIGGER_MQTT_MOSQUITTO_URL="mqtt://localhost:1883" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 
@@ -60,7 +60,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_TRIGGER_MQTT_MOSQUITTO_URL=mqtts://localhost:8883
@@ -81,7 +81,7 @@ docker run \
     -e WUD_TRIGGER_MQTT_MOSQUITTO_TLS_CLIENTCERT="/wud/mqtt/client-cert.pem" \
     -e WUD_TRIGGER_MQTT_MOSQUITTO_TLS_CACHAIN="/wud/mqtt/ca.pem" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 
@@ -94,7 +94,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_TRIGGER_MQTT_MAQIATTO_URL=tcp://maqiatto.com:1883
@@ -111,7 +111,7 @@ docker run \
     -e WUD_TRIGGER_MQTT_MAQIATTO_PASSWORD="mysecretpassword" \
     -e WUD_TRIGGER_MQTT_MAQIATTO_TOPIC="john@doe.com/wud/image" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 
@@ -149,7 +149,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_TRIGGER_MQTT_MOSQUITTO_URL=mqtt://localhost:1883
@@ -164,7 +164,7 @@ docker run \
     -e WUD_TRIGGER_MQTT_MOSQUITTO_HASS_ENABLED="true" \
     -e WUD_TRIGGER_MQTT_MOSQUITTO_HASS_DISCOVERY="true" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 

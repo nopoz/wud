@@ -12,14 +12,14 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     volumes:
       - /etc/localtime:/etc/localtime:ro
 ```
 #### **Docker**
 ```bash
-docker run -v /etc/localtime:/etc/localtime:ro ... fmartinou/whats-up-docker
+docker run -v /etc/localtime:/etc/localtime:ro ... getwud/wud
 ```
 <!-- tabs:end -->
 
@@ -32,14 +32,14 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - TZ=Europe/Paris
 ```
 #### **Docker**
 ```bash
-docker run -e "TZ=Europe/Paris" ... fmartinou/whats-up-docker
+docker run -e "TZ=Europe/Paris" ... getwud/wud
 ```
 <!-- tabs:end -->
 

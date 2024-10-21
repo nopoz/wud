@@ -37,7 +37,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     volumes:
     - /etc/my-services/docker-compose.yml:/wud/docker-compose.yml
@@ -50,6 +50,6 @@ docker run \
   -v /etc/my-services/docker-compose.yml:/wud/docker-compose.yml
   -e "WUD_TRIGGER_DOCKERCOMPOSE_EXAMPLE_FILE=/wud/docker-compose.yml" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->

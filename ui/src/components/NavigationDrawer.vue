@@ -12,7 +12,7 @@
         <v-icon v-if="!mini">mdi-close</v-icon>
         <v-icon v-else>mdi-menu</v-icon>
       </v-app-bar-nav-icon>
-      <v-toolbar-title class="text-body-1">What's up Docker?</v-toolbar-title>
+      <v-toolbar-title class="text-body-1">WUD</v-toolbar-title>
     </v-toolbar>
     <v-list nav class="pt-0 pb-0">
       <v-fade-transition group hide-on-leave mode="in-out">

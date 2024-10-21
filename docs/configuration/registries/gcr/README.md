@@ -20,7 +20,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_REGISTRY_GCR=
@@ -30,7 +30,7 @@ services:
 docker run \
   -e WUD_REGISTRY_GCR="" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 
@@ -42,7 +42,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_REGISTRY_GCR_CLIENTEMAIL=johndoe@mysuperproject.iam.gserviceaccount.com
@@ -54,7 +54,7 @@ docker run \
   -e WUD_REGISTRY_GCR_CLIENTEMAIL="johndoe@mysuperproject.iam.gserviceaccount.com" \
   -e WUD_REGISTRY_GCR_PRIVATEKEY="-----BEGIN PRIVATE KEY-----xxxxxxxxxxx\n-----END PRIVATE KEY-----\n" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 

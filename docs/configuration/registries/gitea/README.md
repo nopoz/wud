@@ -21,7 +21,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_REGISTRY_GITEA_URL=https://gitea.acme.com
@@ -35,6 +35,6 @@ docker run \
   -e "WUD_REGISTRY_GITEA_LOGIN=john" \
   -e "WUD_REGISTRY_GITEA_PASSWORD=doe" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->

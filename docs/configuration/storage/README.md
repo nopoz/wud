@@ -11,7 +11,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     volumes:
       - /path-on-my-host:/store
@@ -21,6 +21,6 @@ services:
 docker run \
   -v /path-on-my-host:/store
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->

@@ -32,7 +32,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_TRIGGER_DOCKER_EXAMPLE_PRUNE=true
@@ -42,6 +42,6 @@ services:
 docker run \
   -e "WUD_TRIGGER_DOCKER_EXAMPLE_PRUNE=true" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->

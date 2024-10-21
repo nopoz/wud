@@ -10,7 +10,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     container_name: wud
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -22,13 +22,13 @@ services:
 docker run -d --name wud \
   -v "/var/run/docker.sock:/var/run/docker.sock" \
   -p 3000:3000 \
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 
 ?> Please notice that wud is available on multiple container registries \
-\- Docker Hub: `fmartinou/whats-up-docker` \
-\- Github Container Registry: `ghcr.io/fmartinou/whats-up-docker`
+\- Docker Hub: `getwud/wud` \
+\- Github Container Registry: `ghcr.io/getwud/wud`
 
 ## Open the UI
 [Open the UI](http://localhost:3000) in a browser and check that everything is working as expected.

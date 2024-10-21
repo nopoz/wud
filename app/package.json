@@ -10,7 +10,7 @@
     "test": "jest --coverage"
   },
   "author": "fmartinou",
-  "repository": "fmartinou/whats-up-docker",
+  "repository": "getwud/wud",
   "license": "MIT",
   "dependencies": {
     "@slack/web-api": "7.4.0",

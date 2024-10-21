@@ -64,7 +64,7 @@ services:
 
   # Wud self tracking :)
   whatsupdocker:
-    image: fmartinou/whats-up-docker:5.1.0
+    image: getwud/wud:5.1.0
     container_name: wud
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -77,7 +77,7 @@ services:
       start_period: 10s       
     labels:
       - 'wud.tag.include=^\d+\.\d+\.\d+$$'
-      - 'wud.link.template=https://github.com/fmartinou/whats-up-docker/releases/tag/$${major}.$${minor}.$${patch}'
+      - 'wud.link.template=https://github.com/getwud/wud/releases/tag/$${major}.$${minor}.$${patch}'
 ```
 
 ## Secret management

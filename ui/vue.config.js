@@ -6,7 +6,7 @@ module.exports = {
   },
 
   pwa: {
-    name: "What's up Docker?",
+    name: "WUD",
 
     themeColor: "#00355E",
     msTileColor: "#00355E",

@@ -21,7 +21,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_REGISTRY_ECR_ACCESSKEYID=xxx
@@ -35,7 +35,7 @@ docker run \
   -e WUD_REGISTRY_ECR_SECRETACCESSKEY="xxx" \
   -e WUD_REGISTRY_ECR_REGION="eu-west-1" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 

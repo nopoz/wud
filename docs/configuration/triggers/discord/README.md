@@ -8,7 +8,7 @@ The `discord` trigger lets you send realtime notifications using [Discord](https
 | Env var                                          | Required       | Description                              | Supported values      | Default value when missing  |
 |--------------------------------------------------|:--------------:|------------------------------------------|-----------------------|-----------------------------|
 | `WUD_TRIGGER_DISCORD_{trigger_name}_URL`         | :red_circle:   | The Discord webhook URL                  | HTTPS URL             |                             |
-| `WUD_TRIGGER_DISCORD_{trigger_name}_BOTUSERNAME` | :white_circle: | The bot username                         |                       | What's up Docker?           |
+| `WUD_TRIGGER_DISCORD_{trigger_name}_BOTUSERNAME` | :white_circle: | The bot username                         |                       | WUD                         |
 | `WUD_TRIGGER_DISCORD_{trigger_name}_CARDCOLOR`   | :white_circle: | Color of the message card                | Color in decimal base | 65280                       |
 | `WUD_TRIGGER_DISCORD_{trigger_name}_CARDLABEL`   | :white_circle: | Optional label to display in the message | String                |                             |
 
@@ -24,7 +24,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_TRIGGER_DISCORD_1_URL=https://discord.com/api/webhooks/123/456
@@ -37,7 +37,7 @@ docker run \
   -e WUD_TRIGGER_DISCORD_1_URL="https://discord.com/api/webhooks/123/456" \
   -e WUD_TRIGGER_DISCORD_1_BOTUSERNAME="WUD" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 

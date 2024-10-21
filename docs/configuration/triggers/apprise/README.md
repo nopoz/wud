@@ -25,7 +25,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_TRIGGER_APPRISE_LOCAL_URL=http://apprise:8000
@@ -37,7 +37,7 @@ docker run \
   -e WUD_TRIGGER_APPRISE_LOCAL_URL="http://apprise:8000" \
   -e WUD_TRIGGER_APPRISE_LOCAL_URLS="mailto://john.doe:secret@gmail.com,sns://AHIAJGNT76XIMXDBIJYA/bu1dHSdO22pfaaVy/wmNsdljF4C07D3bndi9PQJ9/us-east-2/+1(800)555-1223" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 
@@ -57,7 +57,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_TRIGGER_APPRISE_LOCAL_URL=http://apprise:8000
@@ -71,7 +71,7 @@ docker run \
   -e WUD_TRIGGER_APPRISE_LOCAL_CONFIG="wud" \
   -e WUD_TRIGGER_APPRISE_LOCAL_TAG="devops" \  
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 

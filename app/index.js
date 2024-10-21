@@ -6,7 +6,7 @@ const api = require('./api');
 const prometheus = require('./prometheus');
 
 async function main() {
-    log.info(`What's up Docker? is starting (version = ${getVersion()})`);
+    log.info(`WUD is starting (version = ${getVersion()})`);
 
     // Init store
     await store.init();

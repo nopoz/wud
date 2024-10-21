@@ -30,7 +30,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_REGISTRY_HUB=
@@ -40,7 +40,7 @@ services:
 docker run \
   -e WUD_REGISTRY_HUB= \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 
@@ -62,7 +62,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_REGISTRY_HUB_LOGIN=mylogin
@@ -74,7 +74,7 @@ docker run \
   -e WUD_REGISTRY_HUB_LOGIN="mylogin"
   -e WUD_REGISTRY_HUB_PASSWORD="fb4d5db9-e64d-3648-8846-74d0846e55de"
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 
@@ -98,7 +98,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_REGISTRY_HUB_AUTH=am9obmRvZToyYzFiZDg3Mi1lZmI2LTRmM2EtODFhYS03MjQ1MThhMGE1OTI=
@@ -108,6 +108,6 @@ services:
 docker run \
   -e WUD_REGISTRY_HUB_AUTH="am9obmRvZToyYzFiZDg3Mi1lZmI2LTRmM2EtODFhYS03MjQ1MThhMGE1OTI="
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->

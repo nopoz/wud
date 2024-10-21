@@ -37,13 +37,13 @@ test('publishDiscoveryMessage must publish a discovery message expected by HA', 
         name: 'My state',
         device: {
             identifiers: ['wud'],
-            manufacturer: 'Fmartinou',
-            model: 'Wud',
-            name: "What's up docker?",
+            manufacturer: 'WUD',
+            model: 'WUD',
+            name: "WUD",
             sw_version: 'unknown',
         },
         icon: 'mdi:docker',
-        entity_picture: 'https://github.com/fmartinou/whats-up-docker/raw/master/docs/wud_logo.png',
+        entity_picture: 'https://github.com/getwud/wud/raw/main/docs/wud_logo.png',
         state_topic: 'my/state',
         myOption: true,
     }), { retain: true });
@@ -63,13 +63,13 @@ test('addContainerSensor must publish sensor discovery message expected by HA', 
             identifiers: [
                 'wud',
             ],
-            manufacturer: 'Fmartinou',
-            model: 'Wud',
-            name: "What's up docker?",
+            manufacturer: 'WUD',
+            model: 'WUD',
+            name: "WUD",
             sw_version: 'unknown',
         },
         icon: 'mdi:docker',
-        entity_picture: 'https://github.com/fmartinou/whats-up-docker/raw/master/docs/wud_logo.png',
+        entity_picture: 'https://github.com/getwud/wud/raw/main/docs/wud_logo.png',
         state_topic: 'topic/watcher-name/container-name',
         force_update: true,
         value_template: '{{ value_json.image_tag_value }}',
@@ -101,10 +101,10 @@ test('updateContainerSensors must publish all sensors expected by HA', async () 
         object_id: 'topic_total_count',
         name: 'Total container count',
         device: {
-            identifiers: ['wud'], manufacturer: 'Fmartinou', model: 'Wud', name: "What's up docker?", sw_version: 'unknown',
+            identifiers: ['wud'], manufacturer: 'WUD', model: 'WUD', name: "WUD", sw_version: 'unknown',
         },
         icon: 'mdi:docker',
-        entity_picture: 'https://github.com/fmartinou/whats-up-docker/raw/master/docs/wud_logo.png',
+        entity_picture: 'https://github.com/getwud/wud/raw/main/docs/wud_logo.png',
         state_topic: 'topic/total_count',
     }), { retain: true });
 
@@ -113,10 +113,10 @@ test('updateContainerSensors must publish all sensors expected by HA', async () 
         object_id: 'topic_update_count',
         name: 'Total container update count',
         device: {
-            identifiers: ['wud'], manufacturer: 'Fmartinou', model: 'Wud', name: "What's up docker?", sw_version: 'unknown',
+            identifiers: ['wud'], manufacturer: 'WUD', model: 'WUD', name: "WUD", sw_version: 'unknown',
         },
         icon: 'mdi:docker',
-        entity_picture: 'https://github.com/fmartinou/whats-up-docker/raw/master/docs/wud_logo.png',
+        entity_picture: 'https://github.com/getwud/wud/raw/main/docs/wud_logo.png',
         state_topic: 'topic/update_count',
     }), { retain: true });
 
@@ -125,10 +125,10 @@ test('updateContainerSensors must publish all sensors expected by HA', async () 
         object_id: 'topic_update_status',
         name: 'Total container update status',
         device: {
-            identifiers: ['wud'], manufacturer: 'Fmartinou', model: 'Wud', name: "What's up docker?", sw_version: 'unknown',
+            identifiers: ['wud'], manufacturer: 'WUD', model: 'WUDWud', name: "WUD", sw_version: 'unknown',
         },
         icon: 'mdi:docker',
-        entity_picture: 'https://github.com/fmartinou/whats-up-docker/raw/master/docs/wud_logo.png',
+        entity_picture: 'https://github.com/getwud/wud/raw/main/docs/wud_logo.png',
         state_topic: 'topic/update_status',
         payload_on: 'true',
         payload_off: 'false',
@@ -139,10 +139,10 @@ test('updateContainerSensors must publish all sensors expected by HA', async () 
         object_id: 'topic_watcher-name_total_count',
         name: 'Watcher watcher-name container count',
         device: {
-            identifiers: ['wud'], manufacturer: 'Fmartinou', model: 'Wud', name: "What's up docker?", sw_version: 'unknown',
+            identifiers: ['wud'], manufacturer: 'WUD', model: 'WUD', name: "WUD", sw_version: 'unknown',
         },
         icon: 'mdi:docker',
-        entity_picture: 'https://github.com/fmartinou/whats-up-docker/raw/master/docs/wud_logo.png',
+        entity_picture: 'https://github.com/getwud/wud/raw/main/docs/wud_logo.png',
         state_topic: 'topic/watcher-name/total_count',
     }), { retain: true });
 
@@ -151,10 +151,10 @@ test('updateContainerSensors must publish all sensors expected by HA', async () 
         object_id: 'topic_watcher-name_update_count',
         name: 'Watcher watcher-name container update count',
         device: {
-            identifiers: ['wud'], manufacturer: 'Fmartinou', model: 'Wud', name: "What's up docker?", sw_version: 'unknown',
+            identifiers: ['wud'], manufacturer: 'WUD', model: 'WUD', name: "WUD", sw_version: 'unknown',
         },
         icon: 'mdi:docker',
-        entity_picture: 'https://github.com/fmartinou/whats-up-docker/raw/master/docs/wud_logo.png',
+        entity_picture: 'https://github.com/getwud/wud/raw/main/docs/wud_logo.png',
         state_topic: 'topic/watcher-name/update_count',
     }), { retain: true });
 
@@ -163,10 +163,10 @@ test('updateContainerSensors must publish all sensors expected by HA', async () 
         object_id: 'topic_watcher-name_update_status',
         name: 'Watcher watcher-name container update status',
         device: {
-            identifiers: ['wud'], manufacturer: 'Fmartinou', model: 'Wud', name: "What's up docker?", sw_version: 'unknown',
+            identifiers: ['wud'], manufacturer: 'WUD', model: 'WUD', name: "WUD", sw_version: 'unknown',
         },
         icon: 'mdi:docker',
-        entity_picture: 'https://github.com/fmartinou/whats-up-docker/raw/master/docs/wud_logo.png',
+        entity_picture: 'https://github.com/getwud/wud/raw/main/docs/wud_logo.png',
         state_topic: 'topic/watcher-name/update_status',
         payload_on: 'true',
         payload_off: 'false',
@@ -204,10 +204,10 @@ test('updateWatcherSensors must publish all watcher sensor messages expected by 
         object_id: 'topic_watcher-name_running',
         name: 'Watcher watcher-name running status',
         device: {
-            identifiers: ['wud'], manufacturer: 'Fmartinou', model: 'Wud', name: "What's up docker?", sw_version: 'unknown',
+            identifiers: ['wud'], manufacturer: 'WUD', model: 'WUD', name: "WUD", sw_version: 'unknown',
         },
         icon: 'mdi:docker',
-        entity_picture: 'https://github.com/fmartinou/whats-up-docker/raw/master/docs/wud_logo.png',
+        entity_picture: 'https://github.com/getwud/wud/raw/main/docs/wud_logo.png',
         state_topic: 'topic/watcher-name/running',
         payload_on: 'true',
         payload_off: 'false',

@@ -1,14 +1,14 @@
 {
   "name": "wud-e2e",
   "version": "1.0.0",
-  "description": "What's up Docker? the e2e",
+  "description": "WUD - e2e",
   "main": "index.js",
   "scripts": {
     "lint": "eslint '**/*.js'",
     "cucumber": "cucumber-js **/*.feature"
   },
   "author": "fmartinou",
-  "repository": "fmartinou/whats-up-docker",
+  "repository": "getwud/wud",
   "license": "MIT",
   "dependencies": {
     "@cucumber/cucumber": "11.0.1",

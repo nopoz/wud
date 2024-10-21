@@ -21,7 +21,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_REGISTRY_CUSTOM_URL=http://localhost:5000
@@ -31,7 +31,7 @@ services:
 docker run \
   -e "WUD_REGISTRY_CUSTOM_URL=http://localhost:5000" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 
@@ -43,7 +43,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_REGISTRY_CUSTOM_URL=http://localhost:5000
@@ -57,6 +57,6 @@ docker run \
   -e "WUD_REGISTRY_CUSTOM_LOGIN=john" \
   -e "WUD_REGISTRY_CUSTOM_PASSWORD=doe" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->

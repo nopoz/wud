@@ -24,7 +24,7 @@ version: '3'
 services:
 
   whatsupdocker:
-    image: fmartinou/whats-up-docker:5.1.0
+    image: getwud/wud:5.1.0
     ...
     healthcheck:
       test: wget --no-verbose --tries=1 --no-check-certificate --spider http://localhost:3000

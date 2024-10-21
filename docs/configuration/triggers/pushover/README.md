@@ -28,7 +28,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_TRIGGER_PUSHOVER_1_TOKEN=*****************************
@@ -41,7 +41,7 @@ docker run \
   -e WUD_TRIGGER_PUSHOVER_1_TOKEN="*****************************" \
   -e WUD_TRIGGER_PUSHOVER_1_USER="******************************" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 
@@ -53,7 +53,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
         - WUD_TRIGGER_PUSHOVER_1_TOKEN=*****************************
@@ -72,7 +72,7 @@ docker run \
     -e WUD_TRIGGER_PUSHOVER_1_SOUND="cosmic" \
     -e WUD_TRIGGER_PUSHOVER_1_PRIORITY="2" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 

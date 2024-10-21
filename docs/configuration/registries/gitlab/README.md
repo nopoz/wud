@@ -22,7 +22,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_REGISTRY_GITLAB_TOKEN=xxxxx 
@@ -32,7 +32,7 @@ services:
 docker run \
   -e WUD_REGISTRY_GITLAB_TOKEN="xxxxx" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 
@@ -45,7 +45,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_REGISTRY_GITLAB_URL=https://registry.mygitlab.acme.com
@@ -59,7 +59,7 @@ docker run \
   -e WUD_REGISTRY_GITLAB_AUTHURL="https://mygitlab.acme.com"
   -e WUD_REGISTRY_GITLAB_TOKEN="xxxxx" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 

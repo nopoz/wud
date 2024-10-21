@@ -20,14 +20,14 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_LOG_LEVEL=debug
 ```
 #### **Docker**
 ```bash
-docker run -e WUD_LOG_LEVEL=debug ... fmartinou/whats-up-docker
+docker run -e WUD_LOG_LEVEL=debug ... getwud/wud
 ```
 <!-- tabs:end -->
 
@@ -36,7 +36,7 @@ docker run -e WUD_LOG_LEVEL=debug ... fmartinou/whats-up-docker
 <!-- tabs:start -->
 #### **Docker**
 ```bash
-docker run -e WUD_LOG_FORMAT=json ... fmartinou/whats-up-docker
+docker run -e WUD_LOG_FORMAT=json ... getwud/wud
 ```
 
 #### **Docker Compose**
@@ -45,7 +45,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_LOG_FORMAT=json

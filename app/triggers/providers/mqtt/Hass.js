@@ -255,7 +255,7 @@ class Hass {
             name: name || entityId,
             device: getHaDevice(),
             icon: icon || sanitizeIcon('mdi:docker'),
-            entity_picture: 'https://github.com/fmartinou/whats-up-docker/raw/master/docs/wud_logo.png',
+            entity_picture: 'https://github.com/getwud/wud/raw/main/docs/wud_logo.png',
             state_topic: stateTopic,
             ...options,
         }), {

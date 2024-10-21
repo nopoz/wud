@@ -15,6 +15,6 @@ If at startup you face an issue looking like
 Add the `--security-opt seccomp=unconfined` option to your docker command 
 Example
 ```
-docker run ... --security-opt seccomp=unconfined fmartinou/whats-up-docker
+docker run ... --security-opt seccomp=unconfined getwud/wud
 ```
 

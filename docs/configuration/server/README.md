@@ -27,7 +27,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_SERVER_ENABLED=false
@@ -37,7 +37,7 @@ services:
 docker run \
   -e WUD_SERVER_ENABLED=false \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 
@@ -50,7 +50,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_SERVER_PORT=8080
@@ -60,7 +60,7 @@ services:
 docker run \
   -e WUD_SERVER_PORT=8080 \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
 
@@ -73,7 +73,7 @@ version: '3'
 
 services:
   whatsupdocker:
-    image: fmartinou/whats-up-docker
+    image: getwud/wud
     ...
     environment:
       - WUD_SERVER_TLS_ENABLED=true
@@ -87,6 +87,6 @@ docker run \
   -e "WUD_SERVER_TLS_KEY=/wud_certs/server.key" \
   -e "WUD_SERVER_TLS_CERT=/wud_certs/server.crt" \
   ...
-  fmartinou/whats-up-docker
+  getwud/wud
 ```
 <!-- tabs:end -->
