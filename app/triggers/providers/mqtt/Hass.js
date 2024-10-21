@@ -1,4 +1,3 @@
-const capitalize = require('capitalize');
 const { getVersion } = require('../../../configuration');
 const {
     registerContainerAdded,
@@ -10,8 +9,8 @@ const {
 const containerStore = require('../../../store/container');
 
 const HASS_DEVICE_ID = 'wud';
-const HASS_DEVICE_NAME = 'What\'s up Docker?';
-const HASS_MANUFACTURER = 'fmartinou';
+const HASS_DEVICE_NAME = 'wud';
+const HASS_MANUFACTURER = 'wud';
 const HASS_ENTITY_VALUE_TEMPLATE = '{{ value_json.image_tag_value }}';
 const HASS_LATEST_VERSION_TEMPLATE = '{% if value_json.update_kind_kind == "digest" %}{{ value_json.result_digest[:15] }}{% else %}{{ value_json.result_tag }}{% endif %}';
 
@@ -31,9 +30,9 @@ function getHassEntityId(topic) {
 function getHaDevice() {
     return {
         identifiers: [HASS_DEVICE_ID],
-        manufacturer: capitalize(HASS_MANUFACTURER),
-        model: capitalize(HASS_DEVICE_ID),
-        name: capitalize(HASS_DEVICE_NAME),
+        manufacturer: HASS_MANUFACTURER,
+        model: HASS_DEVICE_ID,
+        name: HASS_DEVICE_NAME,
         sw_version: getVersion(),
     };
 }
