@@ -16,6 +16,7 @@ const configurationValid = {
     token: 'token',
     priority: 0,
     sound: 'pushover',
+    html: 0,
     threshold: 'all',
     mode: 'simple',
     once: true,
@@ -103,6 +104,7 @@ test('maskConfiguration should mask sensitive data', () => {
         // eslint-disable-next-line no-template-curly-in-string
         batchtitle: '${count} updates available',
         sound: 'pushover',
+        html: 0,
         threshold: 'all',
         once: true,
         token: 't***n',
@@ -141,6 +143,7 @@ test('trigger should send message to pushover', async () => {
         message: 'Container container1 running with tag 1.0.0 can be updated to tag 2.0.0\n',
         priority: 0,
         sound: 'pushover',
+        html: 0,
         title: 'New tag found for container container1',
     });
 });

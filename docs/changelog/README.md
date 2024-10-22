@@ -1,5 +1,8 @@
 # Changelog
 
+# 7.1.0 (wip)
+- :star: [PUSHOVER] - Add support for HTML templating
+
 # 7.0.0
 - :star: [UI] - Add support for [Selfh.st](https://selfh.st/icons/) icons
 - :star: [Docker watcher] - Add new `watchatstart` option to disable automatic watch during startup
