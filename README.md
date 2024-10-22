@@ -1,6 +1,6 @@
 # WUD (aka What's up Docker?)
 
-![Travis](https://img.shields.io/travis/getwud/wud/main)
+![Travis](https://img.shields.io/travis/com/getwud/wud)
 ![Maintainability](https://img.shields.io/codeclimate/maintainability/getwud/wud)
 ![Coverage](https://img.shields.io/codeclimate/coverage/getwud/wud)
 ![Docker pulls](https://img.shields.io/docker/pulls/getwud/wud)
