@@ -26,6 +26,7 @@ class Http extends Trigger {
                 bearer: this.joi.string(),
             }),
             proxy: this.joi.string(),
+            install: this.joi.boolean().default(false),
         });
     }
 
