@@ -43,6 +43,16 @@
           </v-chip>
         </span>
       </v-toolbar-title>
+      <v-btn
+        v-if="container.install && container.updateAvailable"
+        color="success"
+        outlined
+        small
+        @click="installContainer"
+        class="ml-3"
+      >
+        Install
+      </v-btn>
       <v-spacer />
       <v-tooltip bottom v-if="$vuetify.breakpoint.mdAndUp">
         <template v-slot:activator="{ on, attrs }">
@@ -186,6 +196,7 @@ import ContainerImage from "@/components/ContainerImage";
 import ContainerUpdate from "@/components/ContainerUpdate";
 import ContainerError from "@/components/ContainerError";
 import { getRegistryProviderIcon } from "@/services/registry";
+import Http from '@/triggers/providers/http/Http';
 
 export default {
   components: {
@@ -327,6 +338,15 @@ export default {
     },
   },
 
+async installContainer() {
+      try {
+        await Http.sendHttpRequest(this.container);
+        console.log(`Installation triggered for ${this.container.displayName}`);
+      } catch (error) {
+        console.error(`Failed to install ${this.container.displayName}:`, error);
+      }
+    }
+  },
   mounted() {
     this.deleteEnabled = this.$serverConfig.feature.delete;
   },
