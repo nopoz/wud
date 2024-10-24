@@ -338,7 +338,7 @@ export default {
     },
   },
 
-async installContainer() {
+    async installContainer() {
       try {
         await Http.sendHttpRequest(this.container);
         console.log(`Installation triggered for ${this.container.displayName}`);
