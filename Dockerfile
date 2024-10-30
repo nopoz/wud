@@ -17,7 +17,7 @@ RUN mkdir /store
 # Add TZDATA to allow easy local time configuration
 RUN apk update \
     && apk add --no-cache tzdata openssl \
-    && apk add bash
+    && apk add bash \
     && rm -rf /var/cache/apk/*
 
 # Dependencies Stage (Backend)
