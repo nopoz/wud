@@ -18,8 +18,6 @@ Supported shells for scripts are `/bin/bash`, `/bin/ash`, and `/bin/sh`.
 
 \* By setting the INSTALL variable to `true`, this trigger is only executed manually in the containers UI page by clicking the "Update" button next to the upgrade version. Typical scheduled watch triggers for this trigger will not occur when INSTALL is `true`. Only one INSTALL variable can be set across all trigger types - if more than one is set the UI will throw an error and the trigger will not be executed. 
 
-?> This trigger also supports the [common configuration variables](configuration/triggers/?id=common-trigger-configuration).
-
 ### Examples
 
 #### Specify the local script file inside the WUD container 
