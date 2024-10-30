@@ -52,7 +52,7 @@
         @click.stop="installContainer"
         class="mr-1"
       >
-        Install
+        Update
       </v-chip>
       <v-tooltip bottom v-if="$vuetify.breakpoint.mdAndUp">
         <template v-slot:activator="{ on, attrs }">

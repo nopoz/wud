@@ -113,11 +113,13 @@ class Http extends Trigger {
         console.log(`Sending ${actionType} HTTP request to ${options.uri}`);
         try {
             const response = await rp(options);
-            console.log(`HTTP ${actionType} request successful:`, response);
+            console.log(response 
+                ? `HTTP ${actionType} request successful: ${JSON.stringify(response)}` 
+                : `HTTP ${actionType} request successful`);
             return response;
         } catch (error) {
             console.error(`HTTP ${actionType} request failed:`, error.message);
-            throw error; // Re-throw the error to be handled upstream
+            throw error;
         }
         // MODIFICATION END
         // return rp(options);
