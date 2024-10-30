@@ -3,8 +3,9 @@
 The `script` trigger executes a local script file mounted inside the WUD container. 
 
 Parameters passed to the script are <container name> <current version> <upgrade version>.
-
 For example, `/script/myscript.sh "plex" "1.0.0" "2.0.0"`
+
+Supported shells for scripts are `/bin/bash`, `/bin/ash`, and `/bin/sh`. 
 
 #### Variables
 
