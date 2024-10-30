@@ -2,7 +2,8 @@
 
 The `script` trigger executes a local script file mounted inside the WUD container. 
 
-Parameters passed to the script are <container name> <current version> <upgrade version>.
+Parameters passed to the script are "\<container name\>" "\<current version\>" "\<upgrade version\>".
+
 For example, `/script/myscript.sh "plex" "1.0.0" "2.0.0"`
 
 Supported shells for scripts are `/bin/bash`, `/bin/ash`, and `/bin/sh`. 
@@ -21,7 +22,7 @@ Supported shells for scripts are `/bin/bash`, `/bin/ash`, and `/bin/sh`.
 
 ### Examples
 
-#### Specify local script file in container 
+#### Specify the local script file inside the WUD container 
 
 <!-- tabs:start -->
 #### **Docker Compose**
@@ -49,6 +50,6 @@ getwud/wud
 <!-- tabs:end -->
 
 #### Example of parameters passed to script - container name, current version, upgrade version
-```json
+```bash
 /script/myscript.sh "plex" "1.0.0" "2.0.0"
 ```
