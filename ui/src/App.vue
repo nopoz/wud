@@ -4,6 +4,7 @@
       :message="snackbarMessage"
       :show="snackbarShow"
       :level="snackbarLevel"
+      :timeout="snackbarTimeout"
     />
 
     <navigation-drawer v-if="authenticated" />
@@ -80,14 +81,20 @@ export default {
      * @param message
      * @param level
      */
-    notify(message, level = "info") {
+    notify(message, level = "info", timeout = 5000) {
       this.snackbarMessage = message;
-      this.snackbarShow = true;
       this.snackbarLevel = level;
+      this.snackbarShow = true;
+
+      if (timeout > 0) {
+        setTimeout(() => {
+          this.notifyClose();
+        }, timeout);
+      }
     },
 
     /**
-     * Close a notification.
+     * Close the notification.
      */
     notifyClose() {
       this.snackbarMessage = "";

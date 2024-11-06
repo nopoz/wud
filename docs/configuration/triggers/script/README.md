@@ -11,10 +11,10 @@ Supported shells for scripts are `/bin/bash`, `/bin/ash`, and `/bin/sh`.
 #### Variables
 
 | Env var                                         |    Required    | Description                                                              | Supported values             | Default value when missing |
-|-------------------------------------------------|:--------------:|--------------------------------------------------------------------------|------------------------------|----------------------------| 
+|-------------------------------------------------|:--------------:|--------------------------------------------------------------------------|------------------------------|----------------------------|
 | `WUD_TRIGGER_SCRIPT_{trigger_name}_PATH`        |  :red_circle:  | The absolute path with script file name                                  | Any local path               |                            |
-| `WUD_TRIGGER_SCRIPT_{trigger_name}_INSTALL`     | :white_circle: | If `true`, makes this a manual Update button trigger in the UI\*         | `true`, `false`              | `false`                     |
-| `WUD_TRIGGER_SCRIPT_{trigger_name}_TIMEOUT`     | :white_circle: | The amount of time in milliseconds before considering a script timed out | integer in ms                | `5000`                    |
+| `WUD_TRIGGER_SCRIPT_{trigger_name}_INSTALL`     | :white_circle: | If `true`, makes this a manual Update button trigger in the UI\*         | `true`, `false`              | `false`                    |
+| `WUD_TRIGGER_SCRIPT_{trigger_name}_TIMEOUT`     | :white_circle: | The amount of time in milliseconds before considering a script timed out | integer in ms                | `120000` (2 minutes)       |
 
 \* By setting the INSTALL variable to `true`, this trigger is only executed manually in the containers UI page by clicking the "Update" button next to the upgrade version. Typical scheduled watch triggers for this trigger will not occur when INSTALL is `true`. Only one INSTALL variable can be set across all trigger types - if more than one is set the UI will throw an error and the trigger will not be executed. 
 

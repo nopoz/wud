@@ -22,7 +22,7 @@ export default {
     },
     timeout: {
       type: Number,
-      default: 2000,
+      default: 5000, // Default timeout if none is provided
     },
     message: {
       type: String,
