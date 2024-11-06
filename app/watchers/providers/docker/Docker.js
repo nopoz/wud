@@ -251,6 +251,17 @@ class Docker extends Component {
                 START_WATCHER_DELAY_MS,
             );
         }
+
+        // Listen for the custom event to trigger a watch
+        this.triggerWatchListener = async () => {
+            this.log.info('Received trigger_watch event, performing watch');
+            await this.watchFromCron();
+            event.emitWatcherStop();
+            this.log.info('Watcher has completed scanning containers');
+        };
+
+        event.registerTriggerWatch(this.triggerWatchListener);
+        // === End of added code ===
     }
 
     initWatcher() {
@@ -288,6 +299,10 @@ class Docker extends Component {
         if (this.listenDockerEventsTimeout) {
             clearTimeout(this.listenDockerEventsTimeout);
             delete this.watchCronDebounced;
+        }
+        if (this.triggerWatchListener) {
+            event.unregisterTriggerWatch(this.triggerWatchListener);
+            delete this.triggerWatchListener;
         }
     }
 

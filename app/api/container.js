@@ -107,15 +107,50 @@ async function installContainer(req, res) {
     try {
         const trigger = initializeTrigger(triggerType, triggerConfig);
         await trigger.install(container);
+
+        // Set notification in container
+        container.notification = {
+            message: `Update for ${container.name} completed successfully.`,
+            level: 'success',
+        };
+        // Update the container in the store
+        storeContainer.updateContainer(container);
+
         res.status(200).json({ success: true });
     } catch (e) {
         // Log the error separately
         console.error(`Error installing container ${id}: ${e.message}`);
-        
+
+        // Set error notification in container
+        container.notification = {
+            message: `Update for ${container.name} failed: ${e.message}`,
+            level: 'error',
+        };
+        // Update the container in the store
+        storeContainer.updateContainer(container);
+
         // Return error response
         res.status(500).json({
             error: `Error when installing container ${id} (${e.message})`,
         });
+    }
+}
+
+/**
+ * Clear notification for a container by ID.
+ * @param {Object} req
+ * @param {Object} res
+ */
+function clearContainerNotification(req, res) {
+    const { id } = req.params;
+    const container = storeContainer.getContainer(id);
+
+    if (container) {
+        delete container.notification;
+        storeContainer.updateContainer(container);
+        res.sendStatus(200);
+    } else {
+        res.sendStatus(404);
     }
 }
 
@@ -232,6 +267,7 @@ function init() {
     router.delete('/:id', deleteContainer);
     router.post('/:id/watch', watchContainer);
     router.post('/:id/install', installContainer);
+    router.post('/:id/clear-notification', clearContainerNotification);
     return router;
 }
 

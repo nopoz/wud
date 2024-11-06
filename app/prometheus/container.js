@@ -9,15 +9,21 @@ let gaugeContainer;
  * Populate gauge.
  */
 function populateGauge() {
-    gaugeContainer.reset();
-    storeContainer.getContainers().forEach((container) => {
-        try {
-            gaugeContainer.set(flatten(container), 1);
-        } catch (e) {
-            log.warn(`${container.id} - Error when adding container to the metrics (${e.message})`);
-            log.debug(e);
-        }
-    });
+  gaugeContainer.reset();
+  storeContainer.getContainers().forEach((container) => {
+    try {
+      const labels = flatten(container);
+
+      // Exclude notification fields from labels
+      delete labels.notification_message;
+      delete labels.notification_level;
+
+      gaugeContainer.set(labels, 1);
+    } catch (e) {
+      log.warn(`${container.id} - Error when adding container to the metrics (${e.message})`);
+      log.debug(e);
+    }
+  });
 }
 
 /**
