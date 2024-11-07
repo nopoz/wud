@@ -26,6 +26,7 @@
     "express-session": "1.18.0",
     "flat": "5.0.2",
     "getmac": "6.6.0",
+    "gotify-client": "0.4.2",
     "joi": "17.13.3",
     "joi-cron-expression": "1.0.1",
     "just-debounce": "1.1.0",

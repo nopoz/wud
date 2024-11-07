@@ -1,6 +1,7 @@
 # Changelog
 
 # 7.1.0 (wip)
+- :star: [GOTIFY] - Add support for [Gotify](/configuration/triggers/gotify/) trigger
 - :star: [PUSHOVER] - Add support for HTML templating
 - :fire: [UI] - Fix container list sort
 
