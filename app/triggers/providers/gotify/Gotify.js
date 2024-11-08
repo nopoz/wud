@@ -61,7 +61,7 @@ class Gotify extends Trigger {
     async triggerBatch(containers) {
         return this.client.message.createMessage({
             title: this.renderBatchTitle(containers),
-            body: this.renderBatchBody(containers),
+            message: this.renderBatchBody(containers),
             priority: this.configuration.priority,
         });
     }
