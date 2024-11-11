@@ -1,6 +1,6 @@
 # Changelog
 
-# 7.1.0 (wip)
+# 7.1.0
 - :star: [GOTIFY] - Add support for [Gotify](/configuration/triggers/gotify/) trigger
 - :star: [NTFY] - Add support for [Ntfy](/configuration/triggers/ntfy/) trigger
 - :star: [PUSHOVER] - Add support for HTML templating
