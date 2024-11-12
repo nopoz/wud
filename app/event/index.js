@@ -14,6 +14,9 @@ const WUD_CONTAINER_REPORTS = 'wud:container-reports';
 const WUD_WATCHER_START = 'wud:watcher-start';
 const WUD_WATCHER_STOP = 'wud:watcher-stop';
 
+// New event constant
+const WUD_TRIGGER_WATCH = 'wud:trigger-watch';
+
 /**
  * Emit ContainerReports event.
  * @param containerReports
@@ -109,6 +112,27 @@ function emitWatcherStop(watcher) {
 function registerWatcherStop(handler) {
     eventEmitter.on(WUD_WATCHER_STOP, handler);
 }
+
+// New function to emit trigger_watch
+function emitTriggerWatch() {
+    eventEmitter.emit(WUD_TRIGGER_WATCH);
+}
+
+// New function to register a handler for trigger_watch
+function registerTriggerWatch(handler) {
+    eventEmitter.on(WUD_TRIGGER_WATCH, handler);
+}
+
+// New function to unregister a handler for trigger_watch
+function unregisterTriggerWatch(handler) {
+    eventEmitter.off(WUD_TRIGGER_WATCH, handler);
+}
+
+function unregisterWatcherStop(handler) {
+    eventEmitter.off(WUD_WATCHER_STOP, handler);
+}
+
+
 module.exports = {
     emitContainerReports,
     registerContainerReports,
@@ -124,4 +148,9 @@ module.exports = {
     registerWatcherStart,
     emitWatcherStop,
     registerWatcherStop,
+    // New exports
+    emitTriggerWatch,
+    registerTriggerWatch,
+    unregisterTriggerWatch,
+    unregisterWatcherStop,
 };

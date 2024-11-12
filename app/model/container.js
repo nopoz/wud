@@ -12,6 +12,7 @@ const schema = joi.object({
     displayIcon: joi.string().default('mdi:docker'),
     status: joi.string().default('unknown'),
     watcher: joi.string().min(1).required(),
+    compose_project: joi.string().allow(null).default(null),
     includeTags: joi.string(),
     excludeTags: joi.string(),
     transformTags: joi.string(),
@@ -55,6 +56,10 @@ const schema = joi.object({
         semverDiff: joi.string().allow('major', 'minor', 'patch', 'prerelease', 'unknown'),
     }).default({ kind: 'unknown' }),
     resultChanged: joi.function(),
+    notification: joi.object({
+        message: joi.string().min(1).required(),
+        level: joi.string().valid('info', 'success', 'error').required(),
+    }).optional(),
 });
 
 /**
