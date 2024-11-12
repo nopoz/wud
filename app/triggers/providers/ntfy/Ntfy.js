@@ -29,7 +29,14 @@ class Ntfy extends Trigger {
      * @returns {*}
      */
     maskConfiguration() {
-        return this.configuration;
+        return {
+            ...this.configuration,
+            auth: this.configuration.auth ? {
+                user: Ntfy.mask(this.configuration.user),
+                password: Ntfy.mask(this.configuration.password),
+                token: Ntfy.mask(this.configuration.token),
+            } : undefined,
+        };
     }
 
     /**
@@ -75,15 +82,19 @@ class Ntfy extends Trigger {
             body,
             json: true,
         };
-        if (this.configuration.auth && this.configuration.user && this.configuration.password) {
+        if (
+            this.configuration.auth
+            && this.configuration.auth.user
+            && this.configuration.auth.password
+        ) {
             options.auth = {
                 user: this.configuration.auth.user,
                 pass: this.configuration.auth.password,
             };
         }
-        if (this.configuration.auth && this.configuration.token) {
+        if (this.configuration.auth && this.configuration.auth.token) {
             options.auth = {
-                bearer: this.configuration.auth.bearer,
+                bearer: this.configuration.auth.token,
             };
         }
         return rp(options);
