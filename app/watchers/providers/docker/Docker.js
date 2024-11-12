@@ -139,9 +139,20 @@ function getOldContainers(newContainers, containersFromTheStore) {
  */
 function pruneOldContainers(newContainers, containersFromTheStore) {
     const containersToRemove = getOldContainers(newContainers, containersFromTheStore);
+
     containersToRemove.forEach((containerToRemove) => {
         storeContainer.deleteContainer(containerToRemove.id);
+        console.log(`Pruned container ${containerToRemove.id} (${containerToRemove.name})`);
     });
+
+    // Re-validate pruned containers
+    const validIds = newContainers.map(c => c.id);
+    storeContainer.getContainers({ watcher: this.name })
+        .forEach(c => {
+            if (!validIds.includes(c.id)) {
+                storeContainer.deleteContainer(c.id);
+            }
+        });
 }
 
 function getContainerName(container) {
@@ -342,34 +353,61 @@ class Docker extends Component {
      * @param dockerEventChunk
      * @return {Promise<void>}
      */
-    async onDockerEvent(dockerEventChunk) {
-        const dockerEvent = JSON.parse(dockerEventChunk.toString());
-        const action = dockerEvent.Action;
-        const containerId = dockerEvent.id;
+    async onDockerEvent(chunk) {
+        if (!this.partialData) this.partialData = ''; // Initialize partialData buffer if not set
 
-        // If the container was created or destroyed => perform a watch
-        if (action === 'destroy' || action === 'create') {
-            await this.watchCronDebounced();
-        } else {
-            // Update container state in db if so
-            try {
-                const container = await this.dockerApi.getContainer(containerId);
-                const containerInspect = await container.inspect();
-                const newStatus = containerInspect.State.Status;
-                const containerFound = storeContainer.getContainer(containerId);
-                if (containerFound) {
-                    // Child logger for the container to process
-                    const logContainer = this.log.child({ container: fullName(containerFound) });
-                    const oldStatus = containerFound.status;
-                    containerFound.status = newStatus;
-                    if (oldStatus !== newStatus) {
-                        storeContainer.updateContainer(containerFound);
-                        logContainer.info(`Status changed from ${oldStatus} to ${newStatus}`);
+        try {
+            // Accumulate incoming chunks of data
+            this.partialData += chunk.toString();
+
+            let event;
+            while (this.partialData) {
+                const newLineIndex = this.partialData.indexOf('\n');
+                if (newLineIndex === -1) {
+                    // No complete JSON object yet
+                    return;
+                }
+
+                const completeJson = this.partialData.slice(0, newLineIndex).trim();
+                this.partialData = this.partialData.slice(newLineIndex + 1);
+
+                try {
+                    event = JSON.parse(completeJson);
+                } catch (e) {
+                    console.warn(`Skipping invalid JSON: ${completeJson}`);
+                    continue; // Skip to the next event in case of parsing error
+                }
+
+                // Process the valid Docker event
+                const action = event.Action;
+                const containerId = event.id;
+
+                if (action === 'destroy' || action === 'create') {
+                    await this.watchCronDebounced();
+                } else {
+                    try {
+                        const container = await this.dockerApi.getContainer(containerId);
+                        const containerInspect = await container.inspect();
+                        const newStatus = containerInspect.State.Status;
+                        const containerFound = storeContainer.getContainer(containerId);
+
+                        if (containerFound) {
+                            const logContainer = this.log.child({ container: fullName(containerFound) });
+                            const oldStatus = containerFound.status;
+                            containerFound.status = newStatus;
+
+                            if (oldStatus !== newStatus) {
+                                storeContainer.updateContainer(containerFound);
+                                logContainer.info(`Status changed from ${oldStatus} to ${newStatus}`);
+                            }
+                        }
+                    } catch (e) {
+                        this.log.debug(`Failed to update container details for ID ${containerId}: ${e.message}`);
                     }
                 }
-            } catch (e) {
-                this.log.debug(`Unable to get container details for container id=[${containerId}]`);
             }
+        } catch (error) {
+            this.log.error(`Error processing Docker event: ${error.message}`);
         }
     }
 
@@ -383,15 +421,18 @@ class Docker extends Component {
         // Get container reports
         const containerReports = await this.watch();
 
+        // Filter out null container reports
+        const validContainerReports = containerReports.filter(report => report.container !== null);
+
         // Count container reports
-        const containerReportsCount = containerReports.length;
+        const containerReportsCount = validContainerReports.length;
 
         // Count container available updates
-        const containerUpdatesCount = containerReports
+        const containerUpdatesCount = validContainerReports
             .filter((containerReport) => containerReport.container.updateAvailable).length;
 
         // Count container errors
-        const containerErrorsCount = containerReports
+        const containerErrorsCount = validContainerReports
             .filter((containerReport) => containerReport.container.error !== undefined).length;
 
         const stats = `${containerReportsCount} containers watched, ${containerErrorsCount} errors, ${containerUpdatesCount} available updates`;
@@ -430,41 +471,55 @@ class Docker extends Component {
         }
     }
 
-    /**
-     * Watch a Container.
-     * @param container
-     * @returns {Promise<*>}
-     */
-    async watchContainer(container) {
-        // Child logger for the container to process
-        const logContainer = this.log.child({ container: fullName(container) });
-        const containerWithResult = container;
+/**
+ * Watch a Container.
+ * @param container
+ * @returns {Promise<*>}
+ */
+async watchContainer(container) {
+    const logContainer = this.log.child({ container: fullName(container) });
+    const containerWithResult = container;
 
-        // Reset previous results if so
-        delete containerWithResult.result;
-        delete containerWithResult.error;
-        logContainer.debug('Start watching');
+    // Reset any previous results
+    delete containerWithResult.result;
+    delete containerWithResult.error;
+    logContainer.debug('Start watching');
 
-        try {
-            containerWithResult.result = await this.findNewVersion(container, logContainer);
-        } catch (e) {
-            logContainer.warn(`Error when processing (${e.message})`);
-            logContainer.debug(e);
-            containerWithResult.error = {
-                message: e.message,
-            };
+    try {
+        // Avoid pruning running containers
+        const existingContainer = storeContainer.getContainer(container.id);
+        if (existingContainer && existingContainer.status !== 'running') {
+            logContainer.info(`Skipping container ${container.id} as it is not running.`);
+            storeContainer.deleteContainer(container.id);
+            return { container: null, changed: false };
+        }
+
+        // Process version checking logic
+        containerWithResult.result = await this.findNewVersion(container, logContainer);
+
+        // Check if container needs reinsertion
+        const isPruned = !storeContainer.getContainer(container.id);
+        if (isPruned) {
+            // logContainer.info(`Reinserting container ${container.id}.`); // DEBUG
+            storeContainer.insertContainer(containerWithResult);
+            return this.mapContainerToContainerReport(containerWithResult);
         }
 
         const containerReport = this.mapContainerToContainerReport(containerWithResult);
         event.emitContainerReport(containerReport);
         return containerReport;
+    } catch (e) {
+        logContainer.warn(`Error when processing container ${container.id} (${e.message})`);
+        containerWithResult.error = { message: e.message };
+        return { container: containerWithResult, changed: false };
     }
+}
 
     /**
      * Get all containers to watch.
      * @returns {Promise<unknown[]>}
      */
-    async getContainers() {
+async getContainers() {
         const listContainersOptions = {};
         if (this.configuration.watchall) {
             listContainersOptions.all = true;
@@ -489,25 +544,40 @@ class Docker extends Component {
                 container.Labels[wudDisplayName],
                 container.Labels[wudDisplayIcon],
             ));
-        const containersWithImage = await Promise.all(containerPromises);
+        let containersWithImage = await Promise.all(containerPromises);
 
-        // Return containers to process
-        const containersToReturn = containersWithImage
-            .filter((imagePromise) => imagePromise !== undefined);
+        // Filter out undefined containers and deduplicate
+        containersWithImage = containersWithImage.filter(c => c !== undefined);
+
+        // Log containers after deduplication
+        this.log.debug(`After deduplication: ${containersWithImage.length} containers`);
+        containersWithImage.forEach(c => {
+            this.log.debug(`Container: ${c.name} (${c.id}) - ${c.status}`);
+        });
 
         // Prune old containers from the store
         try {
             const containersFromTheStore = storeContainer.getContainers({ watcher: this.name });
-            pruneOldContainers(containersToReturn, containersFromTheStore);
+            const storeContainerCount = containersFromTheStore.length;
+            this.log.debug(`Found ${storeContainerCount} containers in store`);
+            
+            pruneOldContainers(containersWithImage, containersFromTheStore);
+            
+            // Verify store state after pruning
+            const afterPruneCount = storeContainer.getContainers({ watcher: this.name }).length;
+            this.log.debug(`After pruning: ${afterPruneCount} containers in store`);
         } catch (e) {
             this.log.warn(`Error when trying to prune the old containers (${e.message})`);
         }
+
+        // Update metrics
         getWatchContainerGauge().set({
             type: this.type,
             name: this.name,
-        }, containersToReturn.length);
+        }, containersWithImage.length);
 
-        return containersToReturn;
+        // Return the deduplicated and pruned containers
+        return containersWithImage;
     }
 
     /**
@@ -579,6 +649,16 @@ class Docker extends Component {
      * @param displayName
      * @param displayIcon
      * @returns {Promise<Image>}
+    /**
+     * Add image detail to Container.
+     * @param container
+     * @param includeTags
+     * @param excludeTags
+     * @param transformTags
+     * @param linkTemplate
+     * @param displayName
+     * @param displayIcon
+     * @returns {Promise<Image>}
      */
     async addImageDetailsToContainer(
         container,
@@ -591,15 +671,46 @@ class Docker extends Component {
     ) {
         const containerId = container.Id;
 
-        // Is container already in store? just return it :)
+        // First verify container exists and is running
+        try {
+            const containerInspect = await this.dockerApi.getContainer(containerId).inspect();
+            if (containerInspect.State.Status !== 'running') {
+                // Container exists but isn't running - remove from store if present
+                const containerInStore = storeContainer.getContainer(containerId);
+                if (containerInStore) {
+                    this.log.debug(`Removing non-running container ${containerId} from store`);
+                    storeContainer.deleteContainer(containerId);
+                }
+                return undefined;
+            }
+        } catch (e) {
+            // Container doesn't exist in Docker anymore
+            const containerInStore = storeContainer.getContainer(containerId);
+            if (containerInStore) {
+                this.log.debug(`Removing non-existent container ${containerId} from store`);
+                storeContainer.deleteContainer(containerId);
+            }
+            return undefined;
+        }
+
+        // Now check store
         const containerInStore = storeContainer.getContainer(containerId);
         if (containerInStore !== undefined && containerInStore.error === undefined) {
-            this.log.debug(`Container ${containerInStore.id} already in store`);
-            return containerInStore;
+            // Return it only if it's running
+            if (containerInStore.status === 'running') {
+                this.log.debug(`Container ${containerInStore.id} found in store and running`);
+                return containerInStore;
+            }
+            // Otherwise remove it and let it be recreated
+            this.log.debug(`Removing non-running container ${containerId} from store`);
+            storeContainer.deleteContainer(containerId);
         }
 
         // Get container image details
         const image = await this.dockerApi.getImage(container.Image).inspect();
+        
+        // Get project label dynamically
+        const projectLabel = container.Labels['com.docker.compose.project'] || null;
 
         // Get useful properties
         const containerName = getContainerName(container);
@@ -643,6 +754,7 @@ class Docker extends Component {
             linkTemplate,
             displayName,
             displayIcon,
+            compose_project: projectLabel,
             image: {
                 id: imageId,
                 registry: {

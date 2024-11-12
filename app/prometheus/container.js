@@ -73,6 +73,7 @@ function init() {
             'update_kind_remote_value',
             'update_kind_semver_diff',
             'error_message',
+            'compose_project',
         ],
     });
     log.debug('Start container metrics interval');

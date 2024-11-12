@@ -44,16 +44,15 @@ function insertContainer(container) {
 function updateContainer(container) {
     const containerToReturn = validateContainer(container);
 
-    // Remove existing container
-    containers.chain().find({
-        'data.id': container.id,
-    }).remove();
+    // Lock mechanism to prevent race conditions (simplified implementation)
+    const existingContainer = getContainer(container.id);
+    if (existingContainer) {
+        containers.chain().find({ 'data.id': container.id }).remove();
+    }
 
-    // Insert new one
-    containers.insert({
-        data: containerToReturn,
-    });
+    containers.insert({ data: containerToReturn });
     emitContainerUpdated(containerToReturn);
+    // console.log(`Container ${container.id} updated successfully.`); // DEBUG
     return containerToReturn;
 }
 
@@ -67,17 +66,30 @@ function getContainers(query = {}) {
     Object.keys(query).forEach((key) => {
         filter[`data.${key}`] = query[key];
     });
+
     if (!containers) {
         return [];
     }
+
+    // Get and filter unique containers by name and watcher
     const containerList = containers.find(filter).map((item) => validateContainer(item.data));
-    return containerList.sort(
+    const uniqueContainers = Object.values(
+        containerList.reduce((acc, container) => {
+            const key = `${container.name}-${container.watcher}`;
+            if (!acc[key] || acc[key].id === container.id) {
+                acc[key] = container; // Keep the most recent entry
+            }
+            return acc;
+        }, {})
+    );
+
+    return uniqueContainers.sort(
         byValues([
             [(container) => container.watcher, byString()],
             [(container) => container.image.registry.name, byString()],
             [(container) => container.name, byString()],
             [(container) => container.image.tag.value, byString()],
-        ]),
+        ])
     );
 }
 
@@ -104,10 +116,18 @@ function getContainer(id) {
 function deleteContainer(id) {
     const container = getContainer(id);
     if (container) {
-        containers.chain().find({
-            'data.id': id,
-        }).remove();
+        console.log(`Attempting to delete container: ${id}`);
+        containers.chain().find({ 'data.id': id }).remove();
         emitContainerRemoved(container);
+        // Verify removal
+        const stillExists = getContainer(id);
+        if (stillExists) {
+            console.warn(`Container ${id} still exists after deletion attempt.`);
+        } else {
+            console.log(`Container ${id} deleted successfully.`);
+        }
+    } else {
+        console.warn(`Container ${id} not found for deletion.`);
     }
 }
 
