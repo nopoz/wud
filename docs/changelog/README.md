@@ -1,6 +1,6 @@
 # Changelog
 
-# 7.1.1 (wip)
+# 7.1.1
 - :fire: [NTFY] - Fix basic/bearer authentication
 
 # 7.1.0
