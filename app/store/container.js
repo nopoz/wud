@@ -57,9 +57,18 @@ function updateContainer(container) {
 }
 
 /**
+ * Get unique container key combining name, watcher, and registry.
+ * @param {Object} container
+ * @returns {String}
+ */
+function getContainerKey(container) {
+    return `${container.name}-${container.watcher}-${container.image.registry.name}`;
+}
+
+/**
  * Get all (filtered) containers.
- * @param query
- * @returns {*}
+ * @param {Object} query
+ * @returns {Array}
  */
 function getContainers(query = {}) {
     const filter = {};
@@ -71,19 +80,35 @@ function getContainers(query = {}) {
         return [];
     }
 
-    // Get and filter unique containers by name and watcher
+    // Get and filter containers
     const containerList = containers.find(filter).map((item) => validateContainer(item.data));
-    const uniqueContainers = Object.values(
-        containerList.reduce((acc, container) => {
-            const key = `${container.name}-${container.watcher}`;
-            if (!acc[key] || acc[key].id === container.id) {
-                acc[key] = container; // Keep the most recent entry
-            }
-            return acc;
-        }, {})
-    );
-
-    return uniqueContainers.sort(
+    
+    // Only deduplicate if not filtering by specific criteria
+    if (!query.id && !query.watcher) {
+        const uniqueContainers = Object.values(
+            containerList.reduce((acc, container) => {
+                const key = getContainerKey(container);
+                
+                // Always prefer the current running container over historical entries
+                const existing = acc[key];
+                if (!existing || container.status === 'running') {
+                    acc[key] = container;
+                }
+                return acc;
+            }, {})
+        );
+        return uniqueContainers.sort(
+            byValues([
+                [(container) => container.watcher, byString()],
+                [(container) => container.image.registry.name, byString()],
+                [(container) => container.name, byString()],
+                [(container) => container.image.tag.value, byString()],
+            ])
+        );
+    }
+    
+    // Return full list when filtering
+    return containerList.sort(
         byValues([
             [(container) => container.watcher, byString()],
             [(container) => container.image.registry.name, byString()],

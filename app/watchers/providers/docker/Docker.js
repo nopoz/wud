@@ -117,9 +117,9 @@ function getRegistry(registryName) {
 
 /**
  * Get old containers to prune.
- * @param newContainers
- * @param containersFromTheStore
- * @returns {*[]|*}
+ * @param {Array} newContainers
+ * @param {Array} containersFromTheStore
+ * @returns {Array}
  */
 function getOldContainers(newContainers, containersFromTheStore) {
     if (!containersFromTheStore || !newContainers) {
@@ -127,7 +127,12 @@ function getOldContainers(newContainers, containersFromTheStore) {
     }
     return containersFromTheStore.filter((containerFromStore) => {
         const isContainerStillToWatch = newContainers
-            .find((newContainer) => newContainer.id === containerFromStore.id);
+            .find((newContainer) => 
+                newContainer.id === containerFromStore.id ||
+                (newContainer.name === containerFromStore.name && 
+                 newContainer.watcher === containerFromStore.watcher &&
+                 newContainer.image.registry.name === containerFromStore.image.registry.name)
+            );
         return isContainerStillToWatch === undefined;
     });
 }
@@ -141,15 +146,23 @@ function pruneOldContainers(newContainers, containersFromTheStore) {
     const containersToRemove = getOldContainers(newContainers, containersFromTheStore);
 
     containersToRemove.forEach((containerToRemove) => {
-        storeContainer.deleteContainer(containerToRemove.id);
-        console.log(`Pruned container ${containerToRemove.id} (${containerToRemove.name})`);
+        // Only remove if we don't have a running container with this ID
+        const hasRunningReplacement = newContainers.some(c => 
+            c.id === containerToRemove.id && c.status === 'running'
+        );
+        
+        if (!hasRunningReplacement) {
+            storeContainer.deleteContainer(containerToRemove.id);
+            console.log(`Pruned container ${containerToRemove.id} (${containerToRemove.name})`);
+        }
     });
 
-    // Re-validate pruned containers
+    // Re-validate pruned containers but preserve running ones
     const validIds = newContainers.map(c => c.id);
     storeContainer.getContainers({ watcher: this.name })
         .forEach(c => {
-            if (!validIds.includes(c.id)) {
+            const newContainer = newContainers.find(nc => nc.id === c.id);
+            if (!validIds.includes(c.id) && (!newContainer || newContainer.status !== 'running')) {
                 storeContainer.deleteContainer(c.id);
             }
         });
@@ -471,11 +484,6 @@ class Docker extends Component {
         }
     }
 
-/**
- * Watch a Container.
- * @param container
- * @returns {Promise<*>}
- */
 async watchContainer(container) {
     const logContainer = this.log.child({ container: fullName(container) });
     const containerWithResult = container;
@@ -486,25 +494,23 @@ async watchContainer(container) {
     logContainer.debug('Start watching');
 
     try {
-        // Avoid pruning running containers
-        const existingContainer = storeContainer.getContainer(container.id);
-        if (existingContainer && existingContainer.status !== 'running') {
+        // Get current running container info
+        const dockerContainer = await this.dockerApi.getContainer(container.id).inspect();
+        
+        if (dockerContainer.State.Status !== 'running') {
             logContainer.info(`Skipping container ${container.id} as it is not running.`);
             storeContainer.deleteContainer(container.id);
             return { container: null, changed: false };
         }
 
+        // Update container with current version info
+        containerWithResult.status = dockerContainer.State.Status;
+        containerWithResult.image.id = dockerContainer.Image;
+        
         // Process version checking logic
-        containerWithResult.result = await this.findNewVersion(container, logContainer);
+        containerWithResult.result = await this.findNewVersion(containerWithResult, logContainer);
 
-        // Check if container needs reinsertion
-        const isPruned = !storeContainer.getContainer(container.id);
-        if (isPruned) {
-            // logContainer.info(`Reinserting container ${container.id}.`); // DEBUG
-            storeContainer.insertContainer(containerWithResult);
-            return this.mapContainerToContainerReport(containerWithResult);
-        }
-
+        // Always update store with current running container state
         const containerReport = this.mapContainerToContainerReport(containerWithResult);
         event.emitContainerReport(containerReport);
         return containerReport;
@@ -639,27 +645,6 @@ async getContainers() {
         }
     }
 
-    /**
-     * Add image detail to Container.
-     * @param container
-     * @param includeTags
-     * @param excludeTags
-     * @param transformTags
-     * @param linkTemplate
-     * @param displayName
-     * @param displayIcon
-     * @returns {Promise<Image>}
-    /**
-     * Add image detail to Container.
-     * @param container
-     * @param includeTags
-     * @param excludeTags
-     * @param transformTags
-     * @param linkTemplate
-     * @param displayName
-     * @param displayIcon
-     * @returns {Promise<Image>}
-     */
     async addImageDetailsToContainer(
         container,
         includeTags,
@@ -675,33 +660,31 @@ async getContainers() {
         try {
             const containerInspect = await this.dockerApi.getContainer(containerId).inspect();
             if (containerInspect.State.Status !== 'running') {
-                // Container exists but isn't running - remove from store if present
                 const containerInStore = storeContainer.getContainer(containerId);
-                if (containerInStore) {
+                if (containerInStore && containerInStore.watcher === this.name) {
                     this.log.debug(`Removing non-running container ${containerId} from store`);
                     storeContainer.deleteContainer(containerId);
                 }
                 return undefined;
             }
         } catch (e) {
-            // Container doesn't exist in Docker anymore
             const containerInStore = storeContainer.getContainer(containerId);
-            if (containerInStore) {
+            if (containerInStore && containerInStore.watcher === this.name) {
                 this.log.debug(`Removing non-existent container ${containerId} from store`);
                 storeContainer.deleteContainer(containerId);
             }
             return undefined;
         }
 
-        // Now check store
+        // Check store for existing container
         const containerInStore = storeContainer.getContainer(containerId);
-        if (containerInStore !== undefined && containerInStore.error === undefined) {
-            // Return it only if it's running
+        if (containerInStore !== undefined && 
+            containerInStore.error === undefined && 
+            containerInStore.watcher === this.name) {
             if (containerInStore.status === 'running') {
                 this.log.debug(`Container ${containerInStore.id} found in store and running`);
                 return containerInStore;
             }
-            // Otherwise remove it and let it be recreated
             this.log.debug(`Removing non-running container ${containerId} from store`);
             storeContainer.deleteContainer(containerId);
         }
@@ -729,9 +712,9 @@ async getContainers() {
                 this.log.warn(`Cannot get a reliable tag for this image [${imageNameToParse}]`);
                 return Promise.resolve();
             }
-            // Get the first repo tag (better than nothing ;)
             [imageNameToParse] = image.RepoTags;
         }
+        
         const parsedImage = parse(imageNameToParse);
         const tagName = parsedImage.tag || 'latest';
         const parsedTag = parseSemver(transformTag(transformTags, tagName));
@@ -740,9 +723,11 @@ async getContainers() {
             container.Labels[wudWatchDigest],
             isSemver,
         );
+        
         if (!isSemver && !watchDigest) {
             this.log.warn('Image is not a semver and digest watching is disabled so wud won\'t report any update. Please review the configuration to enable digest watching for this container or exclude this container from being watched');
         }
+
         return normalizeContainer({
             id: containerId,
             name: containerName,
