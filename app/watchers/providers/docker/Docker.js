@@ -43,7 +43,7 @@ function getRegistries() {
  * @param tags
  * @returns {*}
  */
-function getTagCandidates(container, tags, logContainer) {
+function getTagCandidates(container, tags, logContainer, imageDigestMap = new Map()) {
     let filteredTags = tags;
 
     // Match include tag regex
@@ -52,41 +52,27 @@ function getTagCandidates(container, tags, logContainer) {
         filteredTags = filteredTags.filter((tag) => includeTagsRegex.test(tag));
     }
 
-    // Match exclude tag regex
-    if (container.excludeTags) {
-        const excludeTagsRegex = new RegExp(container.excludeTags);
-        filteredTags = filteredTags.filter((tag) => !excludeTagsRegex.test(tag));
-    }
-
-    // Semver image -> find higher semver tag
-    if (container.image.tag.semver) {
-        if (filteredTags.length === 0) {
-            logContainer.warn('No tags found after filtering; check you regex filters');
-        }
-
-        // Keep semver only
-        filteredTags = filteredTags
-            .filter((tag) => parseSemver(transformTag(container.transformTags, tag)) !== null);
-
-        // Keep only greater semver
-        filteredTags = filteredTags
-            .filter((tag) => isGreaterSemver(
-                transformTag(container.transformTags, tag),
-                transformTag(container.transformTags, container.image.tag.value),
-            ));
-
-        // Apply semver sort desc
-        filteredTags.sort((t1, t2) => {
-            const greater = isGreaterSemver(
-                transformTag(container.transformTags, t2),
-                transformTag(container.transformTags, t1),
-            );
-            return greater ? 1 : -1;
-        });
+    const matchingDigest = imageDigestMap?.get(container.image.digest.value);
+    
+    if (matchingDigest) {
+        filteredTags = tags.filter((tag) => matchingDigest.tags.includes(tag));
     } else {
-        // Non semver tag -> do not propose any other registry tag
-        filteredTags = [];
+        // Fallback exclusion of "latest" unless it matches `includeTags`
+        if (container.includeTags && !new RegExp(container.includeTags).test('latest')) {
+            filteredTags = filteredTags.filter((tag) => tag !== 'latest');
+        }
     }
+
+    if (filteredTags.length === 0) {
+        logContainer.warn('No tags found after filtering. Check regex filters.');
+    }
+
+    filteredTags = filteredTags
+        .filter((tag) => parseSemver(transformTag(container.transformTags, tag)) !== null)
+        .sort((t1, t2) =>
+            isGreaterSemver(transformTag(container.transformTags, t2), transformTag(container.transformTags, t1)) ? 1 : -1
+        );
+
     return filteredTags;
 }
 
@@ -305,7 +291,14 @@ class Docker extends Component {
         } else {
             options.socketPath = this.configuration.socket;
         }
+
         this.dockerApi = new Dockerode(options);
+
+        if (!this.dockerApi || typeof this.dockerApi.getContainer !== 'function') {
+            throw new Error('Failed to initialize Docker API or getContainer method is unavailable.');
+        }
+
+        this.log.info('Docker API successfully initialized.');
     }
 
     /**
@@ -594,56 +587,58 @@ async getContainers() {
     async findNewVersion(container, logContainer) {
         const registryProvider = getRegistry(container.image.registry.name);
         const result = { tag: container.image.tag.value };
+
         if (!registryProvider) {
             logContainer.error(`Unsupported registry (${container.image.registry.name})`);
-        } else {
-            // Get all available tags
-            const tags = await registryProvider.getTags(container.image);
-
-            // Get candidate tags (based on tag name)
-            const tagsCandidates = getTagCandidates(container, tags, logContainer);
-
-            // Must watch digest? => Find local/remote digests on registry
-            if (container.image.digest.watch && container.image.digest.repo) {
-                // If we have a tag candidate BUT we also watch digest
-                // (case where local=`mongo:8` and remote=`mongo:8.0.0`),
-                // Then get the digest of the tag candidate
-                // Else get the digest of the same tag as the local one
-                const imageToGetDigestFrom = JSON.parse(JSON.stringify(container.image));
-                if (tagsCandidates.length > 0) {
-                    [imageToGetDigestFrom.tag.value] = tagsCandidates;
-                }
-
-                const remoteDigest = await registryProvider.getImageManifestDigest(
-                    imageToGetDigestFrom,
-                );
-
-                result.digest = remoteDigest.digest;
-                result.created = remoteDigest.created;
-
-                if (remoteDigest.version === 2) {
-                    // Regular v2 manifest => Get manifest digest
-                    /*  eslint-disable no-param-reassign */
-                    const digestV2 = await registryProvider.getImageManifestDigest(
-                        imageToGetDigestFrom,
-                        container.image.digest.repo,
-                    );
-                    container.image.digest.value = digestV2.digest;
-                } else {
-                    // Legacy v1 image => take Image digest as reference for comparison
-                    const image = await this.dockerApi.getImage(container.image.id).inspect();
-                    container.image.digest.value = image.Config.Image === '' ? undefined : image.Config.Image;
-                }
-            }
-
-            // The first one in the array is the highest
-            if (tagsCandidates && tagsCandidates.length > 0) {
-                [result.tag] = tagsCandidates;
-            }
-
             return result;
         }
+
+        // Get all available tags
+        const tags = await registryProvider.getTags(container.image);
+
+        // Populate imageDigestMap only when necessary
+        let imageDigestMap = null;
+        if (container.image.digest.watch) {
+            imageDigestMap = new Map();
+
+            for (const tag of tags) {
+                const digest = await registryProvider.getImageManifestDigest({
+                    ...container.image,
+                    tag: { value: tag },
+                });
+
+                if (digest) {
+                    if (!imageDigestMap.has(digest.digest)) {
+                        imageDigestMap.set(digest.digest, { tags: [] });
+                    }
+                    imageDigestMap.get(digest.digest).tags.push(tag);
+                }
+            }
+        }
+
+        // Get candidate tags using the digest map if applicable
+        const tagsCandidates = getTagCandidates(container, tags, logContainer, imageDigestMap);
+
+        if (container.image.digest.watch && container.image.digest.repo) {
+            const imageToGetDigestFrom = JSON.parse(JSON.stringify(container.image));
+            if (tagsCandidates.length > 0) {
+                [imageToGetDigestFrom.tag.value] = tagsCandidates;
+            }
+
+            const remoteDigest = await registryProvider.getImageManifestDigest(imageToGetDigestFrom);
+
+            result.digest = remoteDigest.digest;
+            result.created = remoteDigest.created;
+        }
+
+        // The first one in the array is the highest
+        if (tagsCandidates && tagsCandidates.length > 0) {
+            [result.tag] = tagsCandidates;
+        }
+
+        return result;
     }
+
 
     async addImageDetailsToContainer(
         container,
