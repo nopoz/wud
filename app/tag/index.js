@@ -62,7 +62,6 @@ function diff(version1, version2) {
  * @return {*}
  */
 function transform(transformFormula, originalTag) {
-    // No formula ? return original tag value
     if (!transformFormula || transformFormula === '') {
         return originalTag;
     }
@@ -72,6 +71,11 @@ function transform(transformFormula, originalTag) {
         const placeholders = transformFormulaSplit[1].match(/\$\d+/g);
         const originalTagMatches = originalTag.match(transformRegex);
 
+        if (!originalTagMatches) {
+            log.warn(`Tag [${originalTag}] does not match the transformation regex [${transformRegex}]. Returning original tag.`);
+            return originalTag;
+        }
+
         let transformedTag = transformFormulaSplit[1];
         placeholders.forEach((placeholder) => {
             const placeholderIndex = Number.parseInt(placeholder.substring(1), 10);
@@ -79,8 +83,7 @@ function transform(transformFormula, originalTag) {
         });
         return transformedTag;
     } catch (e) {
-        // Upon error; log & fallback to original tag value
-        log.warn(`Error when applying transform function [${transformFormula}]to tag [${originalTag}]`);
+        log.warn(`Error when applying transform function [${transformFormula}] to tag [${originalTag}]`);
         log.debug(e);
         return originalTag;
     }

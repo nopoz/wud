@@ -98,3 +98,7 @@ typings/
 
 # Ignore loki file
 .store
+
+# ignore Docker compose files in root
+docker-compose.yml
+
