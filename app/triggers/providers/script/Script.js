@@ -6,6 +6,9 @@ const storeContainer = require('../../../store/container');
 const Docker = require('dockerode');
 const fs = require('fs');
 const registry = require('../../../registry');
+const EventEmitter = require('events');
+
+const scriptOutputEmitter = new EventEmitter();
 
 /**
  * Script Trigger implementation
@@ -364,122 +367,118 @@ async waitForSpecificWatcherToComplete(watcherName, timeout = 60000) {
         });
     }
 
-executeScript(container, actionType) {
-        const { path, timeout } = this.configuration;
-        const name = container.name || 'unknown';
-        const fullImageName = container.image.name || 'unknown';
-        const imageNameParts = fullImageName.split('/');
-        const imageName = imageNameParts[imageNameParts.length - 1];
-        const localValue = container.updateKind?.localValue || 'unknown';
-        const remoteValue = container.updateKind?.remoteValue || 'unknown';
-        const watcher = container.watcher || 'unknown';
-        const compose_project = container.compose_project || 'unknown';
-        const command = shell([path, name, imageName, localValue, remoteValue, watcher, compose_project]);
+async executeScript(container, actionType) {
+    const { path, timeout } = this.configuration;
+    const name = container.name || 'unknown';
+    const fullImageName = container.image.name || 'unknown';
+    const imageNameParts = fullImageName.split('/');
+    const imageName = imageNameParts[imageNameParts.length - 1];
+    const localValue = container.updateKind?.localValue || 'unknown';
+    const remoteValue = container.updateKind?.remoteValue || 'unknown';
+    const watcher = container.watcher || 'unknown';
+    const compose_project = container.compose_project || 'unknown';
+    const command = shell([path, name, imageName, localValue, remoteValue, watcher, compose_project]);
 
-        // Prepare header
-        const header = [
-            '',
-            '##############################################################################',
-            '#                             SCRIPT EXECUTION START                           #',
-            '##############################################################################',
-            `# Container: ${name}`,
-            '# Command Parameters:',
-            `#   - Container Name: ${name}`,
-            `#   - Image Name: ${imageName}`,
-            `#   - Current Version: ${localValue}`,
-            `#   - Target Version: ${remoteValue}`,
-            `#   - Watcher: ${watcher}`,
-            `#   - Compose Project: ${compose_project}`,
-            '#',
-            `# Full Command: ${command}`,
-            '# Script Output:',
-            '------------------------------------------------------------------------------',
-            ''
-        ].join('\n');
+    // Prepare header
+    const header = [
+        '',
+        '##############################################################################',
+        '#                             SCRIPT EXECUTION START                         #',
+        '##############################################################################',
+        `# Container: ${name}`,
+        '# Command Parameters:',
+        `#   - Container Name: ${name}`,
+        `#   - Image Name: ${imageName}`,
+        `#   - Current Version: ${localValue}`,
+        `#   - Target Version: ${remoteValue}`,
+        `#   - Watcher: ${watcher}`,
+        `#   - Compose Project: ${compose_project}`,
+        '#',
+        `# Full Command: ${command}`,
+        '# Script Output:',
+        '------------------------------------------------------------------------------',
+        ''
+    ].join('\n');
 
-        console.log(header);
+    // Helper function to emit log
+    const emitLog = (message) => {
+        console.log(message.trim()); // Keep console logging
+        scriptOutputEmitter.emit('output', {
+            containerId: container.id,
+            containerName: container.name,
+            message: message,
+            timestamp: Date.now()
+        });
+    };
 
-        return new Promise((resolve, reject) => {
-            // Create buffers for collecting output
-            let stdoutBuffer = [];
-            let stderrBuffer = [];
-            
-            const process = exec(command, { timeout }, (error, stdout, stderr) => {
-                if (error) {
-                    if (error.killed && error.signal === 'SIGTERM') {
-                        const timeoutMessage = `Script execution timed out after ${timeout} ms`;
-                        console.error(`# ERROR: ${timeoutMessage}`);
-                        return reject(new Error(timeoutMessage));
-                    } else {
-                        console.error(`# ERROR: Script execution failed: ${error.message}`);
-                        return reject(error);
-                    }
+    // Emit header
+    emitLog(header);
+
+    return new Promise((resolve, reject) => {
+        const process = exec(command, { timeout }, (error) => {
+            if (error && error.killed && error.signal === 'SIGTERM') {
+                const timeoutMessage = `Script execution timed out after ${timeout} ms`;
+                emitLog(`# ERROR: ${timeoutMessage}\n`);
+                return reject(new Error(timeoutMessage));
+            }
+        });
+
+        process.stdout?.on('data', (data) => {
+            const lines = data.toString().split('\n');
+            lines.forEach(line => {
+                if (line.trim()) {
+                    emitLog(`# [${name}] ${line.trim()}\n`);
                 }
-            });
-
-            // Handle stdout data with buffering
-            process.stdout?.on('data', (data) => {
-                const lines = data.toString().split('\n');
-                lines.forEach(line => {
-                    if (line.trim()) {
-                        const formattedLine = `# [${name}] ${line.trim()}`;
-                        stdoutBuffer.push(formattedLine);
-                        console.log(formattedLine);
-                    }
-                });
-            });
-
-            // Handle stderr data with buffering
-            process.stderr?.on('data', (data) => {
-                const lines = data.toString().split('\n');
-                lines.forEach(line => {
-                    if (line.trim()) {
-                        const formattedLine = `# [${name}] ERROR: ${line.trim()}`;
-                        stderrBuffer.push(formattedLine);
-                        console.error(formattedLine);
-                    }
-                });
-            });
-
-            // Handle process completion
-            process.on('close', (code, signal) => {
-                // Prepare footer content
-                const footer = [
-                    '------------------------------------------------------------------------------',
-                    '# Execution Summary:',
-                    `# Container: ${name}`,
-                    `# Exit Code: ${code !== null ? code : 'N/A'}`,
-                    signal ? `# Signal: ${signal}` : null,
-                    code === 0 ? '# Status: Success' : null,
-                    '##############################################################################',
-                    '#                             SCRIPT EXECUTION END                             #',
-                    '##############################################################################',
-                    ''
-                ].filter(Boolean).join('\n');
-
-                console.log(footer);
-
-                if (code !== 0 && code !== null) {
-                    const message = `Script exited with code ${code}`;
-                    console.error(`# ERROR: ${message}`);
-                    reject(new Error(message));
-                } else if (signal) {
-                    const message = `Script was terminated by signal ${signal}`;
-                    console.error(`# ERROR: ${message}`);
-                    reject(new Error(message));
-                } else {
-                    // Join all output with newlines and resolve
-                    resolve(stdoutBuffer.join('\n'));
-                }
-            });
-
-            // Handle process errors
-            process.on('error', (err) => {
-                console.error(`# ERROR: Process error: ${err.message}`);
-                reject(err);
             });
         });
-    }
+
+        process.stderr?.on('data', (data) => {
+            const lines = data.toString().split('\n');
+            lines.forEach(line => {
+                if (line.trim()) {
+                    emitLog(`# [${name}] ERROR: ${line.trim()}\n`);
+                }
+            });
+        });
+
+        process.on('close', (code, signal) => {
+            const footer = [
+                '------------------------------------------------------------------------------',
+                '# Execution Summary:',
+                `# Container: ${name}`,
+                `# Exit Code: ${code !== null ? code : 'N/A'}`,
+                signal ? `# Signal: ${signal}` : null,
+                code === 0 ? '# Status: Success' : null,
+                '##############################################################################',
+                '#                             SCRIPT EXECUTION END                           #',
+                '##############################################################################',
+                ''
+            ].filter(Boolean).join('\n');
+
+            emitLog(footer);
+            
+            scriptOutputEmitter.emit('complete', {
+                containerId: container.id,
+                containerName: container.name,
+                timestamp: Date.now()
+            });
+
+            if (code !== 0 && code !== null) {
+                reject(new Error(`Script exited with code ${code}`));
+            } else if (signal) {
+                reject(new Error(`Script was terminated by signal ${signal}`));
+            } else {
+                resolve();
+            }
+        });
+
+        process.on('error', (err) => {
+            const errorMsg = `# ERROR: Process error: ${err.message}\n`;
+            emitLog(errorMsg);
+            reject(err);
+        });
+    });
+}
 
     setContainerNotification(container, message, level) {
         if (container) {
@@ -490,3 +489,4 @@ executeScript(container, actionType) {
 }
 
 module.exports = ScriptTrigger;
+module.exports.scriptOutputEmitter = scriptOutputEmitter;

@@ -5,11 +5,15 @@ const registry = require('../registry');
 const { getServerConfiguration, getTriggerConfigurations } = require('../configuration');
 const HttpTrigger = require('../triggers/providers/http/Http');
 const ScriptTrigger = require('../triggers/providers/script/Script');
+const { scriptOutputEmitter } = ScriptTrigger;
 
 const router = express.Router();
 
 const serverConfiguration = getServerConfiguration();
 const triggerConfigurations = getTriggerConfigurations();
+
+const recentContainerUpdates = new Map();
+const LOGS_RETENTION_TIME = 5 * 60 * 1000; // Keep logs for 5 minutes
 
 /**
  * Initialize a trigger based on its type.
@@ -104,6 +108,15 @@ async function installContainer(req, res) {
         return res.sendStatus(404);
     }
 
+    // Initialize container logs storage
+    recentContainerUpdates.set(id, {
+        name: container.name,
+        logs: []
+    });
+
+    // Set up event handlers before starting the installation
+    const handlers = setupScriptHandlers(id, container.name);
+
     try {
         const trigger = initializeTrigger(triggerType, triggerConfig);
         await trigger.install(container);
@@ -118,18 +131,14 @@ async function installContainer(req, res) {
 
         res.status(200).json({ success: true });
     } catch (e) {
-        // Log the error separately
         console.error(`Error installing container ${id}: ${e.message}`);
 
-        // Set error notification in container
         container.notification = {
             message: `Update for ${container.name} failed: ${e.message}`,
             level: 'error',
         };
-        // Update the container in the store
         storeContainer.updateContainer(container);
 
-        // Return error response
         res.status(500).json({
             error: `Error when installing container ${id} (${e.message})`,
         });
@@ -256,6 +265,124 @@ function getContainersFromStore(query) {
 }
 
 /**
+ * Stream script execution logs for a container installation.
+ * @param {Object} req
+ * @param {Object} res
+ */
+function streamInstallLogs(req, res) {
+    const { id } = req.params;
+    
+    // Get container info
+    const containerUpdate = recentContainerUpdates.get(id);
+    
+    if (!containerUpdate) {
+        return res.status(404).json({ error: 'Container not found' });
+    }
+
+    const containerName = containerUpdate.name;
+
+    // Set up SSE headers
+    res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no' // Disable nginx buffering
+    });
+
+    let closed = false;
+
+    // Send initial connection message
+    res.write(`data: ${JSON.stringify({ message: "Connected to log stream" })}\n\n`);
+
+    // Send all existing logs in order
+    const existingLogs = containerUpdate.logs || [];
+    const sortedLogs = [...existingLogs].sort((a, b) => a.timestamp - b.timestamp);
+    
+    sortedLogs.forEach(log => {
+        if (!closed) {
+            try {
+                res.write(`data: ${JSON.stringify(log)}\n\n`);
+            } catch (error) {
+                console.warn('Error writing log:', error);
+                closed = true;
+            }
+        }
+    });
+
+    // Set up handlers for new logs
+    const { onOutput, onComplete } = setupScriptHandlers(id, containerName);
+
+    // Override the output handler to also send logs to the client
+    const streamOutput = (data) => {
+        if (!closed && (data.containerId === id || data.containerName === containerName)) {
+            try {
+                res.write(`data: ${JSON.stringify(data)}\n\n`);
+            } catch (error) {
+                console.warn('Error writing to stream:', error);
+                closed = true;
+                cleanup();
+            }
+        }
+    };
+
+    // Add the streaming handler
+    scriptOutputEmitter.on('output', streamOutput);
+
+    const cleanup = () => {
+        closed = true;
+        scriptOutputEmitter.off('output', streamOutput);
+        scriptOutputEmitter.off('output', onOutput);
+        scriptOutputEmitter.off('complete', onComplete);
+    };
+
+    // Clean up on client disconnect or errors
+    req.on('close', cleanup);
+    req.on('error', (error) => {
+        console.error('SSE connection error:', error);
+        cleanup();
+    });
+}
+
+function storeLog(containerId, containerName, message) {
+    if (!recentContainerUpdates.has(containerId)) {
+        recentContainerUpdates.set(containerId, {
+            name: containerName,
+            logs: []
+        });
+    }
+    // Add the log with timestamp
+    recentContainerUpdates.get(containerId).logs.push({
+        containerId,
+        containerName,
+        message,
+        timestamp: Date.now()
+    });
+}
+
+function setupScriptHandlers(id, containerName) {
+    const onOutput = (data) => {
+        if (data.containerId === id || data.containerName === containerName) {
+            storeLog(id, containerName, data.message);
+        }
+    };
+
+    const onComplete = (data) => {
+        if (data.containerId === id || data.containerName === containerName) {
+            setTimeout(() => {
+                recentContainerUpdates.delete(id);
+            }, 5 * 60 * 1000); // Keep logs for 5 minutes after completion
+        }
+    };
+
+    // Register handlers
+    scriptOutputEmitter.on('output', onOutput);
+    scriptOutputEmitter.on('complete', onComplete);
+
+    return { onOutput, onComplete };
+}
+
+
+/**
  * Initialize the router.
  * @returns {Router}
  */
@@ -268,6 +395,7 @@ function init() {
     router.post('/:id/watch', watchContainer);
     router.post('/:id/install', installContainer);
     router.post('/:id/clear-notification', clearContainerNotification);
+    router.get('/:id/install/logs', streamInstallLogs);
     return router;
 }
 

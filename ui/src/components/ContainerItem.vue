@@ -187,6 +187,12 @@
         </v-card-actions>
       </div>
     </v-expand-transition>
+    <script-output-dialog
+    ref="scriptOutput"
+    v-model="showScriptOutput"
+    :container-id="container.id"
+    @update-complete="handleUpdateComplete"
+    />
   </v-card>
 </template>
 
@@ -197,6 +203,7 @@ import ContainerImage from "@/components/ContainerImage";
 import ContainerUpdate from "@/components/ContainerUpdate";
 import ContainerError from "@/components/ContainerError";
 import { getRegistryProviderIcon } from "@/services/registry";
+import ScriptOutputDialog from './ScriptOutputDialog.vue';
 
 export default {
   components: {
@@ -204,6 +211,7 @@ export default {
     ContainerImage,
     ContainerUpdate,
     ContainerError,
+    ScriptOutputDialog,
   },
 
   props: {
@@ -218,6 +226,8 @@ export default {
       dialogDelete: false,
       tab: 0,
       deleteEnabled: false,
+      showScriptOutput: false,
+      updateInProgress: false,
     };
   },
   computed: {
@@ -314,6 +324,23 @@ export default {
   },
 
   methods: {
+    async handleUpdateComplete() {
+      console.log('Update complete, preparing to refresh...');
+      
+      try {
+        // Fetch updated container data
+        await axios.get(`/api/containers/${this.container.id}`);
+        
+        // Close dialog and clean up (will happen via button click now)
+        window.location.reload();
+      } catch (error) {
+        console.error('Error in handleUpdateComplete:', error);
+        window.location.reload();
+      } finally {
+        this.updateInProgress = false;
+      }
+    },
+
     async deleteContainer() {
       this.$emit("delete-container");
     },
@@ -343,27 +370,36 @@ export default {
         return;
       }
 
+      if (this.updateInProgress) {
+        return;
+      }
+
+      this.updateInProgress = true;
+
       try {
+        this.showScriptOutput = true;
         this.$root.$emit('notify', `Update started for ${this.container.displayName}.`, 'info', 5000);
 
-        const response = await axios.post(`/api/containers/${this.container.id}/install`);
-
-        setTimeout(() => {
-          this.refreshContainer(); // Refresh page after update
-        }, 2000);
-
-        const message = response.data?.message || `Update for ${this.container.displayName} completed. Refreshing containers list...`;
-        this.$root.$emit('notify', message, 'success', 7000);
+        await axios.post(`/api/containers/${this.container.id}/install`);
+        
       } catch (error) {
+        this.updateInProgress = false;
         const errorMessage = error.response?.data?.error || error.message || 'Unknown error';
         this.$root.$emit('notify', `Failed to install ${this.container.displayName}: ${errorMessage}`, 'error', 5000);
+        this.showScriptOutput = false;
       }
     },
+
     refreshContainer() {
-      console.log('Refreshing container data...');
-      this.$router.go(0); // Reload the current route to refresh the page
-    },
-  },
+      // First disconnect the event source if it exists
+      if (this.$refs.scriptOutput?.eventSource) {
+        this.$refs.scriptOutput.disconnectEventStream();
+      }
+      
+      // Use window.location.reload() instead of router.go(0)
+      window.location.reload();
+    }
+},
   mounted() {
     this.deleteEnabled = this.$serverConfig.feature.delete;
     this.$root.$on('refresh-containers', this.refreshContainer);
