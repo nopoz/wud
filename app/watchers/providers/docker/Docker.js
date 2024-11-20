@@ -477,7 +477,7 @@ class Docker extends Component {
         }
     }
 
-async watchContainer(container) {
+async watchContainer(container, skipRegistryCheck = false) {
     const logContainer = this.log.child({ container: fullName(container) });
     const containerWithResult = container;
 
@@ -499,9 +499,12 @@ async watchContainer(container) {
         // Update container with current version info
         containerWithResult.status = dockerContainer.State.Status;
         containerWithResult.image.id = dockerContainer.Image;
-        
+
         // Process version checking logic
-        containerWithResult.result = await this.findNewVersion(containerWithResult, logContainer);
+        if (!skipRegistryCheck) {
+            // Only perform registry checks if skipRegistryCheck is false
+            containerWithResult.result = await this.findNewVersion(containerWithResult, logContainer);
+        }
 
         // Always update store with current running container state
         const containerReport = this.mapContainerToContainerReport(containerWithResult);
@@ -518,7 +521,7 @@ async watchContainer(container) {
      * Get all containers to watch.
      * @returns {Promise<unknown[]>}
      */
-async getContainers() {
+    async getContainers() {
         const listContainersOptions = {};
         if (this.configuration.watchall) {
             listContainersOptions.all = true;
@@ -577,6 +580,43 @@ async getContainers() {
 
         // Return the deduplicated and pruned containers
         return containersWithImage;
+    }
+
+    /**
+     * Update the status of a specific container without querying external registries.
+     * @param {Object} container - The container object to update.
+     * @returns {Object|null} - The updated container object or null if the container is no longer running.
+     */
+    async updateContainerStatus(container) {
+        const logContainer = this.log.child({ container: fullName(container) });
+
+        try {
+            // Get the latest container info from Docker API
+            const dockerContainer = await this.dockerApi.getContainer(container.id).inspect();
+
+            if (dockerContainer.State.Status !== 'running') {
+                logContainer.info(`Container ${container.name} is no longer running.`);
+                storeContainer.deleteContainer(container.id);
+                return null;
+            }
+
+            // Update container status and image ID
+            container.status = dockerContainer.State.Status;
+            container.image.id = dockerContainer.Image;
+
+            // Check if the image ID has changed, indicating an update
+            if (container.image.id !== dockerContainer.Image) {
+                logContainer.info(`Container ${container.name} has a new image ID.`);
+            }
+
+            // Update the store with the new container data
+            const updatedContainer = storeContainer.updateContainer(container);
+
+            return updatedContainer;
+        } catch (error) {
+            logContainer.error(`Error updating container ${container.name}: ${error.message}`);
+            throw error;
+        }
     }
 
     /**

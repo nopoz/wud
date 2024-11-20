@@ -193,6 +193,26 @@
     :container-id="container.id"
     @update-complete="handleUpdateComplete"
     />
+  <v-dialog
+    v-model="showUpdateProgress"
+    persistent
+    max-width="400px"
+  >
+    <v-card>
+      <v-card-text class="pa-4">
+        <div class="d-flex align-center mb-3">
+          <v-progress-circular
+            indeterminate
+            color="primary"
+            size="24"
+            class="mr-3"
+          ></v-progress-circular>
+          <span class="text-body-1">Waiting for container update to complete...</span>
+        </div>
+        <div class="text-caption grey--text">
+          The script has completed successfully. Waiting for the container to finish updating before refreshing the view.
+        </div>
+      </v-card-text>
   </v-card>
 </template>
 
@@ -228,6 +248,8 @@ export default {
       deleteEnabled: false,
       showScriptOutput: false,
       updateInProgress: false,
+      showUpdateProgress: false,
+      updateCheckInterval: null
     };
   },
   computed: {
@@ -324,20 +346,121 @@ export default {
   },
 
   methods: {
-    async handleUpdateComplete() {
-      console.log('Update complete, preparing to refresh...');
-      
+    async checkContainerUpdate() {
       try {
-        // Fetch updated container data
-        await axios.get(`/api/containers/${this.container.id}`);
+        const response = await axios.get(`/api/containers/${this.container.id}`, {
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
         
-        // Close dialog and clean up (will happen via button click now)
-        window.location.reload();
+        if (response.data && !response.data.updateAvailable) {
+          // Container update detected
+          this.showUpdateProgress = false;
+          clearInterval(this.updateCheckInterval);
+          
+          // Show success message
+          this.$root.$emit('notify', 
+            'Container update completed successfully. Refreshing view...', 
+            'success', 
+            3000
+          );
+          
+          // Brief delay then refresh
+          setTimeout(() => {
+            window.location.replace(window.location.href);
+          }, 2000);
+        }
+      } catch (error) {
+        console.error('Error checking container update:', error);
+      }
+    },
+
+    async handleUpdateComplete() {
+      console.log('Script completed, monitoring update status...');
+      this.showScriptOutput = false;
+      this.showUpdateProgress = true;
+
+      try {
+        // Wait a moment for the update to start
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // Store the original image ID
+        const originalImageId = this.container.image.id;
+        const containerName = this.container.name;
+        const watcherName = this.container.watcher;
+
+        let attempts = 0;
+        const maxAttempts = 30;
+
+        const checkUpdate = async () => {
+          try {
+            // Call the new refresh endpoint
+            const response = await axios.post('/api/containers/refresh', null, {
+              params: {
+                name: containerName,
+                watcher: watcherName
+              },
+              headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+              }
+            });
+
+            const updatedContainer = response.data;
+
+            console.log('Checking container state:', {
+              currentImageId: updatedContainer?.image?.id,
+              originalImageId: originalImageId,
+              attempt: attempts + 1
+            });
+
+            if (updatedContainer && updatedContainer.image.id !== originalImageId) {
+              console.log('Update detected! New image ID:', updatedContainer.image.id);
+              this.showUpdateProgress = false;
+              clearTimeout(this.updateCheck);
+
+              // Show success and refresh
+              this.$root.$emit('notify',
+                `Container updated successfully to version ${updatedContainer.image.tag.value}`,
+                'success',
+                3000
+              );
+
+              window.location.reload();
+              return;
+            }
+          } catch (error) {
+            console.error('Error checking update:', error);
+          }
+
+          attempts++;
+          if (attempts >= maxAttempts) {
+            this.showUpdateProgress = false;
+            this.$root.$emit('notify',
+              'Please refresh the page to check update status',
+              'info',
+              0
+            );
+            return;
+          }
+
+          // Check again in 5 seconds
+          this.updateCheck = setTimeout(checkUpdate, 5000);
+        };
+
+        // Start checking
+        checkUpdate();
+
       } catch (error) {
         console.error('Error in handleUpdateComplete:', error);
-        window.location.reload();
-      } finally {
-        this.updateInProgress = false;
+        this.showUpdateProgress = false;
+        this.$root.$emit('notify',
+          'Error checking update status. Please refresh the page manually.',
+          'warning',
+          0
+        );
       }
     },
 
@@ -390,23 +513,32 @@ export default {
       }
     },
 
-    refreshContainer() {
-      // First disconnect the event source if it exists
+    async refreshContainer() {
       if (this.$refs.scriptOutput?.eventSource) {
         this.$refs.scriptOutput.disconnectEventStream();
       }
       
-      // Use window.location.reload() instead of router.go(0)
-      window.location.reload();
+      try {
+        // Trigger a watch before refreshing
+        await axios.post('/api/containers/watch');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      } catch (error) {
+        console.error('Error triggering watch:', error);
+      }
+      
+      // Force reload bypassing cache
+      window.location.replace(window.location.href);
     }
 },
   mounted() {
     this.deleteEnabled = this.$serverConfig.feature.delete;
     this.$root.$on('refresh-containers', this.refreshContainer);
   },
-  beforeDestroy() {
-    this.$root.$off('refresh-containers', this.refreshContainer);
-  },
+    beforeDestroy() {
+      if (this.updateCheck) {
+          clearTimeout(this.updateCheck);
+      }
+    }
 };
 </script>
 

@@ -29,7 +29,7 @@ Script execution complete</span></pre>
             color="primary"
             @click="handleClose"
           >
-            {{ error ? 'Close' : 'Close and Refresh View' }}
+            {{ error ? 'Close' : 'Close Script Output' }}
           </v-btn>
         </v-card-actions>
       </div>

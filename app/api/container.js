@@ -64,6 +64,13 @@ function getContainers(req, res) {
     const { query } = req;
     const containers = getContainersFromStore(query);
 
+    // Add cache control headers
+    res.set({
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+    });
+
     const triggersWithInstall = getTriggersWithInstall();
     let installEnabled = false;
 
@@ -81,6 +88,7 @@ function getContainers(req, res) {
 
     res.status(200).json(containersWithInstallFlag);
 }
+
 
 /**
  * Install a container by ID.
@@ -220,6 +228,12 @@ function getContainer(req, res) {
     const container = storeContainer.getContainer(id);
 
     if (container) {
+        // Add cache control headers
+        res.set({
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
         res.status(200).json(container);
     } else {
         res.sendStatus(404);
@@ -381,6 +395,47 @@ function setupScriptHandlers(id, containerName) {
     return { onOutput, onComplete };
 }
 
+async function refreshContainer(req, res) {
+  const { name, watcher } = req.query;
+
+  if (!name || !watcher) {
+    return res.status(400).json({ error: 'Missing name or watcher parameter' });
+  }
+
+  const watcherInstance = getWatchers()[`watcher.docker.${watcher}`];
+  if (!watcherInstance) {
+    return res.status(404).json({ error: `Watcher ${watcher} not found` });
+  }
+
+  try {
+    // Fetch containers watched by this watcher
+    const containers = await watcherInstance.getContainers();
+
+    // Find the container by name
+    const container = containers.find(c => c.name === name);
+    if (!container) {
+      return res.status(404).json({ error: `Container ${name} not found` });
+    }
+
+    // Update container information without querying registries
+    const updatedContainer = await watcherInstance.updateContainerStatus(container);
+
+    // Check if the container is still running
+    if (!updatedContainer) {
+      return res.status(404).json({ error: `Container ${name} is no longer running` });
+    }
+
+    // Update the store with the new container data if not already updated
+    storeContainer.updateContainer(updatedContainer);
+
+    // Return the updated container
+    res.status(200).json(updatedContainer);
+  } catch (error) {
+    console.error(`Error refreshing container ${name}:`, error);
+    res.status(500).json({ error: `Error refreshing container: ${error.message}` });
+  }
+}
+
 
 /**
  * Initialize the router.
@@ -396,6 +451,7 @@ function init() {
     router.post('/:id/install', installContainer);
     router.post('/:id/clear-notification', clearContainerNotification);
     router.get('/:id/install/logs', streamInstallLogs);
+    router.post('/refresh', refreshContainer);
     return router;
 }
 
