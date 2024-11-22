@@ -14,6 +14,31 @@
           </v-list-item-title>
           <v-list-item-subtitle>
             {{ result.tag }}
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn
+                  icon
+                  x-small
+                  v-bind="attrs"
+                  v-on="on"
+                  @click="copyToClipboard('update tag', result.tag)"
+                >
+                  <v-icon small>mdi-clipboard</v-icon>
+                </v-btn>
+              </template>
+              <span class="text-caption">Copy to clipboard</span>
+            </v-tooltip>
+          </v-list-item-subtitle>
+        </v-list-item-content>
+      </v-list-item>
+      <v-list-item v-if="result.link">
+        <v-list-item-avatar>
+          <v-icon color="secondary">mdi-link</v-icon>
+        </v-list-item-avatar>
+        <v-list-item-content>
+          <v-list-item-title>Link</v-list-item-title>
+          <v-list-item-subtitle
+            ><a :href="result.link" target="_blank">{{ result.link }}</a>
           </v-list-item-subtitle>
         </v-list-item-content>
       </v-list-item>
@@ -22,8 +47,9 @@
           <v-icon color="secondary">mdi-function-variant</v-icon>
         </v-list-item-avatar>
         <v-list-item-content>
-          <v-list-item-title>
-            Digest
+          <v-list-item-title> Digest </v-list-item-title>
+          <v-list-item-subtitle>
+            {{ result.digest }}
             <v-tooltip bottom>
               <template v-slot:activator="{ on, attrs }">
                 <v-btn
@@ -31,16 +57,13 @@
                   x-small
                   v-bind="attrs"
                   v-on="on"
-                  @click="copyToClipboard('result digest', result.digest)"
+                  @click="copyToClipboard('update digest', result.digest)"
                 >
                   <v-icon>mdi-clipboard</v-icon>
                 </v-btn>
               </template>
               <span class="text-caption">Copy to clipboard</span>
             </v-tooltip>
-          </v-list-item-title>
-          <v-list-item-subtitle>
-            {{ result.digest }}
           </v-list-item-subtitle>
         </v-list-item-content>
       </v-list-item>
@@ -58,17 +81,6 @@
           <v-list-item-title>Update kind</v-list-item-title>
           <v-list-item-subtitle>
             {{ updateKindFormatted }}
-          </v-list-item-subtitle>
-        </v-list-item-content>
-      </v-list-item>
-      <v-list-item v-if="result.link">
-        <v-list-item-avatar>
-          <v-icon color="secondary">mdi-link</v-icon>
-        </v-list-item-avatar>
-        <v-list-item-content>
-          <v-list-item-title>Link</v-list-item-title>
-          <v-list-item-subtitle
-            ><a :href="result.link" target="_blank">{{ result.link }}</a>
           </v-list-item-subtitle>
         </v-list-item-content>
       </v-list-item>

@@ -1,5 +1,8 @@
 # Changelog
 
+# 7.1.2 (wip)
+- :star: [UI] - Some ux improvements
+
 # 7.1.1
 - :fire: [NTFY] - Fix basic/bearer authentication
 

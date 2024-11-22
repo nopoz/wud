@@ -43,27 +43,30 @@
           </v-chip>
         </span>
       </v-toolbar-title>
+      <v-span v-if="$vuetify.breakpoint.mdAndUp && container.updateAvailable">
+        <v-icon>mdi-arrow-right</v-icon>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <v-chip
+              label
+              outlined
+              :color="newVersionClass"
+              v-bind="attrs"
+              v-on="on"
+              @click="
+                copyToClipboard('container new version', newVersion);
+                $event.stopImmediatePropagation();
+              "
+            >
+              {{ newVersion }}
+              <v-icon right small>mdi-clipboard-outline</v-icon>
+            </v-chip>
+          </template>
+          <span class="text-caption">Copy to clipboard</span>
+        </v-tooltip>
+      </v-span>
+
       <v-spacer />
-      <v-tooltip bottom v-if="$vuetify.breakpoint.mdAndUp">
-        <template v-slot:activator="{ on, attrs }">
-          <v-chip
-            v-if="container.updateAvailable"
-            label
-            outlined
-            :color="newVersionClass"
-            v-bind="attrs"
-            v-on="on"
-            @click="
-              copyToClipboard('container new version', newVersion);
-              $event.stopImmediatePropagation();
-            "
-          >
-            {{ newVersion }}
-            <v-icon right small>mdi-clipboard-outline</v-icon>
-          </v-chip>
-        </template>
-        <span class="text-caption">Copy to clipboard</span>
-      </v-tooltip>
       <v-icon>{{ showDetail ? "mdi-chevron-up" : "mdi-chevron-down" }}</v-icon>
     </v-app-bar>
     <v-expand-transition>
@@ -74,6 +77,14 @@
           v-model="tab"
           ref="tabs"
         >
+          <v-tab v-if="container.result">
+            <span v-if="$vuetify.breakpoint.mdAndUp">Update</span>
+            <v-icon>mdi-package-down</v-icon>
+          </v-tab>
+          <v-tab v-if="container.error">
+            <span v-if="$vuetify.breakpoint.mdAndUp">Error</span>
+            <v-icon>mdi-alert</v-icon>
+          </v-tab>
           <v-tab>
             <span v-if="$vuetify.breakpoint.mdAndUp">Container</span>
             <img
@@ -90,23 +101,9 @@
             <span v-if="$vuetify.breakpoint.mdAndUp">Image</span>
             <v-icon>mdi-package-variant-closed</v-icon>
           </v-tab>
-          <v-tab v-if="container.result">
-            <span v-if="$vuetify.breakpoint.mdAndUp">Update</span>
-            <v-icon>mdi-package-down</v-icon>
-          </v-tab>
-          <v-tab v-if="container.error">
-            <span v-if="$vuetify.breakpoint.mdAndUp">Error</span>
-            <v-icon>mdi-alert</v-icon>
-          </v-tab>
         </v-tabs>
 
         <v-tabs-items v-model="tab">
-          <v-tab-item>
-            <container-detail :container="container" />
-          </v-tab-item>
-          <v-tab-item>
-            <container-image :image="container.image" />
-          </v-tab-item>
           <v-tab-item v-if="container.result">
             <container-update
               :result="container.result"
@@ -117,6 +114,12 @@
           </v-tab-item>
           <v-tab-item v-if="container.error">
             <container-error :error="container.error" />
+          </v-tab-item>
+          <v-tab-item>
+            <container-detail :container="container" />
+          </v-tab-item>
+          <v-tab-item>
+            <container-image :image="container.image" />
           </v-tab-item>
         </v-tabs-items>
 
