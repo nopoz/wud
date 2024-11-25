@@ -19,17 +19,18 @@
         </div>
 
         <v-card-text class="pa-2">
-          <pre ref="logContainer" class="log-output"><template v-for="(log, index) in logs"><span :key="index" :class="getLogClass(log)">{{log.message}}</span></template><span v-if="error" class="error-text">Error: {{ error }}</span><span v-if="isComplete" class="success-text">
-Script execution complete</span></pre>
+          <pre ref="logContainer" class="log-output"><template v-for="(log, index) in logs"><span :key="index" :class="getLogClass(log)">{{log.message}}</span></template><template v-if="error">
+<span class="error-text">Error: {{ error }}</span></template><template v-if="isComplete && scriptExitCode === 0">
+<span class="success-text">Script executed successfully</span></template></pre>
         </v-card-text>
 
-        <v-card-actions v-if="isComplete || error" class="pa-4" style="background-color: #2D2D2D;">
+        <v-card-actions v-if="isComplete || error || scriptExitCode !== null" class="pa-4" style="background-color: #2D2D2D;">
           <v-spacer></v-spacer>
           <v-btn
-            color="primary"
+            :color="scriptExitCode === 0 ? 'primary' : 'error'"
             @click="handleClose"
           >
-            {{ error ? 'Close' : 'Close Script Output' }}
+            {{ scriptExitCode === 0 ? 'Close Script Output' : 'Close' }}
           </v-btn>
         </v-card-actions>
       </div>
@@ -62,7 +63,8 @@ export default {
       maxRetries: 3,
       retryDelay: 500,
       connected: false,
-      firstConnectionEstablished: false
+      firstConnectionEstablished: false,
+      scriptExitCode: null
     };
   },
 
@@ -80,6 +82,8 @@ export default {
   watch: {
     value(newVal) {
       if (newVal) {
+        // Clear everything first
+        this.resetState();
         this.connectionAttempts = 0;
         this.firstConnectionEstablished = false;
         // Add a small delay before first connection attempt
@@ -88,25 +92,26 @@ export default {
         }, 500);
       } else {
         this.disconnectEventStream();
-      }
-    },
-    isComplete(newVal) {
-      console.log('isComplete changed to:', newVal);
-      if (newVal) {
-        console.log('Completion detected in watcher');
-        // Give a small delay before allowing closure
-        setTimeout(() => {
-          this.disconnectEventStream();
-        }, 500);
+        // Also reset state when dialog closes
+        this.resetState();
       }
     }
   },
 
   methods: {
     handleClose() {
+      console.log('Handling dialog close');
+      const success = this.isComplete && !this.error && this.scriptExitCode === 0;
+      
       this.dialogVisible = false;
       this.disconnectEventStream();
-      if (this.isComplete && !this.error) {
+      this.resetState();
+      
+      // Emit dialog-closed event first
+      this.$emit('dialog-closed', { success });
+      
+      // Only emit update-complete if script was successful
+      if (success) {
         this.$emit('update-complete');
       }
     },
@@ -114,9 +119,23 @@ export default {
     close() {
       // Only allow closing via X button if not complete
       if (!this.isComplete && !this.error) {
+        console.log('Closing dialog via X button');
         this.dialogVisible = false;
         this.disconnectEventStream();
+        this.resetState();
+        this.$emit('dialog-closed', { success: false });
       }
+    },
+
+    resetState() {
+      console.log('Resetting state');
+      this.logs = [];
+      this.error = null;
+      this.isComplete = false;
+      this.scriptExitCode = null;
+      this.connectionAttempts = 0;
+      this.firstConnectionEstablished = false;
+      this.disconnectEventStream();
     },
 
     handleComplete() {
@@ -126,20 +145,22 @@ export default {
     },
 
     connectToEventStream() {
+      // Clear any existing event source
       if (this.eventSource) {
         this.disconnectEventStream();
       }
 
+      // Clear existing logs at the start of new connection
+      this.logs = [];
       this.error = null;
-      if (!this.firstConnectionEstablished) {
-        this.logs = [];
-        this.isComplete = false;
-      }
+      this.scriptExitCode = null;
 
       try {
+        console.log('Connecting to event stream...');
         this.eventSource = new EventSource(`/api/containers/${this.containerId}/install/logs`);
         
         this.eventSource.onopen = () => {
+          console.log('Event stream connected');
           this.error = null;
           this.firstConnectionEstablished = true;
           this.connectionAttempts = 0;
@@ -148,22 +169,45 @@ export default {
         this.eventSource.onmessage = (event) => {
           try {
             const logData = JSON.parse(event.data);
-            // Look for script completion in the message
+            console.log('Received log data:', logData); // Debug log
+            
+            // Check for exit code in execution summary
+            if (logData.message && logData.message.includes('Exit Code:')) {
+              const exitCodeMatch = logData.message.match(/Exit Code:\s*(-?\d+)/);
+              if (exitCodeMatch) {
+                this.scriptExitCode = parseInt(exitCodeMatch[1], 10);
+                console.log('Script exit code:', this.scriptExitCode);
+              }
+            }
+            
+            // Look for script completion or error
             if (logData.message && (
               logData.message.includes('SCRIPT EXECUTION END') ||
               logData.message.includes('Successfully executed script')
             )) {
-              this.handleComplete();
+              // Only mark as successful if exit code is 0
+              if (this.scriptExitCode === 0) {
+                this.handleComplete();
+              } else {
+                this.error = `Script failed with exit code ${this.scriptExitCode}`;
+              }
             }
-            this.logs.push(logData);
-            this.scrollToBottom();
+            
+            // Only add the log if it's not a duplicate of the last log
+            const lastLog = this.logs[this.logs.length - 1];
+            if (!lastLog || lastLog.message !== logData.message) {
+              this.logs.push(logData);
+              this.scrollToBottom();
+            }
           } catch (err) {
             console.error('Error parsing log data:', err);
           }
         };
 
         this.eventSource.addEventListener('complete', () => {
-          this.handleComplete();
+          if (this.scriptExitCode === 0) {
+            this.handleComplete();
+          }
         });
 
         this.eventSource.onerror = () => {
