@@ -2,6 +2,7 @@ const { byValues, byString } = require('sort-es');
 
 const express = require('express');
 const nocache = require('nocache');
+const registry = require('../registry');
 
 /**
  * Map a Component to a displayable (api/ui) item.
@@ -23,9 +24,9 @@ function mapComponentToItem(key, component) {
  * @param listFunction
  * @returns {{id: string}[]}
  */
-function mapComponentsToList(listFunction) {
-    return Object.keys(listFunction())
-        .map((key) => mapComponentToItem(key, listFunction()[key]))
+function mapComponentsToList(components) {
+    return Object.keys(components)
+        .map((key) => mapComponentToItem(key, components[key]))
         .sort(byValues([
             [(x) => x.type, byString()],
             [(x) => x.name, byString()],
@@ -37,8 +38,8 @@ function mapComponentsToList(listFunction) {
  * @param req
  * @param res
  */
-function getAll(req, res, listFunction) {
-    res.status(200).json(mapComponentsToList(listFunction));
+function getAll(req, res, kind) {
+    res.status(200).json(mapComponentsToList(registry.getState()[kind]));
 }
 
 /**
@@ -47,9 +48,15 @@ function getAll(req, res, listFunction) {
  * @param res
  * @param listFunction
  */
-function getById(req, res, listFunction) {
-    const { id } = req.params;
-    const component = listFunction()[id];
+function getById(req, res, kind) {
+    const { type, name } = req.params;
+    let id = `${kind}.${type}.${name}`;
+
+    // Hack for registries because id and name are equivalent
+    if (kind === 'registry') {
+        id = `${name}`;
+    }
+    const component = registry.getState()[kind][id];
     if (component) {
         res.status(200).json(mapComponentToItem(id, component));
     } else {
@@ -59,18 +66,19 @@ function getById(req, res, listFunction) {
 
 /**
  * Init the component router.
- * @param listFunction
+ * @param kind
  * @returns {*|Router}
  */
-function init(listFunction) {
+function init(kind) {
     const router = express.Router();
     router.use(nocache());
-    router.get('/', (req, res) => getAll(req, res, listFunction));
-    router.get('/:id', (req, res) => getById(req, res, listFunction));
+    router.get('/', (req, res) => getAll(req, res, kind));
+    router.get('/:type/:name', (req, res) => getById(req, res, kind));
     return router;
 }
 
 module.exports = {
     init,
     mapComponentsToList,
+    getById,
 };

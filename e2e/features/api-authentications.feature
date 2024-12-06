@@ -12,7 +12,7 @@ Feature: WUD Authentications API Exposure
     And response body path $[0].configuration.hash should be .\*.*.
 
   Scenario: WUD must allow to get specific Authentication state
-    When I GET /api/authentications/authentication.basic.john
+    When I GET /api/authentications/basic/john
     Then response code should be 200
     And response body should be valid json
     And response body path $.id should be authentication.basic.john

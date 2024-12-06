@@ -29,7 +29,7 @@ curl http://wud:3000/api/watchers
 This operation lets you get a specific Watcher.
 
 ```bash
-curl http://wud:3000/api/watchers/docker.local
+curl http://wud:3000/api/watchers/docker/local
 
 [
    {
