@@ -252,7 +252,7 @@ class Hass {
             unique_id: entityId,
             object_id: entityId,
             name: name || entityId,
-            device: getHaDevice(),z
+            device: getHaDevice(),
             icon: icon || sanitizeIcon('mdi:docker'),
             entity_picture: 'https://github.com/getwud/wud/raw/main/docs/wud_logo.png',
             state_topic: stateTopic,
