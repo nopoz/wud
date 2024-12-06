@@ -7,4 +7,13 @@ async function getAllTriggers() {
   return response.json();
 }
 
-export { getTriggerIcon, getAllTriggers };
+async function runTrigger({ triggerType, triggerName, container }) {
+  const response = await fetch(`/api/triggers/${triggerType}/${triggerName}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(container),
+  });
+  return response.json();
+}
+
+export { getTriggerIcon, getAllTriggers, runTrigger };

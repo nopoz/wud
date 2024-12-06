@@ -2,7 +2,7 @@
   <v-container fluid>
     <v-row v-for="trigger in triggers" :key="trigger.id">
       <v-col :cols="12" class="pt-2 pb-2">
-        <configuration-item :item="trigger" />
+        <trigger-detail :trigger="trigger" />
       </v-col>
     </v-row>
     <v-row v-if="triggers.length === 0">
@@ -12,7 +12,7 @@
 </template>
 
 <script>
-import ConfigurationItem from "@/components/ConfigurationItem";
+import TriggerDetail from "@/components/TriggerDetail";
 import { getAllTriggers } from "@/services/trigger";
 
 export default {
@@ -22,7 +22,7 @@ export default {
     };
   },
   components: {
-    ConfigurationItem,
+    TriggerDetail,
   },
 
   async beforeRouteEnter(to, from, next) {

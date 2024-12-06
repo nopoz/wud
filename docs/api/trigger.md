@@ -31,7 +31,7 @@ curl http://wud:3000/api/triggers
 This operation lets you get a specific Trigger.
 
 ```bash
-curl http://wud:3000/api/triggers/smtp.gmail
+curl http://wud:3000/api/triggers/smtp/gmail
 
 {
   "id":"smtp.gmail",
@@ -46,4 +46,12 @@ curl http://wud:3000/api/triggers/smtp.gmail
      "to":"xxx@gmail.com"
   }
 }
+```
+
+## Running a trigger
+This operation lets you run a specific Trigger with simulated data.
+
+```bash
+export CONTAINER='{"id":"123456789","name":"container_test","watcher":"watcher_test","updateKind":{"kind":"tag","semverDiff":"patch","localValue":"1.2.3","remoteValue":"1.2.4","result":{"link":"https://my-container/release-notes/"}}}'
+curl -X POST -H "Content-Type: application/json" -d $CONTAINER http://wud:3000/api/triggers/smtp/gmail
 ```

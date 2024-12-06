@@ -1,30 +1,15 @@
-const registry = require('../registry');
 const component = require('./component');
 
-/**
- * Return registered registries.
- * @returns {{id: string}[]}
- */
-function getRegistries() {
-    return registry.getState().registry;
-}
 /**
  * Init Router.
  * @returns {*}
  */
 function init() {
-    return component.init(getRegistries);
-}
-
-/**
- * Get all triggers.
- * @returns {{id: string}[]}
- */
-function getAllRegistries() {
-    return component.mapComponentsToList(getRegistries);
+    const router = component.init('registry');
+    router.get('/:name', (req, res) => component.getById(req, res, 'registry'));
+    return router;
 }
 
 module.exports = {
     init,
-    getAllRegistries,
 };

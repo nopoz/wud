@@ -16,7 +16,7 @@ Feature: WUD Trigger API Exposure
     And response body path $[0].configuration.mock should be mock
 
   Scenario: WUD must allow to get specific Triggers state
-    When I GET /api/triggers/trigger.mock.example
+    When I GET /api/triggers/mock/example
     Then response code should be 200
     And response body should be valid json
     And response body path $.id should be trigger.mock.example
