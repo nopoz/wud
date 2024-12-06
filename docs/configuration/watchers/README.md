@@ -270,7 +270,7 @@ docker run -d --name mariadb --label wud.watch=false mariadb:10.4.5
 <!-- tabs:end -->
 
 ### Include only 3 digits semver tags
-You can filter (by inclusion or inclusion) which versions can be candidates for update.
+You can filter (by inclusion or exclusion) which versions can be candidates for update.
 
 For example, you can indicate that you want to watch x.y.z versions only
 <!-- tabs:start -->
