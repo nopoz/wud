@@ -1,5 +1,6 @@
 const component = require('./component');
 const registry = require('../registry');
+const log = require('../log').child({ component: 'trigger' });
 
 /**
  * Run a specific trigger on a specific container provided in the payload.
@@ -14,12 +15,14 @@ async function runTrigger(req, res) {
 
     const triggerToRun = registry.getState().trigger[`trigger.${triggerType}.${triggerName}`];
     if (!triggerToRun) {
+        log.warn(`No trigger found(type=${triggerType}, name=${triggerName})`);
         res.status(404).json({
             error: `Error when running trigger ${triggerType}.${triggerName} (trigger not found)`,
         });
         return;
     }
     if (!containerToTrigger) {
+        log.warn(`Trigger cannot be executed without container (type=${triggerType}, name=${triggerName})`);
         res.status(400).json({
             error: `Error when running trigger ${triggerType}.${triggerName} (container is undefined)`,
         });
@@ -28,8 +31,10 @@ async function runTrigger(req, res) {
 
     try {
         await triggerToRun.trigger(containerToTrigger);
+        log.info(`Trigger executed with success (type=${triggerType}, name=${triggerName}, container=${JSON.stringify(containerToTrigger)})`);
         res.status(200).json({});
     } catch (e) {
+        log.warn(`Trigger cannot be executed without container (type=${triggerType}, name=${triggerName})`);
         res.status(500).json({
             error: `Error when running trigger ${triggerType}.${triggerName} (${e.message})`,
         });

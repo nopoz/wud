@@ -127,7 +127,7 @@ export default {
       this.isRefreshing = true;
       try {
         const body = await refreshAllContainers();
-        this.$root.$emit("notify", `All containers refreshed`);
+        this.$root.$emit("notify", "All containers refreshed");
         this.$emit("refresh-all-containers", body);
       } catch (e) {
         this.$root.$emit(
