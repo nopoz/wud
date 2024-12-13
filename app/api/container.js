@@ -198,6 +198,12 @@ async function watchContainer(req, res) {
         return res.sendStatus(404);
     }
 
+    // Normalize watcher name if empty (treat as local)
+    let watcherName = container.watcher || '';
+    if (!watcherName.trim()) {
+        watcherName = 'local';
+    }
+
     const watcher = getWatchers()[`watcher.docker.${container.watcher}`];
     if (!watcher) {
         return res.status(500).json({ error: `No provider found for container ${id}` });
@@ -352,8 +358,11 @@ function streamInstallLogs(req, res) {
     // Clean up on client disconnect or errors
     req.on('close', cleanup);
     req.on('error', (error) => {
-        console.error('SSE connection error:', error);
-        cleanup();
+    // Don't log ECONNRESET errors as they're expected when client disconnects
+        if (error.code !== 'ECONNRESET') {
+            console.error('SSE connection error:', error);
+    }
+    cleanup();
     });
 }
 
@@ -398,11 +407,16 @@ function setupScriptHandlers(id, containerName) {
 async function refreshContainer(req, res) {
   const { name, watcher } = req.query;
 
-  if (!name || !watcher) {
-    return res.status(400).json({ error: 'Missing name or watcher parameter' });
+  // Normalize watcher name if empty (treat as local)
+  if (!watcher || watcher.trim() === '') {
+    watcher = 'local';
   }
 
-  const watcherInstance = getWatchers()[`watcher.docker.${watcher}`];
+  // Handle local watcher vs remote watcher instances
+  const watcherInstance = watcher === 'local' ? 
+    getWatchers()['watcher.docker.local'] : 
+    getWatchers()[`watcher.docker.${watcher}`];
+
   if (!watcherInstance) {
     return res.status(404).json({ error: `Watcher ${watcher} not found` });
   }
@@ -417,6 +431,27 @@ async function refreshContainer(req, res) {
       return res.status(404).json({ error: `Container ${name} not found` });
     }
 
+    // Remove any existing containers with same name from store, handling blank watcher names
+    const existingContainers = storeContainer.getContainers({ 
+      name: name
+      // Don't filter by watcher here, we'll handle that in the filtering below
+    });
+    
+    for (const existing of existingContainers) {
+      // For local watcher, match either blank watcher or 'local'
+      const isLocalMatch = watcher === 'local' && 
+        (!existing.watcher || existing.watcher === 'local');
+      
+      // For remote watchers, exact match required
+      const isRemoteMatch = watcher !== 'local' && 
+        existing.watcher === watcher;
+
+      if ((isLocalMatch || isRemoteMatch) && existing.id !== container.id) {
+        console.log(`Removing old container ${existing.id} from store`);
+        storeContainer.deleteContainer(existing.id);
+      }
+    }
+
     // Update container information without querying registries
     const updatedContainer = await watcherInstance.updateContainerStatus(container);
 
@@ -425,7 +460,7 @@ async function refreshContainer(req, res) {
       return res.status(404).json({ error: `Container ${name} is no longer running` });
     }
 
-    // Update the store with the new container data if not already updated
+    // Update the store with the new container data
     storeContainer.updateContainer(updatedContainer);
 
     // Return the updated container

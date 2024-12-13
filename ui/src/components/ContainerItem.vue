@@ -251,7 +251,10 @@ export default {
       showScriptOutput: false,
       updateInProgress: false,
       showUpdateProgress: false,
-      updateCheckInterval: null
+      updateCheckInterval: null,
+      pollInterval: null,
+      pollAttempts: 0,
+      maxPollAttempts: 30
     };
   },
   computed: {
@@ -380,116 +383,54 @@ export default {
     },
 
     async handleUpdateComplete() {
-        console.log('Script completed successfully, monitoring update status...');
+        console.log('[ContainerItem] Update completed, refreshing view');
         this.showScriptOutput = false;
         this.showUpdateProgress = true;
 
         try {
-            // Wait a moment for the update to start
+            // Brief delay to let any final server operations complete
             await new Promise(resolve => setTimeout(resolve, 2000));
-
-            // Store the original image ID and container info
-            const originalImageId = this.container.image.id;
-            const containerName = this.container.name;
-            const watcherName = this.container.watcher;
-
-            let attempts = 0;
-            const maxAttempts = 30;
-            let containerUpdated = false;
-
-            const checkUpdate = async () => {
-                try {
-                    // First trigger a watch to ensure store is updated
-                    await axios.post('/api/containers/watch');
-                    
-                    // Small delay to allow watch to complete
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-
-                    // Now check container status
-                    const response = await axios.post('/api/containers/refresh', null, {
-                        params: {
-                            name: containerName,
-                            watcher: watcherName
-                        },
-                        headers: {
-                            'Cache-Control': 'no-cache',
-                            'Pragma': 'no-cache'
-                        }
-                    });
-
-                    const updatedContainer = response.data;
-
-                    console.log('Checking container state:', {
-                        name: containerName,
-                        currentImageId: updatedContainer?.image?.id,
-                        originalImageId: originalImageId,
-                        attempt: attempts + 1
-                    });
-
-                    if (updatedContainer && updatedContainer.image.id !== originalImageId) {
-                        console.log('Update detected! New image ID:', updatedContainer.image.id);
-                        containerUpdated = true;
-                        this.showUpdateProgress = false;
-                        clearTimeout(this.updateCheck);
-
-                        // Extra verification step - check main containers endpoint
-                        const verifyResponse = await axios.get('/api/containers', {
-                            headers: {
-                                'Cache-Control': 'no-cache',
-                                'Pragma': 'no-cache'
-                            }
-                        });
-
-                        const verifyContainer = verifyResponse.data.find(c => 
-                            c.name === containerName && c.watcher === watcherName
-                        );
-
-                        if (verifyContainer && verifyContainer.image.id === updatedContainer.image.id) {
-                            // Show success and force a clean reload
-                            this.$root.$emit('notify',
-                                `Container updated successfully to version ${updatedContainer.image.tag.value}`,
-                                'success',
-                                3000
-                            );
-
-                            // Force a clean reload bypassing cache
-                            window.location.replace(window.location.href);
-                            return;
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error checking update:', error);
-                }
-
-                attempts++;
-                if (attempts >= maxAttempts && !containerUpdated) {
-                    this.showUpdateProgress = false;
-                    this.$root.$emit('notify',
-                        'Update status unclear - please refresh the page manually',
-                        'warning',
-                        0
-                    );
-                    return;
-                }
-
-                // Check again in 5 seconds if not updated
-                if (!containerUpdated) {
-                    this.updateCheck = setTimeout(checkUpdate, 5000);
-                }
-            };
-
-            // Start checking
-            checkUpdate();
-
-        } catch (error) {
-            console.error('Error in handleUpdateComplete:', error);
-            this.showUpdateProgress = false;
-            this.updateInProgress = false;
-            this.$root.$emit('notify',
-                'Error checking update status. Please refresh the page manually.',
-                'error',
-                0
+            
+            // Show success notification
+            this.$root.$emit('notify', 
+                'Update completed successfully. Refreshing...', 
+                'success', 
+                3000
             );
+
+            // Set a flag to prevent error messages during refresh
+            this.updateInProgress = false;
+            
+            // Clear any pending notifications
+            if (this.container.notification) {
+                await axios.post(`/api/containers/${this.container.id}/clear-notification`);
+            }
+
+            // Wait briefly for notifications to clear
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Then refresh
+            window.location.replace(window.location.href);
+        } catch (error) {
+            // Only show errors if we haven't started refreshing
+            if (this.updateInProgress) {
+                console.error('Error during update completion:', error);
+                this.$root.$emit('notify',
+                    'Error checking update status - please refresh manually',
+                    'error',
+                    0
+                );
+            }
+        }
+    },
+
+    handleDialogClosed({ success }) {
+        console.log('[ContainerItem] Dialog closed with success:', success);
+        if (!success) {
+            this.stopPolling();
+            this.updateInProgress = false;
+            this.showScriptOutput = false;
+            this.showUpdateProgress = false;
         }
     },
 
@@ -545,16 +486,6 @@ export default {
       }
     },
 
-    handleDialogClosed({ success }) {
-      console.log('Dialog closed with success:', success);
-      this.updateInProgress = false;
-      if (!success) {
-        console.log('Script failed, resetting state');
-        this.showScriptOutput = false;
-        this.showUpdateProgress = false;
-      }
-    },
-
     async refreshContainer() {
       if (this.$refs.scriptOutput?.eventSource) {
         this.$refs.scriptOutput.disconnectEventStream();
@@ -577,9 +508,9 @@ export default {
     this.$root.$on('refresh-containers', this.refreshContainer);
   },
     beforeDestroy() {
-      if (this.updateCheck) {
-          clearTimeout(this.updateCheck);
-      }
+        if (this.checkInterval) {
+            clearInterval(this.checkInterval);
+        }
     }
 };
 </script>

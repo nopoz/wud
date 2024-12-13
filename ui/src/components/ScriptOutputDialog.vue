@@ -99,21 +99,36 @@ export default {
   },
 
   methods: {
-    handleClose() {
-      console.log('Handling dialog close');
-      const success = this.isComplete && !this.error && this.scriptExitCode === 0;
-      
-      this.dialogVisible = false;
-      this.disconnectEventStream();
-      this.resetState();
-      
-      // Emit dialog-closed event first
-      this.$emit('dialog-closed', { success });
-      
-      // Only emit update-complete if script was successful
-      if (success) {
-        this.$emit('update-complete');
-      }
+    async handleClose() {
+        console.log('[ScriptDialog] Handling dialog close');
+        // Cache the state before we reset anything
+        const currentState = {
+            isComplete: this.isComplete,
+            error: this.error,
+            scriptExitCode: this.scriptExitCode
+        };
+        console.log('[ScriptDialog] Current state:', currentState);
+        
+        const success = currentState.isComplete && !currentState.error && currentState.scriptExitCode === 0;
+        console.log('[ScriptDialog] Success evaluation:', success);
+
+        if (success) {
+            console.log('[ScriptDialog] Script successful, emitting update-complete');
+            this.$emit('update-complete');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            console.log('[ScriptDialog] Finished waiting, closing dialog');
+        }
+        
+        // Close the dialog
+        this.dialogVisible = false;
+        
+        // Emit dialog-closed before we reset state
+        console.log('[ScriptDialog] Emitting dialog-closed with success:', success);
+        this.$emit('dialog-closed', { success });
+        
+        // Finally clean up
+        this.disconnectEventStream();
+        this.resetState();
     },
 
     close() {

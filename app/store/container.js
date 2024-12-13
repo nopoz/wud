@@ -44,15 +44,29 @@ function insertContainer(container) {
 function updateContainer(container) {
     const containerToReturn = validateContainer(container);
 
-    // Lock mechanism to prevent race conditions (simplified implementation)
-    const existingContainer = getContainer(container.id);
+    // Remove any existing containers with same name/watcher combo but different ID
+    const existingContainers = containers.chain()
+        .find({
+            'data.name': container.name,
+            'data.watcher': container.watcher
+        })
+        .data();
+
+    for (const existing of existingContainers) {
+        if (existing.data.id !== container.id) {
+            console.log(`Removing old container record ${existing.data.id} for ${container.name}`);
+            containers.remove(existing);
+        }
+    }
+
+    // Now update/insert the new container
+    const existingContainer = containers.findOne({ 'data.id': container.id });
     if (existingContainer) {
         containers.chain().find({ 'data.id': container.id }).remove();
     }
 
     containers.insert({ data: containerToReturn });
     emitContainerUpdated(containerToReturn);
-    // console.log(`Container ${container.id} updated successfully.`); // DEBUG
     return containerToReturn;
 }
 

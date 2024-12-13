@@ -129,29 +129,42 @@ function getOldContainers(newContainers, containersFromTheStore) {
  * @param containersFromTheStore
  */
 function pruneOldContainers(newContainers, containersFromTheStore) {
-    const containersToRemove = getOldContainers(newContainers, containersFromTheStore);
+    if (process.env.DEBUG) {  // Only log full container lists in debug mode
+        console.log(`Pruning old containers. New containers: ${newContainers.map(c => `${c.id} (${c.status})`).join(', ')}`);
+        console.log(`Store containers: ${containersFromTheStore.map(c => `${c.id} (${c.status})`).join(', ')}`);
+    } else {
+        console.log(`Pruning old containers (${newContainers.length} new, ${containersFromTheStore.length} in store)`);
+    }
 
-    containersToRemove.forEach((containerToRemove) => {
-        // Only remove if we don't have a running container with this ID
-        const hasRunningReplacement = newContainers.some(c => 
-            c.id === containerToRemove.id && c.status === 'running'
-        );
-        
-        if (!hasRunningReplacement) {
-            storeContainer.deleteContainer(containerToRemove.id);
-            console.log(`Pruned container ${containerToRemove.id} (${containerToRemove.name})`);
+    // Group new containers by name+watcher combo
+    const newContainersByKey = newContainers.reduce((acc, container) => {
+        const key = `${container.name}_${container.watcher}`;
+        if (!acc[key]) {
+            acc[key] = [];
         }
-    });
+        acc[key].push(container);
+        return acc;
+    }, {});
 
-    // Re-validate pruned containers but preserve running ones
-    const validIds = newContainers.map(c => c.id);
-    storeContainer.getContainers({ watcher: this.name })
-        .forEach(c => {
-            const newContainer = newContainers.find(nc => nc.id === c.id);
-            if (!validIds.includes(c.id) && (!newContainer || newContainer.status !== 'running')) {
-                storeContainer.deleteContainer(c.id);
+    for (const containerToCheck of containersFromTheStore) {
+        const key = `${containerToCheck.name}_${containerToCheck.watcher}`;
+        const newContainersForKey = newContainersByKey[key] || [];
+
+        // If we have new containers for this name+watcher combo
+        if (newContainersForKey.length > 0) {
+            // Check if this container's ID is in the new containers list
+            const stillExists = newContainersForKey.some(c => c.id === containerToCheck.id);
+            
+            if (!stillExists) {
+                console.log(`Removing old container ${containerToCheck.id} for ${containerToCheck.name}`);
+                storeContainer.deleteContainer(containerToCheck.id);
             }
-        });
+        } else {
+            // No new containers for this name+watcher combo, remove the old one
+            console.log(`Removing orphaned container ${containerToCheck.id} for ${containerToCheck.name}`);
+            storeContainer.deleteContainer(containerToCheck.id);
+        }
+    }
 }
 
 function getContainerName(container) {
@@ -491,7 +504,28 @@ async watchContainer(container, skipRegistryCheck = false) {
         const dockerContainer = await this.dockerApi.getContainer(container.id).inspect();
         
         if (dockerContainer.State.Status !== 'running') {
-            logContainer.info(`Skipping container ${container.id} as it is not running.`);
+            logContainer.info(`Container ${container.id} is not running, checking for replacement`);
+            
+            // Check if there's a replacement container running with same name
+            const containers = await this.dockerApi.listContainers({
+                filters: {
+                    name: [container.name],
+                    status: ['running']
+                }
+            });
+
+            const replacement = containers.find(c => 
+                c.Names.some(n => n.replace('/', '') === container.name)
+            );
+
+            if (replacement) {
+                logContainer.info(`Found replacement container ${replacement.Id} for ${container.name}`);
+                // Process the replacement container
+                const replacementContainer = await this.addImageDetailsToContainer(replacement);
+                return this.watchContainer(replacementContainer, skipRegistryCheck);
+            }
+
+            logContainer.info(`No replacement found, removing container ${container.id}`);
             storeContainer.deleteContainer(container.id);
             return { container: null, changed: false };
         }
@@ -502,7 +536,6 @@ async watchContainer(container, skipRegistryCheck = false) {
 
         // Process version checking logic
         if (!skipRegistryCheck) {
-            // Only perform registry checks if skipRegistryCheck is false
             containerWithResult.result = await this.findNewVersion(containerWithResult, logContainer);
         }
 
@@ -511,7 +544,7 @@ async watchContainer(container, skipRegistryCheck = false) {
         event.emitContainerReport(containerReport);
         return containerReport;
     } catch (e) {
-        logContainer.warn(`Error when processing container ${container.id} (${e.message})`);
+        logContainer.warn(`Error processing container ${container.id}: ${e.message}`);
         containerWithResult.error = { message: e.message };
         return { container: containerWithResult, changed: false };
     }

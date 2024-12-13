@@ -62,71 +62,74 @@ class ScriptTrigger extends Trigger {
     }
 
 async install(container) {
-        console.log(`Attempting script install for container: ${container.name || 'unknown'}`);
+    console.log(`Attempting script install for container: ${container.name || 'unknown'}`);
 
-        if (String(this.configuration.install).toLowerCase() !== 'true') {
-            console.log(`Skipping install for container: ${container.name || 'unknown'} because install is not enabled.`);
-            return;
-        }
-
-        const storedContainer = storeContainer.getContainer(container.id);
-        if (!storedContainer) {
-            console.warn(`Container with ID ${container.id} not found in store.`);
-            throw new Error(`No such container: ${container.id}`);
-        }
-
-        this.setContainerNotification(storedContainer, `Update started for ${storedContainer.name}`, 'info');
-
-        try {
-            const previousImageId = this.getContainerImageId(storedContainer);
-            const oldContainerId = storedContainer.id;
-            console.log(`Previous image ID for ${storedContainer.name}: ${previousImageId}`);
-
-            // Clean up any existing containers with same name before starting
-            await this.cleanupExistingContainers(storedContainer);
-
-            await this.executeScript(storedContainer, 'install');
-            console.log(`Successfully executed script for container: ${storedContainer.name || 'unknown'}`);
-
-            // Wait for new container
-            const newContainer = await this.waitForContainerImageUpdate(storedContainer, previousImageId);
-            console.log(`Container ${storedContainer.name || 'unknown'} has been updated to a new image`);
-
-            // Do another cleanup after update
-            await this.cleanupExistingContainers(newContainer, [newContainer.id]);
-
-            // Trigger watch and wait for completion using specific watcher
-            console.log(`Triggering watcher scan for ${storedContainer.watcher}...`);
-            event.emitTriggerWatch();
-            await this.waitForSpecificWatcherToComplete(storedContainer.watcher);
-            console.log('Watcher has completed scanning containers');
-
-            // Validate the state after watch completion
-            const finalContainers = storeContainer.getContainers({ 
-                name: container.name, 
-                watcher: container.watcher 
-            });
-            if (finalContainers.length > 1) {
-                console.warn(`Multiple containers detected after update for ${container.name}. Triggering additional cleanup.`);
-                await this.cleanupExistingContainers(container, finalContainers.map(c => c.id));
-            }
-
-            return { 
-                success: true, 
-                message: `Update for ${storedContainer.name} completed successfully.`,
-                newContainerId: newContainer.id 
-            };
-        } catch (error) {
-            console.error(`Error during install for container ${storedContainer.name || 'unknown'}: ${error.message}`);
-            this.setContainerNotification(storedContainer, `Update for ${storedContainer.name} failed: ${error.message}`, 'error');
-            return { 
-                success: false, 
-                message: `Update for ${storedContainer.name} failed: ${error.message}` 
-            };
-        }
+    if (String(this.configuration.install).toLowerCase() !== 'true') {
+        console.log(`Skipping install for container: ${container.name || 'unknown'} because install is not enabled.`);
+        return;
     }
 
-getDockerApiForWatcher(watcherName) {
+    const storedContainer = storeContainer.getContainer(container.id);
+    if (!storedContainer) {
+        console.warn(`Container with ID ${container.id} not found in store.`);
+        throw new Error(`No such container: ${container.id}`);
+    }
+
+    this.setContainerNotification(storedContainer, `Update started for ${storedContainer.name}`, 'info');
+
+    try {
+        const previousImageId = this.getContainerImageId(storedContainer);
+        console.log(`Previous image ID for ${storedContainer.name}: ${previousImageId}`);
+
+        // Clean up any existing containers with the same name before starting
+        await this.cleanupExistingContainers(storedContainer);
+
+        await this.executeScript(storedContainer, 'install');
+        console.log(`Successfully executed script for container: ${storedContainer.name || 'unknown'}`);
+
+        // Wait for the new container to appear with an updated image
+        const newContainer = await this.waitForContainerImageUpdate(storedContainer, previousImageId);
+        console.log(`Container ${storedContainer.name || 'unknown'} has been updated to a new image`);
+
+        // Do another cleanup after update
+        await this.cleanupExistingContainers(newContainer, [newContainer.id]);
+
+        // Trigger watch and wait for completion
+        console.log(`Triggering watcher scan for ${storedContainer.watcher}...`);
+        event.emitTriggerWatch();
+        await this.waitForSpecificWatcherToComplete(storedContainer.watcher);
+        console.log('Watcher has completed scanning containers');
+
+        // Validate the state after watch completion
+        const finalContainers = storeContainer.getContainers({ 
+            name: container.name, 
+            watcher: container.watcher 
+        });
+        if (finalContainers.length > 1) {
+            console.warn(`Multiple containers detected after update for ${container.name}. Triggering additional cleanup.`);
+            await this.cleanupExistingContainers(container, finalContainers.map(c => c.id));
+        }
+
+        return { 
+            success: true, 
+            message: `Update for ${storedContainer.name} completed successfully.`,
+            newContainerId: finalContainers.length > 0 ? finalContainers[0].id : null 
+        };
+    } catch (error) {
+        console.error(`Error during install for container ${storedContainer.name || 'unknown'}: ${error.message}`);
+        this.setContainerNotification(storedContainer, `Update for ${storedContainer.name} failed: ${error.message}`, 'error');
+        // Only log container removal if it's not a validation error
+        if (!error.message.includes('ValidationError')) {
+            console.log(`Removing old container ${storedContainer.id} for ${storedContainer.name}`);
+        }
+        return { 
+            success: false, 
+            message: `Update for ${storedContainer.name} failed: ${error.message}` 
+        };
+    }
+}
+
+    getDockerApiForWatcher(watcherName) {
         console.log(`Setting up Docker API for watcher: ${watcherName}`);
         
         try {
@@ -168,8 +171,9 @@ getDockerApiForWatcher(watcherName) {
     }
 
     async cleanupExistingContainers(container, excludeIds = []) {
-        console.log(`Cleaning up existing containers for ${container.name}`);
-        
+        console.log(`Starting cleanup of existing containers for ${container.name} (watcher: ${container.watcher})`);
+        console.log(`Exclude IDs: ${excludeIds.length ? excludeIds.join(', ') : 'None'}`);
+
         const MAX_RETRIES = 3;
         let attempts = 0;
 
@@ -179,22 +183,22 @@ getDockerApiForWatcher(watcherName) {
                 watcher: container.watcher 
             });
 
-            // Track if we actually need to do any cleanup this iteration
             let cleanupNeeded = false;
+            console.log(`Cleanup attempt #${attempts + 1} for ${container.name} (watcher: ${container.watcher})...`);
 
             for (const existingContainer of containers) {
                 if (!excludeIds.includes(existingContainer.id)) {
                     try {
                         cleanupNeeded = true;
-                        console.log(`Attempting to delete container ${existingContainer.id} for ${container.name}`);
+                        console.log(`Found container to cleanup: ${existingContainer.id} (status: ${existingContainer.status}, tag: ${existingContainer.image.tag.value})`);
                         await storeContainer.deleteContainer(existingContainer.id);
                         
-                        // Verify the deletion
+                        // Remove duplicate messages - only log final status
                         const stillExists = storeContainer.getContainer(existingContainer.id);
                         if (stillExists) {
                             console.warn(`Container ${existingContainer.id} still exists after deletion attempt`);
                         } else {
-                            console.log(`Successfully removed container ${existingContainer.id}`);
+                            console.log(`Container ${existingContainer.id} deleted successfully.`);
                         }
                     } catch (err) {
                         console.warn(`Failed to delete container ${existingContainer.id}: ${err.message}`);
@@ -202,42 +206,48 @@ getDockerApiForWatcher(watcherName) {
                 }
             }
 
-            // If no cleanup was needed, we can exit early
             if (!cleanupNeeded) {
-                console.log(`No cleanup needed for ${container.name}`);
+                console.log(`No cleanup needed for ${container.name} (watcher: ${container.watcher}). Exiting cleanup loop.`);
                 break;
             }
 
-            // Verify the current state
+            // Check if any old containers remain
             const remainingContainers = storeContainer.getContainers({
                 name: container.name,
                 watcher: container.watcher,
             }).filter(c => !excludeIds.includes(c.id));
 
             if (remainingContainers.length === 0) {
-                console.log(`All old containers for ${container.name} have been cleaned up.`);
+                console.log(`All old containers for ${container.name} (watcher: ${container.watcher}) have been cleaned up.`);
                 break;
             } else {
-                console.log(`Retry cleanup needed, ${remainingContainers.length} containers remain for ${container.name}:`, 
-                    remainingContainers.map(c => `${c.id} (${c.status})`).join(', '));
+                console.log(`Cleanup retry needed: ${remainingContainers.length} containers remain for ${container.name}:`,
+                    remainingContainers.map(c => `${c.id} (${c.status})`).join(', ')
+                );
             }
 
             attempts += 1;
+            console.log(`Waiting before next cleanup attempt...`);
             await new Promise(resolve => setTimeout(resolve, 2000)); // Wait before retry
         }
 
         if (attempts === MAX_RETRIES) {
-            console.warn(`Max retries reached for cleaning up old containers for ${container.name}. Some containers may still remain.`);
+            console.warn(`Max retries reached for cleaning up old containers for ${container.name} (watcher: ${container.watcher}). Some containers may still remain.`);
             const remainingContainers = storeContainer.getContainers({
                 name: container.name,
                 watcher: container.watcher,
             }).filter(c => !excludeIds.includes(c.id));
             
             if (remainingContainers.length > 0) {
-                console.warn('Remaining containers:', remainingContainers.map(c => 
-                    `${c.id} (${c.status})`).join(', '));
+                console.warn('Remaining containers after max retries:', 
+                    remainingContainers.map(c => `${c.id} (${c.status})`).join(', ')
+                );
+            } else {
+                console.log(`No remaining containers after max retries, but no successful break detected. Please investigate further.`);
             }
         }
+
+        console.log(`Cleanup process completed for ${container.name} (watcher: ${container.watcher}).`);
     }
 
     getContainerImageId(container) {
@@ -247,11 +257,23 @@ getDockerApiForWatcher(watcherName) {
         return container.image.id;
     }
 
-async waitForContainerImageUpdate(container, previousImageId) {
+    async waitForContainerImageUpdate(container, previousImageId) {
         const timeout = this.configuration.timeout || 300000;
         const startTime = Date.now();
-        const originalWatcher = container.watcher;
+
+        let originalWatcher = container.watcher || '';
+        if (!originalWatcher || originalWatcher.trim() === '') {
+            originalWatcher = 'local';
+        }
         
+        // Add artificial delay for local watcher to match remote behavior
+        const envPrefix = `WUD_WATCHER_${originalWatcher.toUpperCase()}_`;
+        const socketPath = process.env[`${envPrefix}SOCKET`];
+        if (socketPath) {  // This indicates a local watcher
+            console.log(`Adding delay for local watcher ${originalWatcher}`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+
         console.log(`Waiting for container update with watcher: ${originalWatcher}`);
 
         try {
@@ -308,13 +330,16 @@ async waitForContainerImageUpdate(container, previousImageId) {
                 }, 30000);
 
                 const onWatcherStop = (watcher) => {
-                    const watcherName = watcher?.name?.split('/')?.pop()?.replace('watcher.docker.', '') || '';
-                    console.log(`Got watcher stop event for: ${watcherName}`);
+                    const watcherRef = `watcher.docker.${originalWatcher}`;
+                    const fullWatcherName = watcher?.name || '';
 
-                    if (watcherName === originalWatcher) {
+                    // Match either the local case or the remote case
+                    if ((originalWatcher === 'local' && !fullWatcherName) || 
+                        fullWatcherName.includes(watcherRef)) {
                         clearTimeout(timer);
                         event.unregisterWatcherStop(onWatcherStop);
                         resolve();
+                        return;
                     }
                 };
 
@@ -339,27 +364,35 @@ async waitForContainerImageUpdate(container, previousImageId) {
         }
     }
 
-async waitForSpecificWatcherToComplete(watcherName, timeout = 60000) {
+    async waitForSpecificWatcherToComplete(watcherName, timeout = 60000) {
         console.log(`Waiting for watcher ${watcherName} to complete...`);
         
+        // If watcherName is supposed to be local but is empty, default it to 'local'
+        if (!watcherName || watcherName.trim() === '') {
+            watcherName = 'local';
+        }
+        
         return new Promise((resolve, reject) => {
-            const startTime = Date.now();
+            let completed = false;
             const timeoutId = setTimeout(() => {
-                event.unregisterWatcherStop(onWatcherStop);
-                reject(new Error(`Timeout waiting for watcher ${watcherName} to complete`));
+                if (!completed) {  // Only reject if we haven't completed successfully
+                    event.unregisterWatcherStop(onWatcherStop);
+                    reject(new Error(`Timeout waiting for watcher ${watcherName} to complete`));
+                }
             }, timeout);
 
             const onWatcherStop = (watcher) => {
-                const watcherComponentName = watcher?.name?.split('/')?.pop()?.replace('watcher.docker.', '') || '';
-                console.log(`Got watcher stop event for: ${watcherComponentName}`);
+                const watcherRef = `watcher.docker.${watcherName}`;
+                const fullWatcherName = watcher?.name || '';
 
-                if (watcherComponentName === watcherName) {
-                    console.log(`Watcher ${watcherName} completed scan`);
+                // Check for both the short name and the full reference
+                if ((watcherName === 'local' && !fullWatcherName) || 
+                    fullWatcherName.includes(watcherRef)) {
+                    completed = true;  // Mark as completed before cleanup
                     clearTimeout(timeoutId);
                     event.unregisterWatcherStop(onWatcherStop);
                     resolve();
-                } else if (Date.now() - startTime < timeout) {
-                    console.log(`Ignoring completion of different watcher: ${watcherComponentName}`);
+                    return;
                 }
             };
 
@@ -367,118 +400,123 @@ async waitForSpecificWatcherToComplete(watcherName, timeout = 60000) {
         });
     }
 
-async executeScript(container, actionType) {
-    const { path, timeout } = this.configuration;
-    const name = container.name || 'unknown';
-    const fullImageName = container.image.name || 'unknown';
-    const imageNameParts = fullImageName.split('/');
-    const imageName = imageNameParts[imageNameParts.length - 1];
-    const localValue = container.updateKind?.localValue || 'unknown';
-    const remoteValue = container.updateKind?.remoteValue || 'unknown';
-    const watcher = container.watcher || 'unknown';
-    const compose_project = container.compose_project || 'unknown';
-    const command = shell([path, name, imageName, localValue, remoteValue, watcher, compose_project]);
+    async executeScript(container, actionType) {
+        const { path, timeout } = this.configuration;
+        const name = container.name || 'unknown';
+        const fullImageName = container.image.name || 'unknown';
+        const imageNameParts = fullImageName.split('/');
+        const imageName = imageNameParts[imageNameParts.length - 1];
+        const localValue = container.updateKind?.localValue || 'unknown';
+        const remoteValue = container.updateKind?.remoteValue || 'unknown';
+        
+        let watcher = container.watcher || '';
+        if (!watcher || watcher.trim() === '') {
+            watcher = 'local';
+        }
 
-    // Prepare header
-    const header = [
-        '',
-        '##############################################################################',
-        '#                             SCRIPT EXECUTION START                         #',
-        '##############################################################################',
-        `# Container: ${name}`,
-        '# Command Parameters:',
-        `#   - Container Name: ${name}`,
-        `#   - Image Name: ${imageName}`,
-        `#   - Current Version: ${localValue}`,
-        `#   - Target Version: ${remoteValue}`,
-        `#   - Watcher: ${watcher}`,
-        `#   - Compose Project: ${compose_project}`,
-        '#',
-        `# Full Command: ${command}`,
-        '# Script Output:',
-        '------------------------------------------------------------------------------',
-        ''
-    ].join('\n');
+        const compose_project = container.compose_project || 'unknown';
+        const command = shell([path, name, imageName, localValue, remoteValue, watcher, compose_project]);
 
-    // Helper function to emit log
-    const emitLog = (message) => {
-        console.log(message.trim()); // Keep console logging
-        scriptOutputEmitter.emit('output', {
-            containerId: container.id,
-            containerName: container.name,
-            message: message,
-            timestamp: Date.now()
-        });
-    };
+        // Prepare header
+        const header = [
+            '',
+            '##############################################################################',
+            '#                             SCRIPT EXECUTION START                         #',
+            '##############################################################################',
+            `# Container: ${name}`,
+            '# Command Parameters:',
+            `#   - Container Name: ${name}`,
+            `#   - Image Name: ${imageName}`,
+            `#   - Current Version: ${localValue}`,
+            `#   - Target Version: ${remoteValue}`,
+            `#   - Watcher: ${watcher}`,
+            `#   - Compose Project: ${compose_project}`,
+            '#',
+            `# Full Command: ${command}`,
+            '# Script Output:',
+            '------------------------------------------------------------------------------',
+            ''
+        ].join('\n');
 
-    // Emit header
-    emitLog(header);
-
-    return new Promise((resolve, reject) => {
-        const process = exec(command, { timeout }, (error) => {
-            if (error && error.killed && error.signal === 'SIGTERM') {
-                const timeoutMessage = `Script execution timed out after ${timeout} ms`;
-                emitLog(`# ERROR: ${timeoutMessage}\n`);
-                return reject(new Error(timeoutMessage));
-            }
-        });
-
-        process.stdout?.on('data', (data) => {
-            const lines = data.toString().split('\n');
-            lines.forEach(line => {
-                if (line.trim()) {
-                    emitLog(`# [${name}] ${line.trim()}\n`);
-                }
-            });
-        });
-
-        process.stderr?.on('data', (data) => {
-            const lines = data.toString().split('\n');
-            lines.forEach(line => {
-                if (line.trim()) {
-                    emitLog(`# [${name}] ERROR: ${line.trim()}\n`);
-                }
-            });
-        });
-
-        process.on('close', (code, signal) => {
-            const footer = [
-                '------------------------------------------------------------------------------',
-                '# Execution Summary:',
-                `# Container: ${name}`,
-                `# Exit Code: ${code !== null ? code : 'N/A'}`,
-                signal ? `# Signal: ${signal}` : null,
-                code === 0 ? '# Status: Success' : null,
-                '##############################################################################',
-                '#                             SCRIPT EXECUTION END                           #',
-                '##############################################################################',
-                ''
-            ].filter(Boolean).join('\n');
-
-            emitLog(footer);
-            
-            scriptOutputEmitter.emit('complete', {
+        // Helper function to emit log
+        const emitLog = (message) => {
+            console.log(message.trim()); // Keep console logging
+            scriptOutputEmitter.emit('output', {
                 containerId: container.id,
                 containerName: container.name,
+                message: message,
                 timestamp: Date.now()
             });
+        };
 
-            if (code !== 0 && code !== null) {
-                reject(new Error(`Script exited with code ${code}`));
-            } else if (signal) {
-                reject(new Error(`Script was terminated by signal ${signal}`));
-            } else {
-                resolve();
-            }
-        });
+        // Emit header
+        emitLog(header);
 
-        process.on('error', (err) => {
-            const errorMsg = `# ERROR: Process error: ${err.message}\n`;
-            emitLog(errorMsg);
-            reject(err);
+        return new Promise((resolve, reject) => {
+            const process = exec(command, { timeout }, (error) => {
+                if (error && error.killed && error.signal === 'SIGTERM') {
+                    const timeoutMessage = `Script execution timed out after ${timeout} ms`;
+                    emitLog(`# ERROR: ${timeoutMessage}\n`);
+                    return reject(new Error(timeoutMessage));
+                }
+            });
+
+            process.stdout?.on('data', (data) => {
+                const lines = data.toString().split('\n');
+                lines.forEach(line => {
+                    if (line.trim()) {
+                        emitLog(`# [${name}] ${line.trim()}\n`);
+                    }
+                });
+            });
+
+            process.stderr?.on('data', (data) => {
+                const lines = data.toString().split('\n');
+                lines.forEach(line => {
+                    if (line.trim()) {
+                        emitLog(`# [${name}] ERROR: ${line.trim()}\n`);
+                    }
+                });
+            });
+
+            process.on('close', (code, signal) => {
+                const footer = [
+                    '------------------------------------------------------------------------------',
+                    '# Execution Summary:',
+                    `# Container: ${name}`,
+                    `# Exit Code: ${code !== null ? code : 'N/A'}`,
+                    signal ? `# Signal: ${signal}` : null,
+                    code === 0 ? '# Status: Success' : null,
+                    '##############################################################################',
+                    '#                             SCRIPT EXECUTION END                           #',
+                    '##############################################################################',
+                    ''
+                ].filter(Boolean).join('\n');
+
+                emitLog(footer);
+                
+                scriptOutputEmitter.emit('complete', {
+                    containerId: container.id,
+                    containerName: container.name,
+                    timestamp: Date.now()
+                });
+
+                if (code !== 0 && code !== null) {
+                    reject(new Error(`Script exited with code ${code}`));
+                } else if (signal) {
+                    reject(new Error(`Script was terminated by signal ${signal}`));
+                } else {
+                    resolve();
+                }
+            });
+
+            process.on('error', (err) => {
+                const errorMsg = `# ERROR: Process error: ${err.message}\n`;
+                emitLog(errorMsg);
+                reject(err);
+            });
         });
-    });
-}
+    }
 
     setContainerNotification(container, message, level) {
         if (container) {
