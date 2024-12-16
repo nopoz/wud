@@ -3,6 +3,8 @@ const nocache = require('nocache');
 const storeContainer = require('../store/container');
 const registry = require('../registry');
 const { getServerConfiguration } = require('../configuration');
+const { mapComponentsToList } = require('./component');
+const Trigger = require('../triggers/providers/Trigger');
 
 const router = express.Router();
 
@@ -14,6 +16,14 @@ const serverConfiguration = getServerConfiguration();
  */
 function getWatchers() {
     return registry.getState().watcher;
+}
+
+/**
+ * Return registered triggers.
+ * @returns {{id: string}[]}
+ */
+function getTriggers() {
+    return registry.getState().trigger;
 }
 
 /**
@@ -87,6 +97,40 @@ async function watchContainers(req, res) {
     }
 }
 
+async function getContainerTriggers(req, res) {
+    const { id } = req.params;
+
+    const container = storeContainer.getContainer(id);
+    if (container) {
+        const allTriggers = mapComponentsToList(getTriggers());
+        const includedTriggers = container.triggerInclude ? container.triggerInclude.split(/\s*,\s*/).map((includedTrigger) => Trigger.parseIncludeOrIncludeTriggerString(includedTrigger)) : undefined;
+        const excludedTriggers = container.triggerExclude ? container.triggerExclude.split(/\s*,\s*/).map((excludedTrigger) => Trigger.parseIncludeOrIncludeTriggerString(excludedTrigger)) : undefined;
+        const associatedTriggers = [];
+        allTriggers.forEach((trigger) => {
+            const triggerToAssociate = { ...trigger };
+            let associated = true;
+            if (includedTriggers) {
+                const includedTrigger = includedTriggers.find((tr) => tr.id === trigger.id);
+                if (includedTrigger) {
+                    triggerToAssociate.configuration.threshold = includedTrigger.threshold;
+                } else {
+                    associated = false;
+                }
+            }
+            if (excludedTriggers && excludedTriggers
+                .map((excludedTrigger) => excludedTrigger.id).includes(trigger.id)) {
+                associated = false;
+            }
+            if (associated) {
+                associatedTriggers.push(triggerToAssociate);
+            }
+        });
+        res.status(200).json(associatedTriggers);
+    } else {
+        res.sendStatus(404);
+    }
+}
+
 /**
  * Watch an image.
  * @param req
@@ -139,6 +183,7 @@ function init() {
     router.post('/watch', watchContainers);
     router.get('/:id', getContainer);
     router.delete('/:id', deleteContainer);
+    router.get('/:id/triggers', getContainerTriggers);
     router.post('/:id/watch', watchContainer);
     return router;
 }
