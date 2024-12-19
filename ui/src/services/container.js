@@ -28,10 +28,16 @@ async function deleteContainer(containerId) {
   return fetch(`/api/containers/${containerId}`, { method: "DELETE" });
 }
 
+async function getContainerTriggers(containerId) {
+  const response = await fetch(`/api/containers/${containerId}/triggers`);
+  return response.json();
+}
+
 export {
   getContainerIcon,
   getAllContainers,
   refreshAllContainers,
   refreshContainer,
   deleteContainer,
+  getContainerTriggers,
 };

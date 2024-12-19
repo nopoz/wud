@@ -43,7 +43,7 @@
           </v-chip>
         </span>
       </v-toolbar-title>
-      <v-span v-if="$vuetify.breakpoint.mdAndUp && container.updateAvailable">
+      <span v-if="$vuetify.breakpoint.mdAndUp && container.updateAvailable">
         <v-icon>mdi-arrow-right</v-icon>
         <v-tooltip bottom>
           <template v-slot:activator="{ on, attrs }">
@@ -64,7 +64,7 @@
           </template>
           <span class="text-caption">Copy to clipboard</span>
         </v-tooltip>
-      </v-span>
+      </span>
 
       <v-spacer />
       <v-icon>{{ showDetail ? "mdi-chevron-up" : "mdi-chevron-down" }}</v-icon>
@@ -101,6 +101,10 @@
             <span v-if="$vuetify.breakpoint.mdAndUp">Image</span>
             <v-icon>mdi-package-variant-closed</v-icon>
           </v-tab>
+          <v-tab>
+            <span v-if="$vuetify.breakpoint.mdAndUp">Triggers</span>
+            <v-icon>mdi-bell-ring</v-icon>
+          </v-tab>
         </v-tabs>
 
         <v-tabs-items v-model="tab">
@@ -120,6 +124,9 @@
           </v-tab-item>
           <v-tab-item>
             <container-image :image="container.image" />
+          </v-tab-item>
+          <v-tab-item>
+            <container-triggers :container="container" />
           </v-tab-item>
         </v-tabs-items>
 
@@ -184,18 +191,20 @@
 </template>
 
 <script>
-import ContainerDetail from "@/components/ContainerDetail";
-import ContainerImage from "@/components/ContainerImage";
-import ContainerUpdate from "@/components/ContainerUpdate";
-import ContainerError from "@/components/ContainerError";
 import { getRegistryProviderIcon } from "@/services/registry";
+import ContainerDetail from "@/components/ContainerDetail";
+import ContainerError from "@/components/ContainerError";
+import ContainerImage from "@/components/ContainerImage";
+import ContainerTriggers from "@/components/ContainerTriggers";
+import ContainerUpdate from "@/components/ContainerUpdate";
 
 export default {
   components: {
     ContainerDetail,
-    ContainerImage,
-    ContainerUpdate,
     ContainerError,
+    ContainerImage,
+    ContainerTriggers,
+    ContainerUpdate,
   },
 
   props: {

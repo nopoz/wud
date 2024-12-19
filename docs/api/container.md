@@ -112,6 +112,32 @@ curl http://wud:3000/api/containers/31a61a8305ef1fc9a71fa4f20a68d7ec88b28e32303b
 }
 ```
 
+## Get all triggers associated to the container
+
+This operation lets you get the list of the containers associated to the container.
+
+```bash
+curl http://wud:3000/api/containers/31a61a8305ef1fc9a71fa4f20a68d7ec88b28e32303bbc4a5f192e851165b816/triggers
+
+[
+  {
+    "id": "trigger.ntfy.one",
+    "type": "ntfy",
+    "name": "one",
+    "configuration": {
+      "topic": "235ef38e-f1db-414a-964f-ce3f2cc8094d",
+      "url": "https://ntfy.sh",
+      "threshold": "major",
+      "mode": "simple",
+      "once": true,
+      "simpletitle": "New ${kind} found for container ${name}",
+      "simplebody": "Container ${name} running with ${kind} ${local} can be updated to ${kind} ${remote}\n${link}",
+      "batchtitle": "${count} updates available",
+    }
+  }
+]
+```
+
 ## Watch a Container
 This operation triggers a manual watch on a container.
 
