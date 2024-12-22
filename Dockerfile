@@ -1,5 +1,5 @@
 # Common Stage
-FROM node:18-alpine as base
+FROM node:23-slim as base
 
 LABEL maintainer="fmartinou"
 EXPOSE 3000
@@ -15,9 +15,9 @@ WORKDIR /home/node/app
 RUN mkdir /store
 
 # Add TZDATA to allow easy local time configuration
-RUN apk update \
-    && apk add --no-cache tzdata openssl \
-    && rm -rf /var/cache/apk/*
+RUN apt update \
+    && apt install tzdata openssl \
+    && rm -rf /var/cache/apt/*
 
 # Dependencies stage
 FROM base as dependencies
