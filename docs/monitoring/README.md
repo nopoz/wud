@@ -22,10 +22,10 @@ You can use it to configure health checks performed by your container orchestrat
 services:
 
   whatsupdocker:
-    image: getwud/wud:5.1.0
+    image: getwud/wud:7.2.0
     ...
     healthcheck:
-      test: wget --no-verbose --tries=1 --no-check-certificate --spider http://localhost:3000
+      test: node --eval "fetch('http://localhost:3000').catch(() => process.exit(1))"
       interval: 10s
       timeout: 10s
       retries: 3
