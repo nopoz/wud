@@ -1,7 +1,9 @@
 # Changelog
 
 # 8.0.0 (wip)
+- :star: [TRIGGER] - Add support for automatic or manual triggers
 - :star: [REGISTRY] - Add support for multiple registries of the same type
+- :star: [DOCKER] - Add default healthcheck to the `wud` docker image
 - :fire: [TRIGGER] - Fix specific triggers to specific containers association issue
 - :lock: Upgrade to node.js 23
 - :lock: Add prettier

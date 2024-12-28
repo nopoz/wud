@@ -10,13 +10,15 @@ ENV WORKDIR=/home/node/app
 ENV WUD_LOG_FORMAT=text
 ENV WUD_VERSION=$WUD_VERSION
 
+HEALTHCHECK --interval=30s --timeout=5s CMD curl --fail http://localhost:${WUD_SERVER_PORT:-3000}/health || exit 1
+
 WORKDIR /home/node/app
 
 RUN mkdir /store
 
 # Add TZDATA to allow easy local time configuration
 RUN apt update \
-    && apt install tzdata openssl \
+    && apt install -y tzdata openssl curl \
     && rm -rf /var/cache/apt/*
 
 # Dependencies stage

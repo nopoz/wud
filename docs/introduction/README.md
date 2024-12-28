@@ -6,7 +6,7 @@
 ![Maintainability](https://img.shields.io/codeclimate/maintainability/getwud/wud)
 ![Coverage](https://img.shields.io/codeclimate/coverage/getwud/wud)
 
-## What's up Docker? <small>(aka **WUD**)</small>
+## WUD <small>(aka **What's up Docker?**)</small>
 Gets you notified when new versions of your Docker containers are available and lets you react the way you want.
 
 #### WUD is built on 3 concepts:

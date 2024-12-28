@@ -198,7 +198,10 @@ export default {
   },
   filters: {
     formatValue(value) {
-      return value ? value : "<empty>";
+      if (value === undefined || value === null || value === "") {
+        return "<empty>";
+      }
+      return value;
     },
   },
 };

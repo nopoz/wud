@@ -11,10 +11,11 @@ const configurationValid = {
     botusername: 'Bot Name',
     cardcolor: 65280,
     cardlabel: 'Container',
+    auto: true,
     threshold: 'all',
     mode: 'simple',
     once: true,
-
+    auto: true,
     simpletitle: 'New ${kind} found for container ${name}',
 
     simplebody:
@@ -50,7 +51,7 @@ test('maskConfiguration should mask sensitive data', () => {
         cardcolor: 65280,
         cardlabel: 'Container',
         once: true,
-
+        auto: true,
         simplebody:
             'Container ${name} running with ${kind} ${local} can be updated to ${kind} ${remote}\n${link}',
 

@@ -17,7 +17,7 @@ const configurationValid = {
     threshold: 'all',
     once: true,
     mode: 'simple',
-
+    auto: true,
     simpletitle: 'New ${kind} found for container ${name}',
 
     simplebody:

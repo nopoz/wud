@@ -11,9 +11,8 @@ const configurationValid = {
     mode: 'simple',
     threshold: 'all',
     once: true,
-
+    auto: true,
     simpletitle: 'New ${kind} found for container ${name}',
-
     simplebody:
         'Container ${name} running with ${kind} ${local} can be updated to ${kind} ${remote}\n${link}',
 

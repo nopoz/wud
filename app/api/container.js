@@ -5,6 +5,7 @@ const registry = require('../registry');
 const { getServerConfiguration } = require('../configuration');
 const { mapComponentsToList } = require('./component');
 const Trigger = require('../triggers/providers/Trigger');
+const log = require('../log').child({ component: 'container' });
 
 const router = express.Router();
 
@@ -157,6 +158,44 @@ async function getContainerTriggers(req, res) {
 }
 
 /**
+ * Run trigger.
+ * @param {*} req
+ * @param {*} res
+ */
+async function runTrigger(req, res) {
+    const { id, triggerType, triggerName } = req.params;
+
+    const containerToTrigger = storeContainer.getContainer(id);
+    if (containerToTrigger) {
+        const triggerToRun = getTriggers()[`${triggerType}.${triggerName}`];
+        if (triggerToRun) {
+            try {
+                await triggerToRun.trigger(containerToTrigger);
+                log.info(
+                    `Trigger executed with success (type=${triggerType}, name=${triggerName}, container=${JSON.stringify(containerToTrigger)})`,
+                );
+                res.status(200).json({});
+            } catch (e) {
+                log.warn(
+                    `Trigger cannot be executed without container (type=${triggerType}, name=${triggerName})`,
+                );
+                res.status(500).json({
+                    error: `Error when running trigger ${triggerType}.${triggerName} (${e.message})`,
+                });
+            }
+        } else {
+            res.status(404).json({
+                error: 'Trigger not found',
+            });
+        }
+    } else {
+        res.status(404).json({
+            error: 'Container not found',
+        });
+    }
+}
+
+/**
  * Watch an image.
  * @param req
  * @param res
@@ -211,6 +250,7 @@ function init() {
     router.get('/:id', getContainer);
     router.delete('/:id', deleteContainer);
     router.get('/:id/triggers', getContainerTriggers);
+    router.post('/:id/triggers/:triggerType/:triggerName', runTrigger);
     router.post('/:id/watch', watchContainer);
     return router;
 }

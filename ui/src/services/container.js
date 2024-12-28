@@ -33,6 +33,17 @@ async function getContainerTriggers(containerId) {
   return response.json();
 }
 
+async function runTrigger({ containerId, triggerType, triggerName }) {
+  const response = await fetch(
+    `/api/containers/${containerId}/triggers/${triggerType}/${triggerName}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    },
+  );
+  return response.json();
+}
+
 export {
   getContainerIcon,
   getAllContainers,
@@ -40,4 +51,5 @@ export {
   refreshContainer,
   deleteContainer,
   getContainerTriggers,
+  runTrigger,
 };

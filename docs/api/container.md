@@ -121,7 +121,7 @@ curl http://wud:3000/api/containers/31a61a8305ef1fc9a71fa4f20a68d7ec88b28e32303b
 
 [
   {
-    "id": "trigger.ntfy.one",
+    "id": "ntfy.one",
     "type": "ntfy",
     "name": "one",
     "configuration": {
@@ -172,6 +172,14 @@ curl -X POST http://wud:3000/api/containers/ca0edc3fb0b4647963629bdfccbb3ccfa352
   },
   "updateAvailable": true
 }
+```
+
+## Run a trigger on the container
+
+This operation lets you manually run a trigger on the container.
+
+```bash
+curl -X POST http://wud:3000/api/containers/31a61a8305ef1fc9a71fa4f20a68d7ec88b28e32303bbc4a5f192e851165b816/triggers/ntfy.one
 ```
 
 ## Delete a Container
