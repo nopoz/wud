@@ -5,9 +5,16 @@ services:
     labels:
       - wud.watch=true
 
-  traefik:
+  traefik1:
     image: traefik:3.0.0
     labels:
       - wud.watch=true
       - wud.tag.include=^\d+\.\d+.\d+$$
-      - wud.trigger.include=ntfy.one:major
+      - wud.trigger.include=ntfy.one
+
+  traefik2:
+    image: traefik:3.0.0
+    labels:
+      - wud.watch=true
+      - wud.tag.include=^\d+\.\d+.\d+$$
+      - wud.trigger.exclude=ntfy.two
