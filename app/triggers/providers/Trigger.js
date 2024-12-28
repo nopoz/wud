@@ -88,7 +88,7 @@ class Trigger extends Component {
     }
 
     /**
-     * Parse $type.$name:$threshold string.
+     * Parse $name:$threshold string.
      * @param {*} includeOrExcludeTriggerString
      * @returns
      */
@@ -96,7 +96,7 @@ class Trigger extends Component {
         const includeOrExcludeTriggerSplit =
             includeOrExcludeTriggerString.split(/\s*:\s*/);
         const includeOrExcludeTrigger = {
-            id: `trigger.${includeOrExcludeTriggerSplit[0]}`,
+            id: includeOrExcludeTriggerSplit[0],
             threshold: 'all',
         };
         if (includeOrExcludeTriggerSplit.length === 2) {
