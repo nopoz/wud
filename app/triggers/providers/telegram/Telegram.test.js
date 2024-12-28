@@ -9,7 +9,7 @@ const configurationValid = {
     threshold: 'all',
     mode: 'simple',
     once: true,
-
+    auto: true,
     simpletitle: 'New ${kind} found for container ${name}',
 
     simplebody:
@@ -43,7 +43,7 @@ test('maskConfiguration should mask sensitive data', () => {
         chatid: '1*******9',
         mode: 'simple',
         once: true,
-
+        auto: true,
         simplebody:
             'Container ${name} running with ${kind} ${local} can be updated to ${kind} ${remote}\n${link}',
 

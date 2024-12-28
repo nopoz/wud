@@ -25,7 +25,7 @@ services:
     image: getwud/wud:7.2.0
     ...
     healthcheck:
-      test: node --eval "fetch('http://localhost:3000').catch(() => process.exit(1))"
+      test: curl --fail http://localhost:${WUD_SERVER_PORT:-3000}/health || exit 1
       interval: 10s
       timeout: 10s
       retries: 3

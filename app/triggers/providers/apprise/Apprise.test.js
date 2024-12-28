@@ -10,6 +10,7 @@ const configurationValid = {
     url: 'http://xxx.com',
     urls: 'maito://user:pass@gmail.com',
     threshold: 'all',
+    auto: true,
     once: true,
     mode: 'simple',
 

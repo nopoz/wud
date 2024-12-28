@@ -81,9 +81,13 @@
             <span v-if="$vuetify.breakpoint.mdAndUp">Update</span>
             <v-icon>mdi-package-down</v-icon>
           </v-tab>
-          <v-tab v-if="container.error">
-            <span v-if="$vuetify.breakpoint.mdAndUp">Error</span>
-            <v-icon>mdi-alert</v-icon>
+          <v-tab>
+            <span v-if="$vuetify.breakpoint.mdAndUp">Triggers</span>
+            <v-icon>mdi-bell-ring</v-icon>
+          </v-tab>
+          <v-tab>
+            <span v-if="$vuetify.breakpoint.mdAndUp">Image</span>
+            <v-icon>mdi-package-variant-closed</v-icon>
           </v-tab>
           <v-tab>
             <span v-if="$vuetify.breakpoint.mdAndUp">Container</span>
@@ -97,13 +101,9 @@
               {{ containerIcon }}
             </v-icon>
           </v-tab>
-          <v-tab>
-            <span v-if="$vuetify.breakpoint.mdAndUp">Image</span>
-            <v-icon>mdi-package-variant-closed</v-icon>
-          </v-tab>
-          <v-tab>
-            <span v-if="$vuetify.breakpoint.mdAndUp">Triggers</span>
-            <v-icon>mdi-bell-ring</v-icon>
+          <v-tab v-if="container.error">
+            <span v-if="$vuetify.breakpoint.mdAndUp">Error</span>
+            <v-icon>mdi-alert</v-icon>
           </v-tab>
         </v-tabs>
 
@@ -116,17 +116,17 @@
               :update-available="container.updateAvailable"
             />
           </v-tab-item>
-          <v-tab-item v-if="container.error">
-            <container-error :error="container.error" />
-          </v-tab-item>
           <v-tab-item>
-            <container-detail :container="container" />
+            <container-triggers :container="container" />
           </v-tab-item>
           <v-tab-item>
             <container-image :image="container.image" />
           </v-tab-item>
           <v-tab-item>
-            <container-triggers :container="container" />
+            <container-detail :container="container" />
+          </v-tab-item>
+          <v-tab-item v-if="container.error">
+            <container-error :error="container.error" />
           </v-tab-item>
         </v-tabs-items>
 

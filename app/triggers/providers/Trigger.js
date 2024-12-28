@@ -257,17 +257,20 @@ class Trigger extends Component {
      */
     async init() {
         await this.initTrigger();
-        if (this.configuration.mode.toLowerCase() === 'simple') {
-            this.log.debug('Configure "simple" mode');
-            event.registerContainerReport(async (containerReport) =>
-                this.handleContainerReport(containerReport),
-            );
-        }
-        if (this.configuration.mode.toLowerCase() === 'batch') {
-            this.log.debug('Configure "batch" mode');
-            event.registerContainerReports(async (containersReports) =>
-                this.handleContainerReports(containersReports),
-            );
+        if (this.configuration.auto) {
+            this.log.info(`Registering for auto execution`);
+            if (this.configuration.mode.toLowerCase() === 'simple') {
+                event.registerContainerReport(async (containerReport) =>
+                    this.handleContainerReport(containerReport),
+                );
+            }
+            if (this.configuration.mode.toLowerCase() === 'batch') {
+                event.registerContainerReports(async (containersReports) =>
+                    this.handleContainerReports(containersReports),
+                );
+            }
+        } else {
+            this.log.info(`Registering for manual execution`);
         }
     }
 
@@ -279,6 +282,7 @@ class Trigger extends Component {
     validateConfiguration(configuration) {
         const schema = this.getConfigurationSchema();
         const schemaWithDefaultOptions = schema.append({
+            auto: this.joi.bool().default(true),
             threshold: this.joi
                 .string()
                 .insensitive()
@@ -292,18 +296,13 @@ class Trigger extends Component {
             once: this.joi.boolean().default(true),
             simpletitle: this.joi
                 .string()
-
                 .default('New ${kind} found for container ${name}'),
             simplebody: this.joi
                 .string()
-
                 .default(
                     'Container ${name} running with ${kind} ${local} can be updated to ${kind} ${remote}\n${link}',
                 ),
-            batchtitle: this.joi
-                .string()
-
-                .default('${count} updates available'),
+            batchtitle: this.joi.string().default('${count} updates available'),
         });
         const schemaValidated =
             schemaWithDefaultOptions.validate(configuration);
