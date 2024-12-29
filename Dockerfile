@@ -16,9 +16,9 @@ WORKDIR /home/node/app
 
 RUN mkdir /store
 
-# Add TZDATA to allow easy local time configuration
+# Add useful stuff
 RUN apt update \
-    && apt install -y tzdata openssl curl \
+    && apt install -y tzdata openssl curl git jq \
     && rm -rf /var/cache/apt/*
 
 # Dependencies stage
