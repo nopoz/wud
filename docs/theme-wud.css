@@ -1,11 +1,5 @@
 :root {
     --base-font-size: 14px;
     --theme-color   : #00355E;
-}
-
-.markdown-section {
-    position: relative;
-    max-width: 100%;
-    margin: 0 auto;
-    padding: 2rem 45px;
+    --content-max-width: 100%;
 }
