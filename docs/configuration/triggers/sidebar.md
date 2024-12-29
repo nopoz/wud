@@ -8,6 +8,7 @@
     - [Storage](configuration/storage/)
     - [Triggers](configuration/triggers/)
         - [Apprise](configuration/triggers/apprise/)
+        - [Command](configuration/triggers/command/)
         - [Docker](configuration/triggers/docker/)
         - [Docker Compose](configuration/triggers/docker-compose/)
         - [Gotify](configuration/triggers/gotify/)
