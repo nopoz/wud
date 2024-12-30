@@ -131,8 +131,8 @@ curl http://wud:3000/api/containers/31a61a8305ef1fc9a71fa4f20a68d7ec88b28e32303b
       "mode": "simple",
       "once": true,
       "simpletitle": "New ${kind} found for container ${name}",
-      "simplebody": "Container ${name} running with ${kind} ${local} can be updated to ${kind} ${remote}\n${link}",
-      "batchtitle": "${count} updates available",
+      "simplebody": "Container ${container.name} running with ${container.updateKind.kind} ${container.updateKind.localValue} can be updated to ${container.updateKind.kind} ${container.updateKind.remoteValue}${container.result && container.result.link ? "\\n" + container.result.link : ""}",
+      "batchtitle": "${containers.length} updates available",
     }
   }
 ]

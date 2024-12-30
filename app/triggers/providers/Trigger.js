@@ -10,45 +10,35 @@ const { fullName } = require('../../model/container');
  * @returns {*}
  */
 function renderSimple(template, container) {
-    let value = template;
-    value = value.replace(/\${\s*id\s*}/g, container.id ? container.id : '');
-    value = value.replace(
-        /\${\s*name\s*}/g,
-        container.name ? container.name : '',
-    );
-    value = value.replace(
-        /\${\s*watcher\s*}/g,
-        container.watcher ? container.watcher : '',
-    );
-    value = value.replace(
-        /\${\s*kind\s*}/g,
+    // Set deprecated vars for backward compatibility
+    const id = container.id;
+    const name = container.name;
+    const watcher = container.watcher;
+    const kind =
         container.updateKind && container.updateKind.kind
             ? container.updateKind.kind
-            : '',
-    );
-    value = value.replace(
-        /\${\s*semver\s*}/g,
+            : '';
+    const semver =
         container.updateKind && container.updateKind.semverDiff
             ? container.updateKind.semverDiff
-            : '',
-    );
-    value = value.replace(
-        /\${\s*local\s*}/g,
+            : '';
+    const local =
         container.updateKind && container.updateKind.localValue
             ? container.updateKind.localValue
-            : '',
-    );
-    value = value.replace(
-        /\${\s*remote\s*}/g,
+            : '';
+    const remote =
         container.updateKind && container.updateKind.remoteValue
             ? container.updateKind.remoteValue
-            : '',
-    );
-    value = value.replace(
-        /\${\s*link\s*}/g,
-        container.result && container.result.link ? container.result.link : '',
-    );
-    return value;
+            : '';
+    const link =
+        container.result && container.result.link ? container.result.link : '';
+    return eval('`' + template + '`');
+}
+
+function renderBatch(template, containers) {
+    // Set deprecated vars for backward compatibility
+    const count = containers ? containers.length : 0;
+    return eval('`' + template + '`');
 }
 
 /**
@@ -296,13 +286,17 @@ class Trigger extends Component {
             once: this.joi.boolean().default(true),
             simpletitle: this.joi
                 .string()
-                .default('New ${kind} found for container ${name}'),
+                .default(
+                    'New ${container.updateKind.kind} found for container ${container.name}',
+                ),
             simplebody: this.joi
                 .string()
                 .default(
-                    'Container ${name} running with ${kind} ${local} can be updated to ${kind} ${remote}\n${link}',
+                    'Container ${container.name} running with ${container.updateKind.kind} ${container.updateKind.localValue} can be updated to ${container.updateKind.kind} ${container.updateKind.remoteValue}${container.result && container.result.link ? "\\n" + container.result.link : ""}',
                 ),
-            batchtitle: this.joi.string().default('${count} updates available'),
+            batchtitle: this.joi
+                .string()
+                .default('${containers.length} updates available'),
         });
         const schemaValidated =
             schemaWithDefaultOptions.validate(configuration);
@@ -368,9 +362,7 @@ class Trigger extends Component {
      * @returns {*}
      */
     renderBatchTitle(containers) {
-        let title = this.configuration.batchtitle;
-        title = title.replace(/\$\{\s*count\s*\}/g, containers.length);
-        return title;
+        return renderBatch(this.configuration.batchtitle, containers);
     }
 
     /**

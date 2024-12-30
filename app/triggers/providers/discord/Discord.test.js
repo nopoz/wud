@@ -16,12 +16,13 @@ const configurationValid = {
     mode: 'simple',
     once: true,
     auto: true,
-    simpletitle: 'New ${kind} found for container ${name}',
+    simpletitle:
+        'New ${container.updateKind.kind} found for container ${container.name}',
 
     simplebody:
-        'Container ${name} running with ${kind} ${local} can be updated to ${kind} ${remote}\n${link}',
+        'Container ${container.name} running with ${container.updateKind.kind} ${container.updateKind.localValue} can be updated to ${container.updateKind.kind} ${container.updateKind.remoteValue}${container.result && container.result.link ? "\\n" + container.result.link : ""}',
 
-    batchtitle: '${count} updates available',
+    batchtitle: '${containers.length} updates available',
 };
 
 beforeEach(() => {
@@ -44,7 +45,7 @@ test('validateConfiguration should throw error when invalid', () => {
 test('maskConfiguration should mask sensitive data', () => {
     discord.configuration = configurationValid;
     expect(discord.maskConfiguration()).toEqual({
-        batchtitle: '${count} updates available',
+        batchtitle: '${containers.length} updates available',
         botusername: 'Bot Name',
         url: 'h********************************1',
         mode: 'simple',
@@ -53,9 +54,10 @@ test('maskConfiguration should mask sensitive data', () => {
         once: true,
         auto: true,
         simplebody:
-            'Container ${name} running with ${kind} ${local} can be updated to ${kind} ${remote}\n${link}',
+            'Container ${container.name} running with ${container.updateKind.kind} ${container.updateKind.localValue} can be updated to ${container.updateKind.kind} ${container.updateKind.remoteValue}${container.result && container.result.link ? "\\n" + container.result.link : ""}',
 
-        simpletitle: 'New ${kind} found for container ${name}',
+        simpletitle:
+            'New ${container.updateKind.kind} found for container ${container.name}',
         threshold: 'all',
     });
 });
@@ -91,7 +93,7 @@ test('trigger should send POST http request to webhook endpoint', async () => {
                     fields: [
                         {
                             name: 'Container',
-                            value: 'Container container1 running with tag 1.0.0 can be updated to tag 2.0.0\n',
+                            value: 'Container container1 running with tag 1.0.0 can be updated to tag 2.0.0',
                         },
                     ],
                 },

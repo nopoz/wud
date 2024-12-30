@@ -2,6 +2,7 @@
 
 # 8.0.0 (wip)
 - :star: [TRIGGER] - Add support for automatic or manual triggers
+- :star: [TRIGGER] - Improve `title`, `body` and `link` templates
 - :star: [REGISTRY] - Add support for multiple registries of the same type
 - :star: [DOCKER] - Add default healthcheck to the `wud` docker image
 - :star: [COMMAND] - Add support for [Command](/configuration/triggers/command/) trigger

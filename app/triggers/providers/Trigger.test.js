@@ -18,12 +18,13 @@ const configurationValid = {
     once: true,
     mode: 'simple',
     auto: true,
-    simpletitle: 'New ${kind} found for container ${name}',
+    simpletitle:
+        'New ${container.updateKind.kind} found for container ${container.name}',
 
     simplebody:
-        'Container ${name} running with ${kind} ${local} can be updated to ${kind} ${remote}\n${link}',
+        'Container ${container.name} running with ${container.updateKind.kind} ${container.updateKind.localValue} can be updated to ${container.updateKind.kind} ${container.updateKind.remoteValue}${container.result && container.result.link ? "\\n" + container.result.link : ""}',
 
-    batchtitle: '${count} updates available',
+    batchtitle: '${containers.length} updates available',
 };
 
 beforeEach(() => {
@@ -405,6 +406,25 @@ test('renderSimpleBody should replace placeholders when template is a customized
         }),
     ).toEqual(
         'Watcher DUMMY reports container container-name available update',
+    );
+});
+
+test('renderSimpleBody should evaluate js functions when template is a customized one', async () => {
+    trigger.configuration.simplebody =
+        'Container ${name} update from ${local.substring(0, 15)} to ${remote.substring(0, 15)}';
+    expect(
+        trigger.renderSimpleBody({
+            name: 'container-name',
+            updateKind: {
+                kind: 'digest',
+                localValue:
+                    'sha256:9a82d5773ccfcb73ba341619fd44790a30750731568c25a6e070c2c44aa30bde',
+                remoteValue:
+                    'sha256:6cdd479147e4d2f1f853c7205ead7e2a0b0ccbad6e3ff0986e01936cbd179c17',
+            },
+        }),
+    ).toEqual(
+        'Container container-name update from sha256:9a82d577 to sha256:6cdd4791',
     );
 });
 
