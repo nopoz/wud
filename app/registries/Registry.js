@@ -128,7 +128,7 @@ class Registry extends Component {
             image,
             url: `${image.registry.url}/${image.name}/manifests/${tagOrDigest}`,
             headers: {
-                Accept: 'application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.index.v1+json',
+                Accept: 'application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json',
             },
         });
         if (responseManifests) {

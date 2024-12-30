@@ -54,7 +54,7 @@ test('getImageManifestDigest should return digest for application/vnd.docker.dis
     registryMocked.callRegistry = (options) => {
         if (
             options.headers.Accept ===
-            'application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.index.v1+json'
+            'application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json'
         ) {
             return {
                 schemaVersion: 2,
@@ -117,7 +117,7 @@ test('getImageManifestDigest should return digest for application/vnd.docker.dis
     registryMocked.callRegistry = (options) => {
         if (
             options.headers.Accept ===
-            'application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.index.v1+json'
+            'application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json'
         ) {
             return {
                 schemaVersion: 2,
@@ -170,7 +170,7 @@ test('getImageManifestDigest should return digest for application/vnd.docker.dis
     registryMocked.callRegistry = (options) => {
         if (
             options.headers.Accept ===
-            'application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.index.v1+json'
+            'application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json'
         ) {
             return {
                 schemaVersion: 2,
@@ -219,7 +219,7 @@ test('getImageManifestDigest should return digest for application/vnd.docker.con
     registryMocked.callRegistry = (options) => {
         if (
             options.headers.Accept ===
-            'application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.index.v1+json'
+            'application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json'
         ) {
             return {
                 schemaVersion: 1,
