@@ -14,12 +14,13 @@ const configurationValid = {
     once: true,
     mode: 'simple',
 
-    simpletitle: 'New ${kind} found for container ${name}',
+    simpletitle:
+        'New ${container.updateKind.kind} found for container ${container.name}',
 
     simplebody:
-        'Container ${name} running with ${kind} ${local} can be updated to ${kind} ${remote}\n${link}',
+        'Container ${container.name} running with ${container.updateKind.kind} ${container.updateKind.localValue} can be updated to ${container.updateKind.kind} ${container.updateKind.remoteValue}${container.result && container.result.link ? "\\n" + container.result.link : ""}',
 
-    batchtitle: '${count} updates available',
+    batchtitle: '${containers.length} updates available',
 };
 
 beforeEach(() => {
@@ -76,7 +77,7 @@ test('trigger should send POST http request to notify endpoint', async () => {
         body: {
             urls: 'maito://user:pass@gmail.com',
             title: 'New tag found for container container1',
-            body: 'Container container1 running with tag 1.0.0 can be updated to tag 2.0.0\n',
+            body: 'Container container1 running with tag 1.0.0 can be updated to tag 2.0.0',
             format: 'text',
             type: 'info',
         },

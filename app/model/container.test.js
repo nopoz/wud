@@ -330,9 +330,16 @@ test('getLink should render link templates when called', () => {
     const getLink = container.__get__('getLink');
     expect(
         getLink(
-            'https://test-${major}.${minor}.${patch}.acme.com',
+            {
+                linkTemplate:
+                    'https://test-${major}.${minor}.${patch}.acme.com',
+                image: {
+                    tag: {
+                        semver: true,
+                    },
+                },
+            },
             '10.5.2',
-            true,
         ),
     ).toEqual('https://test-10.5.2.acme.com');
 });

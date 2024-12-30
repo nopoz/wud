@@ -24,12 +24,13 @@ const configurationValid = {
     mode: 'simple',
     once: true,
     auto: true,
-    simpletitle: 'New ${kind} found for container ${name}',
+    simpletitle:
+        'New ${container.updateKind.kind} found for container ${container.name}',
 
     simplebody:
-        'Container ${name} running with ${kind} ${local} can be updated to ${kind} ${remote}\n${link}',
+        'Container ${container.name} running with ${container.updateKind.kind} ${container.updateKind.localValue} can be updated to ${container.updateKind.kind} ${container.updateKind.remoteValue}${container.result && container.result.link ? "\\n" + container.result.link : ""}',
 
-    batchtitle: '${count} updates available',
+    batchtitle: '${containers.length} updates available',
 };
 
 test('validateConfiguration should return validated configuration when valid', () => {
@@ -104,11 +105,12 @@ test('maskConfiguration should mask sensitive data', () => {
         device: undefined,
         auto: true,
         simplebody:
-            'Container ${name} running with ${kind} ${local} can be updated to ${kind} ${remote}\n${link}',
+            'Container ${container.name} running with ${container.updateKind.kind} ${container.updateKind.localValue} can be updated to ${container.updateKind.kind} ${container.updateKind.remoteValue}${container.result && container.result.link ? "\\n" + container.result.link : ""}',
 
-        simpletitle: 'New ${kind} found for container ${name}',
+        simpletitle:
+            'New ${container.updateKind.kind} found for container ${container.name}',
 
-        batchtitle: '${count} updates available',
+        batchtitle: '${containers.length} updates available',
         sound: 'pushover',
         html: 0,
         threshold: 'all',
@@ -147,7 +149,7 @@ test('trigger should send message to pushover', async () => {
     expect(result).toStrictEqual({
         device: undefined,
         message:
-            'Container container1 running with tag 1.0.0 can be updated to tag 2.0.0\n',
+            'Container container1 running with tag 1.0.0 can be updated to tag 2.0.0',
         priority: 0,
         sound: 'pushover',
         html: 0,

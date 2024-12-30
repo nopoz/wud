@@ -14,12 +14,13 @@ const configurationValid = {
     threshold: 'all',
     once: true,
     auto: true,
-    simpletitle: 'New ${kind} found for container ${name}',
+    simpletitle:
+        'New ${container.updateKind.kind} found for container ${container.name}',
 
     simplebody:
-        'Container ${name} running with ${kind} ${local} can be updated to ${kind} ${remote}\n${link}',
+        'Container ${container.name} running with ${container.updateKind.kind} ${container.updateKind.localValue} can be updated to ${container.updateKind.kind} ${container.updateKind.remoteValue}${container.result && container.result.link ? "\\n" + container.result.link : ""}',
 
-    batchtitle: '${count} updates available',
+    batchtitle: '${containers.length} updates available',
 };
 
 beforeEach(() => {
@@ -45,14 +46,19 @@ test('trigger should call http client', async () => {
     ntfy.configuration = configurationValid;
     const container = {
         name: 'container1',
+        updateKind: {
+            kind: 'tag',
+            localValue: '1.0.0',
+            remoteValue: '2.0.0',
+        },
     };
     await ntfy.trigger(container);
     expect(rp).toHaveBeenCalledWith({
         body: {
             message:
-                'Container container1 running with   can be updated to  \n',
+                'Container container1 running with tag 1.0.0 can be updated to tag 2.0.0',
             priority: 2,
-            title: 'New  found for container container1',
+            title: 'New tag found for container container1',
             topic: 'xxx',
         },
         headers: {
@@ -71,14 +77,19 @@ test('trigger should use basic auth when configured like that', async () => {
     };
     const container = {
         name: 'container1',
+        updateKind: {
+            kind: 'tag',
+            localValue: '1.0.0',
+            remoteValue: '2.0.0',
+        },
     };
     await ntfy.trigger(container);
     expect(rp).toHaveBeenCalledWith({
         body: {
             message:
-                'Container container1 running with   can be updated to  \n',
+                'Container container1 running with tag 1.0.0 can be updated to tag 2.0.0',
             priority: 2,
-            title: 'New  found for container container1',
+            title: 'New tag found for container container1',
             topic: 'xxx',
         },
         headers: {
@@ -98,14 +109,19 @@ test('trigger should use bearer auth when configured like that', async () => {
     };
     const container = {
         name: 'container1',
+        updateKind: {
+            kind: 'tag',
+            localValue: '1.0.0',
+            remoteValue: '2.0.0',
+        },
     };
     await ntfy.trigger(container);
     expect(rp).toHaveBeenCalledWith({
         body: {
             message:
-                'Container container1 running with   can be updated to  \n',
+                'Container container1 running with tag 1.0.0 can be updated to tag 2.0.0',
             priority: 2,
-            title: 'New  found for container container1',
+            title: 'New tag found for container container1',
             topic: 'xxx',
         },
         headers: {

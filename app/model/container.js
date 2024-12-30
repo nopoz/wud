@@ -73,30 +73,36 @@ const schema = joi.object({
 
 /**
  * Render Link template.
- * @param linkTemplate
- * @param tagValue
- * @param isSemver
+ * @param container
  * @returns {undefined|*}
  */
-function getLink(linkTemplate, tagValue, isSemver) {
-    if (!linkTemplate) {
+function getLink(container, originalTagValue) {
+    if (!container || !container.linkTemplate) {
         return undefined;
     }
-    const raw = tagValue;
-    let link = linkTemplate;
-    link = link.replace(/\${\s*raw\s*}/g, raw);
-    if (isSemver) {
-        const versionSemver = parseSemver(tagValue);
-        const { major, minor, patch, prerelease } = versionSemver;
-        link = link.replace(/\${\s*major\s*}/g, major);
-        link = link.replace(/\${\s*minor\s*}/g, minor);
-        link = link.replace(/\${\s*patch\s*}/g, patch);
-        link = link.replace(
-            /\${\s*prerelease\s*}/g,
-            prerelease && prerelease.length > 0 ? prerelease[0] : '',
-        );
+
+    // Export vars for dynamic template interpolation
+    const raw = originalTagValue; // deprecated, kept for backward compatibility
+    const original = originalTagValue;
+    const transformed = container.transformTags
+        ? transformTag(container.transformTags, originalTagValue)
+        : originalTagValue;
+    let major = '';
+    let minor = '';
+    let patch = '';
+    let prerelease = '';
+
+    if (container.image.tag.semver) {
+        const versionSemver = parseSemver(transformed);
+        major = versionSemver.major;
+        minor = versionSemver.minor;
+        patch = versionSemver.patch;
+        prerelease =
+            versionSemver.prerelease && versionSemver.prerelease.length > 0
+                ? prerelease[0]
+                : '';
     }
-    return link;
+    return eval('`' + container.linkTemplate + '`');
 }
 
 /**
@@ -161,14 +167,7 @@ function addLinkProperty(container) {
         Object.defineProperty(container, 'link', {
             enumerable: true,
             get() {
-                return getLink(
-                    container.linkTemplate,
-                    transformTag(
-                        container.transformTags,
-                        container.image.tag.value,
-                    ),
-                    container.image.tag.semver,
-                );
+                return getLink(container, container.image.tag.value);
             },
         });
 
@@ -176,14 +175,7 @@ function addLinkProperty(container) {
             Object.defineProperty(container.result, 'link', {
                 enumerable: true,
                 get() {
-                    return getLink(
-                        container.linkTemplate,
-                        transformTag(
-                            container.transformTags,
-                            container.result.tag,
-                        ),
-                        container.image.tag.semver,
-                    );
+                    return getLink(container, container.result.tag);
                 },
             });
         }
