@@ -49,6 +49,7 @@ class Pushover extends Trigger {
                 then: this.joi.required(),
                 otherwise: this.joi.optional(),
             }),
+            ttl: this.joi.number().integer().min(0),
             expire: this.joi
                 .number()
                 .integer()
@@ -113,7 +114,9 @@ class Pushover extends Trigger {
             messageToSend.expire = this.configuration.expire;
             messageToSend.retry = this.configuration.retry;
         }
-
+        if (this.configuration.ttl) {
+            messageToSend.ttl = this.configuration.ttl;
+        }
         return new Promise((resolve, reject) => {
             const push = new Push({
                 user: this.configuration.user,
