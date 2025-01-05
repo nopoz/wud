@@ -2,32 +2,23 @@
   <v-container fluid>
     <v-row dense>
       <v-col>
-        <container-filter
-          :registries="registries"
-          :registry-selected-init="registrySelected"
-          :watchers="watchers"
-          :watcher-selected-init="watcherSelected"
-          :update-kinds="updateKinds"
-          :update-kind-selected-init="updateKindSelected"
-          :updateAvailable="updateAvailableSelected"
-          @registry-changed="onRegistryChanged"
-          @watcher-changed="onWatcherChanged"
-          @update-available-changed="onUpdateAvailableChanged"
-          @update-kind-changed="onUpdateKindChanged"
-          @refresh-all-containers="onRefreshAllContainers"
-        />
+        <container-filter :registries="registries" :registry-selected-init="registrySelected" :watchers="watchers"
+          :watcher-selected-init="watcherSelected" :update-kinds="updateKinds"
+          :update-kind-selected-init="updateKindSelected" :updateAvailable="updateAvailableSelected"
+          :groupByCompose="groupByComposeSelected" @registry-changed="onRegistryChanged"
+          @watcher-changed="onWatcherChanged" @update-available-changed="onUpdateAvailableChanged"
+          @group-by-compose-changed="onGroupByComposeChanged" @update-kind-changed="onUpdateKindChanged"
+          @refresh-all-containers="onRefreshAllContainers" />
       </v-col>
     </v-row>
 
     <v-fade-transition group hide-on-leave mode="in-out">
-      <template v-for="container in containersFiltered">
+      <template v-for="(container, index) in containersFiltered">
         <v-row :key="container.id">
           <v-col class="pt-2 pb-2">
-            <container-item
-              :container="container"
-              @delete-container="deleteContainer(container)"
-              @container-deleted="removeContainerFromList(container)"
-            />
+            <container-item :showComposeName="groupByComposeSelected" :previousContainer="containersFiltered[index - 1]"
+              :container="container" @delete-container="deleteContainer(container)"
+              @container-deleted="removeContainerFromList(container)" />
           </v-col>
         </v-row>
       </template>
@@ -56,6 +47,7 @@ export default {
       watcherSelected: "",
       updateKindSelected: "",
       updateAvailableSelected: false,
+      groupByComposeSelected: false,
     };
   },
 
@@ -103,12 +95,17 @@ export default {
         .filter((container) =>
           this.updateKindSelected
             ? this.updateKindSelected ===
-              (container.updateKind && container.updateKind.semverDiff)
+            (container.updateKind && container.updateKind.semverDiff)
             : true,
         )
         .filter((container) =>
           this.updateAvailableSelected ? container.updateAvailable : true,
-        );
+        ).sort((a, b) => {
+          if (this.groupByComposeSelected) {
+            return a.composeProject.localeCompare(b.composeProject);
+          }
+          return a.displayName.localeCompare(b.displayName);
+        });
     },
   },
 
@@ -123,6 +120,10 @@ export default {
     },
     onUpdateAvailableChanged() {
       this.updateAvailableSelected = !this.updateAvailableSelected;
+      this.updateQueryParams();
+    },
+    onGroupByComposeChanged() {
+      this.groupByComposeSelected = !this.groupByComposeSelected;
       this.updateQueryParams();
     },
     onUpdateKindChanged(updateKindSelected) {
@@ -142,6 +143,9 @@ export default {
       }
       if (this.updateAvailableSelected) {
         query["update-available"] = this.updateAvailableSelected;
+      }
+      if (this.groupByComposeSelected) {
+        query["group-by-compose"] = this.groupByComposeSelected;
       }
       this.$router.push({ query });
     },
@@ -170,6 +174,7 @@ export default {
     const watcherSelected = to.query["watcher"];
     const updateKindSelected = to.query["update-kind"];
     const updateAvailable = to.query["update-available"];
+    const groupByCOmpose = to.query["group-by-compose"];
     try {
       const containers = await getAllContainers();
       next((vm) => {
@@ -184,6 +189,9 @@ export default {
         }
         if (updateAvailable) {
           vm.updateAvailableSelected = updateAvailable.toLowerCase() === "true";
+        }
+        if (groupByCOmpose) {
+          vm.groupByComposeSelected = groupByCOmpose.toLowerCase() === "true";
         }
         vm.containers = containers;
       });

@@ -51,6 +51,16 @@
           dense
         />
       </v-col>
+      <v-col>
+        <v-switch
+          class="switch-top"
+          label="Group by Compose"
+          @change="emitGroupByComposeChanged"
+          :value="groupByCompose"
+          :hide-details="true"
+          dense
+        />
+      </v-col>
       <v-col class="text-right">
         <v-btn
           color="secondary"
@@ -99,6 +109,10 @@ export default {
       type: Boolean,
       required: true,
     },
+    groupByCompose: {
+      type: Boolean,
+      required: true,
+    },
   },
 
   data() {
@@ -122,6 +136,9 @@ export default {
     },
     emitUpdateAvailableChanged() {
       this.$emit("update-available-changed");
+    },
+    emitGroupByComposeChanged() {
+      this.$emit("group-by-compose-changed");
     },
     async refreshAllContainers() {
       this.isRefreshing = true;
