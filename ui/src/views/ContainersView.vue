@@ -100,9 +100,25 @@ export default {
         )
         .filter((container) =>
           this.updateAvailableSelected ? container.updateAvailable : true,
-        ).sort((a, b) => {
-          if (this.groupByComposeSelected) {
-            return a.composeProject.localeCompare(b.composeProject);
+        )
+        // .map((c,index) => {
+        //   if(index > 10){
+        //     c.composeProject = undefined;
+        //   }
+        //   return c;
+        // })
+        .sort((a, b) => {
+          if (this.groupByComposeSelecte) {
+            if(a.composeProject || !b.composeProject){
+              return -1;
+            }
+            if(b.composeProject || !a.composeProject){
+              return 1;
+            }
+            if(a.composeProject || b.composeProject){
+              return a.composeProject.localeCompare(b.composeProject);
+            }
+            return a.displayName.localeCompare(b.displayName);
           }
           return a.displayName.localeCompare(b.displayName);
         });

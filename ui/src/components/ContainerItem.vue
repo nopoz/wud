@@ -2,7 +2,7 @@
   <div>
     <div v-if="this.showComposeName && this.previousContainer?.composeProject !== this.container.composeProject">
       <div class="text-h6">
-        {{ this.container.composeProject }}
+        {{ this.container.composeProject ?? "Standalone Containers" }}
       </div>
       <v-divider class="pb-3"></v-divider>
     </div>
