@@ -20,13 +20,13 @@ services:
     image: getwud/wud
     ...
     environment:
-      - WUD_REGISTRY_LSCR_PRIVATE_USERNAME=john@doe
+      - WUD_REGISTRY_LSCR_PRIVATE_USERNAME=johndoe
       - WUD_REGISTRY_LSCR_PRIVATE_TOKEN=xxxxx 
 ```
 #### **Docker**
 ```bash
 docker run \
-  -e WUD_REGISTRY_LSCR_PRIVATE_USERNAME="john@doe" \
+  -e WUD_REGISTRY_LSCR_PRIVATE_USERNAME="johndoe" \
   -e WUD_REGISTRY_LSCR_PRIVATE_TOKEN="xxxxx" \
   ...
   getwud/wud
