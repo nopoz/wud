@@ -12,7 +12,14 @@ function populateGauge() {
     gaugeContainer.reset();
     storeContainer.getContainers().forEach((container) => {
         try {
-            gaugeContainer.set(flatten(container), 1);
+            const flatContainer = flatten(container);
+            const flatContainerWithoutLaels = Object.keys(flatContainer)
+                .filter((key) => !key.startsWith('labels_'))
+                .reduce((obj, key) => {
+                    obj[key] = flatContainer[key];
+                    return obj;
+                }, {});
+            gaugeContainer.set(flatContainerWithoutLaels, 1);
         } catch (e) {
             log.warn(
                 `${container.id} - Error when adding container to the metrics (${e.message})`,
@@ -71,7 +78,6 @@ function init() {
             'update_kind_remote_value',
             'update_kind_semver_diff',
             'error_message',
-            'compose_project',
         ],
     });
     log.debug('Start container metrics interval');

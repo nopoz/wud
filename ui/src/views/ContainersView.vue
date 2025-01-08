@@ -5,18 +5,17 @@
         <container-filter :registries="registries" :registry-selected-init="registrySelected" :watchers="watchers"
           :watcher-selected-init="watcherSelected" :update-kinds="updateKinds"
           :update-kind-selected-init="updateKindSelected" :updateAvailable="updateAvailableSelected"
-          :groupByCompose="groupByComposeSelected" @registry-changed="onRegistryChanged"
+          :groupByLabel="groupByLabel" :groupLabels="allContainerLabels" @registry-changed="onRegistryChanged"
           @watcher-changed="onWatcherChanged" @update-available-changed="onUpdateAvailableChanged"
-          @group-by-compose-changed="onGroupByComposeChanged" @update-kind-changed="onUpdateKindChanged"
+          @group-by-label-changed="onGroupByLabelChanged" @update-kind-changed="onUpdateKindChanged"
           @refresh-all-containers="onRefreshAllContainers" />
       </v-col>
     </v-row>
-
     <v-fade-transition group hide-on-leave mode="in-out">
       <template v-for="(container, index) in containersFiltered">
         <v-row :key="container.id">
           <v-col class="pt-2 pb-2">
-            <container-item :showComposeName="groupByComposeSelected" :previousContainer="containersFiltered[index - 1]"
+            <container-item :groupingLabel="groupByLabel" :previousContainer="containersFiltered[index - 1]"
               :container="container" @delete-container="deleteContainer(container)"
               @container-deleted="removeContainerFromList(container)" />
           </v-col>
@@ -47,11 +46,18 @@ export default {
       watcherSelected: "",
       updateKindSelected: "",
       updateAvailableSelected: false,
-      groupByComposeSelected: false,
+      groupByLabel: "",
     };
   },
+  watch: {
 
+  },
   computed: {
+    allContainerLabels() {
+      return this.containers.reduce((acc, container) => {
+        return [...acc, ...Object.keys(container.labels ?? {})];
+      }, []);
+    },
     registries() {
       return [
         ...new Set(
@@ -81,7 +87,7 @@ export default {
       ];
     },
     containersFiltered() {
-      return this.containers
+      const filteredContainers = this.containers
         .filter((container) =>
           this.registrySelected
             ? this.registrySelected === container.image.registry.name
@@ -101,27 +107,22 @@ export default {
         .filter((container) =>
           this.updateAvailableSelected ? container.updateAvailable : true,
         )
-        // .map((c,index) => {
-        //   if(index > 10){
-        //     c.composeProject = undefined;
-        //   }
-        //   return c;
-        // })
         .sort((a, b) => {
-          if (this.groupByComposeSelecte) {
-            if(a.composeProject || !b.composeProject){
+          if (this.groupByLabel) {
+            if (a.labels?.[this.groupByLabel] && !b.labels?.[this.groupByLabel]) {
               return -1;
             }
-            if(b.composeProject || !a.composeProject){
+            if (b.labels?.[this.groupByLabel] && !a.labels?.[this.groupByLabel]) {
               return 1;
             }
-            if(a.composeProject || b.composeProject){
-              return a.composeProject.localeCompare(b.composeProject);
+            if (a.labels?.[this.groupByLabel] && b.labels?.[this.groupByLabel]) {
+              return a.labels?.[this.groupByLabel].localeCompare(b.labels?.[this.groupByLabel]);
             }
             return a.displayName.localeCompare(b.displayName);
           }
           return a.displayName.localeCompare(b.displayName);
         });
+      return filteredContainers
     },
   },
 
@@ -138,8 +139,8 @@ export default {
       this.updateAvailableSelected = !this.updateAvailableSelected;
       this.updateQueryParams();
     },
-    onGroupByComposeChanged() {
-      this.groupByComposeSelected = !this.groupByComposeSelected;
+    onGroupByLabelChanged(groupByLabel) {
+      this.groupByLabel = groupByLabel;
       this.updateQueryParams();
     },
     onUpdateKindChanged(updateKindSelected) {
@@ -160,8 +161,8 @@ export default {
       if (this.updateAvailableSelected) {
         query["update-available"] = this.updateAvailableSelected;
       }
-      if (this.groupByComposeSelected) {
-        query["group-by-compose"] = this.groupByComposeSelected;
+      if (this.groupByLabel) {
+        query["group-by-label"] = this.groupByLabel;
       }
       this.$router.push({ query });
     },
@@ -190,7 +191,7 @@ export default {
     const watcherSelected = to.query["watcher"];
     const updateKindSelected = to.query["update-kind"];
     const updateAvailable = to.query["update-available"];
-    const groupByCOmpose = to.query["group-by-compose"];
+    const groupByLabel = to.query["group-by-label"];
     try {
       const containers = await getAllContainers();
       next((vm) => {
@@ -206,8 +207,8 @@ export default {
         if (updateAvailable) {
           vm.updateAvailableSelected = updateAvailable.toLowerCase() === "true";
         }
-        if (groupByCOmpose) {
-          vm.groupByComposeSelected = groupByCOmpose.toLowerCase() === "true";
+        if (groupByLabel) {
+          vm.groupByLabel = groupByLabel;
         }
         vm.containers = containers;
       });

@@ -1,8 +1,8 @@
 <template>
   <div>
-    <div v-if="this.showComposeName && this.previousContainer?.composeProject !== this.container.composeProject">
+    <div v-if="this.groupingLabel && this.previousContainer?.labels?.[this.groupingLabel] !== this.container.labels?.[this.groupingLabel]">
       <div class="text-h6">
-        {{ this.container.composeProject ?? "Standalone Containers" }}
+        {{ this.container.labels?.[this.groupingLabel] ?? "Container without the sorted Label" }}
       </div>
       <v-divider class="pb-3"></v-divider>
     </div>
@@ -185,8 +185,8 @@ export default {
       type: Object,
       required: false,
     },
-    showComposeName: {
-      type: Boolean,
+    groupingLabel: {
+      type: String,
       required: true,
     }
   },
