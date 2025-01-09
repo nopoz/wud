@@ -1,29 +1,49 @@
 <template>
   <div>
-    <div v-if="this.groupingLabel && this.previousContainer?.labels?.[this.groupingLabel] !== this.container.labels?.[this.groupingLabel]">
+    <div
+      v-if="
+        this.groupingLabel &&
+        this.previousContainer?.labels?.[this.groupingLabel] !==
+          this.container.labels?.[this.groupingLabel]
+      "
+    >
       <div class="text-h6">
-        {{ this.container.labels?.[this.groupingLabel] ?? "Container without the sorted Label" }}
+        {{ this.groupingLabel }} =
+        {{ this.container.labels?.[this.groupingLabel] ?? "(empty)" }}
       </div>
       <v-divider class="pb-3"></v-divider>
     </div>
     <v-card>
-      <v-app-bar flat dense tile @click="collapseDetail()" style="cursor: pointer">
+      <v-app-bar
+        flat
+        dense
+        tile
+        @click="collapseDetail()"
+        style="cursor: pointer"
+      >
         <v-toolbar-title class="text-body-3">
-          <v-chip label color="info" outlined disabled><v-icon left
-              v-if="$vuetify.breakpoint.mdAndUp">mdi-update</v-icon>{{ container.watcher }}
+          <v-chip label color="info" outlined disabled
+            ><v-icon left v-if="$vuetify.breakpoint.mdAndUp">mdi-update</v-icon
+            >{{ container.watcher }}
           </v-chip>
           /
           <span v-if="$vuetify.breakpoint.mdAndUp && !selfhstContainerIconUrl">
-            <v-chip label color="info" outlined disabled><v-icon left v-if="$vuetify.breakpoint.mdAndUp">{{
-              registryIcon
-                }}</v-icon>{{ container.image.registry.name }}
+            <v-chip label color="info" outlined disabled
+              ><v-icon left v-if="$vuetify.breakpoint.mdAndUp">{{
+                registryIcon
+              }}</v-icon
+              >{{ container.image.registry.name }}
             </v-chip>
             /
           </span>
           <v-chip label color="info" outlined disabled>
             <span v-if="$vuetify.breakpoint.mdAndUp">
-              <img :src="selfhstContainerIconUrl" style="width: 24px; height: 24px" class="v-icon v-icon--left"
-                v-if="isSelfhstContainerIcon" />
+              <img
+                :src="selfhstContainerIconUrl"
+                style="width: 24px; height: 24px"
+                class="v-icon v-icon--left"
+                v-if="isSelfhstContainerIcon"
+              />
               <v-icon left v-else>
                 {{ containerIcon }}
               </v-icon>
@@ -41,10 +61,17 @@
           <v-icon>mdi-arrow-right</v-icon>
           <v-tooltip bottom>
             <template v-slot:activator="{ on, attrs }">
-              <v-chip label outlined :color="newVersionClass" v-bind="attrs" v-on="on" @click="
-                copyToClipboard('container new version', newVersion);
-              $event.stopImmediatePropagation();
-              ">
+              <v-chip
+                label
+                outlined
+                :color="newVersionClass"
+                v-bind="attrs"
+                v-on="on"
+                @click="
+                  copyToClipboard('container new version', newVersion);
+                  $event.stopImmediatePropagation();
+                "
+              >
                 {{ newVersion }}
                 <v-icon right small>mdi-clipboard-outline</v-icon>
               </v-chip>
@@ -54,11 +81,18 @@
         </span>
 
         <v-spacer />
-        <v-icon>{{ showDetail ? "mdi-chevron-up" : "mdi-chevron-down" }}</v-icon>
+        <v-icon>{{
+          showDetail ? "mdi-chevron-up" : "mdi-chevron-down"
+        }}</v-icon>
       </v-app-bar>
       <v-expand-transition>
         <div v-show="showDetail">
-          <v-tabs :icons-and-text="$vuetify.breakpoint.mdAndUp" fixed-tabs v-model="tab" ref="tabs">
+          <v-tabs
+            :icons-and-text="$vuetify.breakpoint.mdAndUp"
+            fixed-tabs
+            v-model="tab"
+            ref="tabs"
+          >
             <v-tab v-if="container.result">
               <span v-if="$vuetify.breakpoint.mdAndUp">Update</span>
               <v-icon>mdi-package-down</v-icon>
@@ -73,8 +107,12 @@
             </v-tab>
             <v-tab>
               <span v-if="$vuetify.breakpoint.mdAndUp">Container</span>
-              <img :src="selfhstContainerIconUrl" style="width: 24px; height: 24px" class="v-icon v-icon--left"
-                v-if="isSelfhstContainerIcon" />
+              <img
+                :src="selfhstContainerIconUrl"
+                style="width: 24px; height: 24px"
+                class="v-icon v-icon--left"
+                v-if="isSelfhstContainerIcon"
+              />
               <v-icon left v-else>
                 {{ containerIcon }}
               </v-icon>
@@ -87,8 +125,12 @@
 
           <v-tabs-items v-model="tab">
             <v-tab-item v-if="container.result">
-              <container-update :result="container.result" :semver="container.image.tag.semver"
-                :update-kind="container.updateKind" :update-available="container.updateAvailable" />
+              <container-update
+                :result="container.result"
+                :semver="container.image.tag.semver"
+                :update-kind="container.updateKind"
+                :update-available="container.updateAvailable"
+              />
             </v-tab-item>
             <v-tab-item>
               <container-triggers :container="container" />
@@ -107,9 +149,19 @@
           <v-card-actions>
             <v-row>
               <v-col class="text-center">
-                <v-dialog v-model="dialogDelete" width="500" v-if="deleteEnabled">
+                <v-dialog
+                  v-model="dialogDelete"
+                  width="500"
+                  v-if="deleteEnabled"
+                >
                   <template v-slot:activator="{ on, attrs }">
-                    <v-btn small color="error" outlined v-bind="attrs" v-on="on">
+                    <v-btn
+                      small
+                      color="error"
+                      outlined
+                      v-bind="attrs"
+                      v-on="on"
+                    >
                       Delete
                       <v-icon right>mdi-delete</v-icon>
                     </v-btn>
@@ -130,7 +182,9 @@
                           }}</span>
                           from the list?
                           <br />
-                          <span class="font-italic">(The real container won't be deleted)</span>
+                          <span class="font-italic"
+                            >(The real container won't be deleted)</span
+                          >
                         </v-col>
                       </v-row>
                       <v-row>
@@ -139,10 +193,14 @@
                             Cancel
                           </v-btn>
                           &nbsp;
-                          <v-btn color="error" small @click="
-                            dialogDelete = false;
-                          deleteContainer();
-                          ">
+                          <v-btn
+                            color="error"
+                            small
+                            @click="
+                              dialogDelete = false;
+                              deleteContainer();
+                            "
+                          >
                             Delete
                           </v-btn>
                         </v-col>
@@ -188,7 +246,7 @@ export default {
     groupingLabel: {
       type: String,
       required: true,
-    }
+    },
   },
   data() {
     return {

@@ -1,4 +1,4 @@
-- [Introduction](introduction/)
+- [Introduction](?id=introduction)
 - [Quick start](quickstart/)
 - [Configuration](configuration/)
     - [Authentication](configuration/authentications/)
@@ -23,7 +23,6 @@
         - [Telegram](configuration/triggers/telegram/)
         - [Discord](configuration/triggers/discord/)
     - [Watchers](configuration/watchers/)
-- [UI](ui/)
 - [Api](api/)
 - [Monitoring](monitoring/)
 - [FAQ](faq/)

@@ -1,29 +1,75 @@
 <template>
-  <v-container fluid class="ma-0 mb-3" :class="$vuetify.breakpoint.mdAndUp ? 'pa-0' : ''">
+  <v-container
+    fluid
+    class="ma-0 mb-3"
+    :class="$vuetify.breakpoint.mdAndUp ? 'pa-0' : ''"
+  >
     <v-row dense>
       <v-col>
-        <v-select :hide-details="true" v-model="watcherSelected" :items="watchers" @change="emitWatcherChanged"
-          :clearable="true" label="Watcher" outlined dense></v-select>
+        <v-select
+          :hide-details="true"
+          v-model="watcherSelected"
+          :items="watchers"
+          @change="emitWatcherChanged"
+          :clearable="true"
+          label="Watcher"
+          outlined
+          dense
+        ></v-select>
       </v-col>
       <v-col>
-        <v-select :hide-details="true" v-model="registrySelected" :items="registries" @change="emitRegistryChanged"
-          :clearable="true" label="Registry" outlined dense></v-select>
+        <v-select
+          :hide-details="true"
+          v-model="registrySelected"
+          :items="registries"
+          @change="emitRegistryChanged"
+          :clearable="true"
+          label="Registry"
+          outlined
+          dense
+        ></v-select>
       </v-col>
       <v-col>
-        <v-select :hide-details="true" v-model="updateKindSelected" :items="updateKinds" @change="emitUpdateKindChanged"
-          :clearable="true" label="Update kind" outlined dense></v-select>
+        <v-select
+          :hide-details="true"
+          v-model="updateKindSelected"
+          :items="updateKinds"
+          @change="emitUpdateKindChanged"
+          :clearable="true"
+          label="Update kind"
+          outlined
+          dense
+        ></v-select>
       </v-col>
 
       <v-col>
-        <v-autocomplete label="Group by label" :items="groupLabels" :value="groupByLabel" @change="emitGroupByLabelChanged" clearable outlined dense>
+        <v-autocomplete
+          label="Group by label"
+          :items="groupLabels"
+          :value="groupByLabel"
+          @change="emitGroupByLabelChanged"
+          clearable
+          outlined
+          dense
+        >
         </v-autocomplete>
       </v-col>
       <v-col>
-        <v-switch class="switch-top" label="Update available" @change="emitUpdateAvailableChanged"
-          :value="updateAvailable" :hide-details="true" dense />
+        <v-switch
+          class="switch-top"
+          label="Update available"
+          @change="emitUpdateAvailableChanged"
+          :value="updateAvailable"
+          :hide-details="true"
+          dense
+        />
       </v-col>
       <v-col class="text-right">
-        <v-btn color="secondary" @click.stop="refreshAllContainers" :loading="isRefreshing">
+        <v-btn
+          color="secondary"
+          @click.stop="refreshAllContainers"
+          :loading="isRefreshing"
+        >
           Watch now
           <v-icon> mdi-refresh</v-icon>
         </v-btn>
@@ -99,7 +145,7 @@ export default {
       this.$emit("update-available-changed");
     },
     emitGroupByLabelChanged(newLabel) {
-      this.$emit("group-by-label-changed",newLabel ?? "");
+      this.$emit("group-by-label-changed", newLabel ?? "");
     },
     async refreshAllContainers() {
       this.isRefreshing = true;

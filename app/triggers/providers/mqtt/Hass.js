@@ -319,7 +319,7 @@ class Hass {
                 device: getHaDevice(),
                 icon: icon || sanitizeIcon('mdi:docker'),
                 entity_picture:
-                    'https://github.com/getwud/wud/raw/main/docs/wud_logo.png',
+                    'https://github.com/getwud/wud/raw/main/docs/assets/wud-logo-256.png',
                 state_topic: stateTopic,
                 ...options,
             }),

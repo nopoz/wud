@@ -1,7 +1,6 @@
-- [Introduction](introduction/)
+- [Introduction](?id=introduction)
 - [Quick start](quickstart/)
 - [Configuration](configuration/)
-- [UI](ui/)
 - [Api](api/)
     - [Application](api/app)
     - [Container](api/container)

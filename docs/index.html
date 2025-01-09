@@ -16,18 +16,23 @@
   <!-- WUD theme -->
   <link rel="stylesheet" href="theme-wud.css" />
 
+    <!-- Favicon -->
+  <meta name="theme-color" content="#ffffff">
+  <link rel="icon" href="assets/wud-logo.svg">
+  <link rel="mask-icon" href="assets/wud-logo.svg" color="#000000">
+
 </head>
 <body>
   <div id="app">Please wait...</div>
   <script>
     window.$docsify = {
-      name: 'What\'s up Docker?',
-      logo: '/wud_logo_500.png',
+      name: 'WUD',
+      logo: 'assets/wud-logo.svg',
       repo: 'getwud/wud',
       coverpage: true,
-      onlyCover: true,
+      onlyCover: false,
       loadSidebar: 'sidebar.md',
-      maxLevel   : 2,
+      maxLevel   : 1,
       subMaxLevel: 2,
       auto2top: true,
       themeable: {

@@ -115,11 +115,9 @@ import { getTriggerIcon } from "@/services/trigger";
 import { getServerIcon } from "@/services/server";
 import { getWatcherIcon } from "@/services/watcher";
 import { getAuthenticationIcon } from "@/services/authentication";
-import logo from "@/assets/wud_logo_white.png";
 
 export default {
   data: () => ({
-    logo,
     mini: true,
     darkMode: localStorage.darkMode === "true",
     containerIcon: getContainerIcon(),

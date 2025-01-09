@@ -1,9 +1,5 @@
 <template>
   <v-app-bar app flat dark tile clipped-left dense>
-    <v-app-bar-nav-icon>
-      <v-img :src="logo" alt="logo" max-width="48px" />
-    </v-app-bar-nav-icon>
-
     <v-toolbar-title
       v-if="viewName && 'home'.toLowerCase() !== viewName.toLowerCase()"
       class="text-body-1 text-capitalize ma-0 pl-4"
@@ -28,7 +24,6 @@
 </template>
 <script>
 import { logout } from "@/services/auth";
-import logo from "@/assets/wud_logo_white.png";
 
 export default {
   props: {
@@ -38,9 +33,7 @@ export default {
     },
   },
   data() {
-    return {
-      logo,
-    };
+    return {};
   },
   computed: {
     viewName() {

@@ -1,8 +1,7 @@
 # Trigger API
 This API allows to query the state of the triggers.
 
-?> Need to add a new Trigger?  
-[Take a look at the documentation.](/triggers/)
+?> [Need to add a new Trigger?](/configuration/triggers/)
 
 ## Get all Triggers
 This operation lets you get all the configured triggers.

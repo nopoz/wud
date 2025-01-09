@@ -46,7 +46,7 @@ test('publishDiscoveryMessage must publish a discovery message expected by HA', 
             },
             icon: 'mdi:docker',
             entity_picture:
-                'https://github.com/getwud/wud/raw/main/docs/wud_logo.png',
+                'https://github.com/getwud/wud/raw/main/docs/assets/wud-logo-256.png',
             state_topic: 'my/state',
             myOption: true,
         }),
@@ -75,7 +75,7 @@ test('addContainerSensor must publish sensor discovery message expected by HA', 
             },
             icon: 'mdi:docker',
             entity_picture:
-                'https://github.com/getwud/wud/raw/main/docs/wud_logo.png',
+                'https://github.com/getwud/wud/raw/main/docs/assets/wud-logo-256.png',
             state_topic: 'topic/watcher-name/container-name',
             force_update: true,
             value_template: '{{ value_json.image_tag_value }}',
@@ -125,7 +125,7 @@ test('updateContainerSensors must publish all sensors expected by HA', async () 
             },
             icon: 'mdi:docker',
             entity_picture:
-                'https://github.com/getwud/wud/raw/main/docs/wud_logo.png',
+                'https://github.com/getwud/wud/raw/main/docs/assets/wud-logo-256.png',
             state_topic: 'topic/total_count',
         }),
         { retain: true },
@@ -147,7 +147,7 @@ test('updateContainerSensors must publish all sensors expected by HA', async () 
             },
             icon: 'mdi:docker',
             entity_picture:
-                'https://github.com/getwud/wud/raw/main/docs/wud_logo.png',
+                'https://github.com/getwud/wud/raw/main/docs/assets/wud-logo-256.png',
             state_topic: 'topic/update_count',
         }),
         { retain: true },
@@ -169,7 +169,7 @@ test('updateContainerSensors must publish all sensors expected by HA', async () 
             },
             icon: 'mdi:docker',
             entity_picture:
-                'https://github.com/getwud/wud/raw/main/docs/wud_logo.png',
+                'https://github.com/getwud/wud/raw/main/docs/assets/wud-logo-256.png',
             state_topic: 'topic/update_status',
             payload_on: 'true',
             payload_off: 'false',
@@ -193,7 +193,7 @@ test('updateContainerSensors must publish all sensors expected by HA', async () 
             },
             icon: 'mdi:docker',
             entity_picture:
-                'https://github.com/getwud/wud/raw/main/docs/wud_logo.png',
+                'https://github.com/getwud/wud/raw/main/docs/assets/wud-logo-256.png',
             state_topic: 'topic/watcher-name/total_count',
         }),
         { retain: true },
@@ -215,7 +215,7 @@ test('updateContainerSensors must publish all sensors expected by HA', async () 
             },
             icon: 'mdi:docker',
             entity_picture:
-                'https://github.com/getwud/wud/raw/main/docs/wud_logo.png',
+                'https://github.com/getwud/wud/raw/main/docs/assets/wud-logo-256.png',
             state_topic: 'topic/watcher-name/update_count',
         }),
         { retain: true },
@@ -237,7 +237,7 @@ test('updateContainerSensors must publish all sensors expected by HA', async () 
             },
             icon: 'mdi:docker',
             entity_picture:
-                'https://github.com/getwud/wud/raw/main/docs/wud_logo.png',
+                'https://github.com/getwud/wud/raw/main/docs/assets/wud-logo-256.png',
             state_topic: 'topic/watcher-name/update_status',
             payload_on: 'true',
             payload_off: 'false',
@@ -336,7 +336,7 @@ test('updateWatcherSensors must publish all watcher sensor messages expected by 
             },
             icon: 'mdi:docker',
             entity_picture:
-                'https://github.com/getwud/wud/raw/main/docs/wud_logo.png',
+                'https://github.com/getwud/wud/raw/main/docs/assets/wud-logo-256.png',
             state_topic: 'topic/watcher-name/running',
             payload_on: 'true',
             payload_off: 'false',
