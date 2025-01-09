@@ -13,13 +13,13 @@ function populateGauge() {
     storeContainer.getContainers().forEach((container) => {
         try {
             const flatContainer = flatten(container);
-            const flatContainerWithoutLaels = Object.keys(flatContainer)
+            const flatContainerWithoutLabels = Object.keys(flatContainer)
                 .filter((key) => !key.startsWith('labels_'))
                 .reduce((obj, key) => {
                     obj[key] = flatContainer[key];
                     return obj;
                 }, {});
-            gaugeContainer.set(flatContainerWithoutLaels, 1);
+            gaugeContainer.set(flatContainerWithoutLabels, 1);
         } catch (e) {
             log.warn(
                 `${container.id} - Error when adding container to the metrics (${e.message})`,
