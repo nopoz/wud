@@ -1,6 +1,6 @@
 # Changelog
 
-## 8.0.0 (wip)
+## 8.0.0
 - :star: [COMMAND] - Add support for [Command](/configuration/triggers/command/) trigger
 - :star: [DOCKER] - Add default healthcheck to the `wud` docker image
 - :star: [PUSHOVER] - Add support for optional message TTL
