@@ -1,193 +1,162 @@
 <template>
-  <v-card>
-    <v-app-bar
-      flat
-      dense
-      tile
-      @click="collapseDetail()"
-      style="cursor: pointer"
-    >
-      <v-toolbar-title class="text-body-3">
-        <v-chip label color="info" outlined disabled
-          ><v-icon left v-if="$vuetify.breakpoint.mdAndUp">mdi-update</v-icon
-          >{{ container.watcher }}
-        </v-chip>
-        /
-        <span v-if="$vuetify.breakpoint.mdAndUp && !selfhstContainerIconUrl">
-          <v-chip label color="info" outlined disabled
-            ><v-icon left v-if="$vuetify.breakpoint.mdAndUp">{{
-              registryIcon
-            }}</v-icon
-            >{{ container.image.registry.name }}
+  <div>
+    <div v-if="this.groupingLabel && this.previousContainer?.labels?.[this.groupingLabel] !== this.container.labels?.[this.groupingLabel]">
+      <div class="text-h6">
+        {{ this.container.labels?.[this.groupingLabel] ?? "Container without the sorted Label" }}
+      </div>
+      <v-divider class="pb-3"></v-divider>
+    </div>
+    <v-card>
+      <v-app-bar flat dense tile @click="collapseDetail()" style="cursor: pointer">
+        <v-toolbar-title class="text-body-3">
+          <v-chip label color="info" outlined disabled><v-icon left
+              v-if="$vuetify.breakpoint.mdAndUp">mdi-update</v-icon>{{ container.watcher }}
           </v-chip>
           /
-        </span>
-        <v-chip label color="info" outlined disabled>
-          <span v-if="$vuetify.breakpoint.mdAndUp">
-            <img
-              :src="selfhstContainerIconUrl"
-              style="width: 24px; height: 24px"
-              class="v-icon v-icon--left"
-              v-if="isSelfhstContainerIcon"
-            />
-            <v-icon left v-else>
-              {{ containerIcon }}
-            </v-icon>
-          </span>
-          {{ container.displayName }}
-        </v-chip>
-        <span v-if="$vuetify.breakpoint.mdAndUp">
-          :
-          <v-chip label outlined color="info" disabled>
-            {{ container.image.tag.value }}
-          </v-chip>
-        </span>
-      </v-toolbar-title>
-      <span v-if="$vuetify.breakpoint.mdAndUp && container.updateAvailable">
-        <v-icon>mdi-arrow-right</v-icon>
-        <v-tooltip bottom>
-          <template v-slot:activator="{ on, attrs }">
-            <v-chip
-              label
-              outlined
-              :color="newVersionClass"
-              v-bind="attrs"
-              v-on="on"
-              @click="
-                copyToClipboard('container new version', newVersion);
-                $event.stopImmediatePropagation();
-              "
-            >
-              {{ newVersion }}
-              <v-icon right small>mdi-clipboard-outline</v-icon>
+          <span v-if="$vuetify.breakpoint.mdAndUp && !selfhstContainerIconUrl">
+            <v-chip label color="info" outlined disabled><v-icon left v-if="$vuetify.breakpoint.mdAndUp">{{
+              registryIcon
+                }}</v-icon>{{ container.image.registry.name }}
             </v-chip>
-          </template>
-          <span class="text-caption">Copy to clipboard</span>
-        </v-tooltip>
-      </span>
+            /
+          </span>
+          <v-chip label color="info" outlined disabled>
+            <span v-if="$vuetify.breakpoint.mdAndUp">
+              <img :src="selfhstContainerIconUrl" style="width: 24px; height: 24px" class="v-icon v-icon--left"
+                v-if="isSelfhstContainerIcon" />
+              <v-icon left v-else>
+                {{ containerIcon }}
+              </v-icon>
+            </span>
+            {{ container.displayName }}
+          </v-chip>
+          <span v-if="$vuetify.breakpoint.mdAndUp">
+            :
+            <v-chip label outlined color="info" disabled>
+              {{ container.image.tag.value }}
+            </v-chip>
+          </span>
+        </v-toolbar-title>
+        <span v-if="$vuetify.breakpoint.mdAndUp && container.updateAvailable">
+          <v-icon>mdi-arrow-right</v-icon>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on, attrs }">
+              <v-chip label outlined :color="newVersionClass" v-bind="attrs" v-on="on" @click="
+                copyToClipboard('container new version', newVersion);
+              $event.stopImmediatePropagation();
+              ">
+                {{ newVersion }}
+                <v-icon right small>mdi-clipboard-outline</v-icon>
+              </v-chip>
+            </template>
+            <span class="text-caption">Copy to clipboard</span>
+          </v-tooltip>
+        </span>
 
-      <v-spacer />
-      <v-icon>{{ showDetail ? "mdi-chevron-up" : "mdi-chevron-down" }}</v-icon>
-    </v-app-bar>
-    <v-expand-transition>
-      <div v-show="showDetail">
-        <v-tabs
-          :icons-and-text="$vuetify.breakpoint.mdAndUp"
-          fixed-tabs
-          v-model="tab"
-          ref="tabs"
-        >
-          <v-tab v-if="container.result">
-            <span v-if="$vuetify.breakpoint.mdAndUp">Update</span>
-            <v-icon>mdi-package-down</v-icon>
-          </v-tab>
-          <v-tab>
-            <span v-if="$vuetify.breakpoint.mdAndUp">Triggers</span>
-            <v-icon>mdi-bell-ring</v-icon>
-          </v-tab>
-          <v-tab>
-            <span v-if="$vuetify.breakpoint.mdAndUp">Image</span>
-            <v-icon>mdi-package-variant-closed</v-icon>
-          </v-tab>
-          <v-tab>
-            <span v-if="$vuetify.breakpoint.mdAndUp">Container</span>
-            <img
-              :src="selfhstContainerIconUrl"
-              style="width: 24px; height: 24px"
-              class="v-icon v-icon--left"
-              v-if="isSelfhstContainerIcon"
-            />
-            <v-icon left v-else>
-              {{ containerIcon }}
-            </v-icon>
-          </v-tab>
-          <v-tab v-if="container.error">
-            <span v-if="$vuetify.breakpoint.mdAndUp">Error</span>
-            <v-icon>mdi-alert</v-icon>
-          </v-tab>
-        </v-tabs>
+        <v-spacer />
+        <v-icon>{{ showDetail ? "mdi-chevron-up" : "mdi-chevron-down" }}</v-icon>
+      </v-app-bar>
+      <v-expand-transition>
+        <div v-show="showDetail">
+          <v-tabs :icons-and-text="$vuetify.breakpoint.mdAndUp" fixed-tabs v-model="tab" ref="tabs">
+            <v-tab v-if="container.result">
+              <span v-if="$vuetify.breakpoint.mdAndUp">Update</span>
+              <v-icon>mdi-package-down</v-icon>
+            </v-tab>
+            <v-tab>
+              <span v-if="$vuetify.breakpoint.mdAndUp">Triggers</span>
+              <v-icon>mdi-bell-ring</v-icon>
+            </v-tab>
+            <v-tab>
+              <span v-if="$vuetify.breakpoint.mdAndUp">Image</span>
+              <v-icon>mdi-package-variant-closed</v-icon>
+            </v-tab>
+            <v-tab>
+              <span v-if="$vuetify.breakpoint.mdAndUp">Container</span>
+              <img :src="selfhstContainerIconUrl" style="width: 24px; height: 24px" class="v-icon v-icon--left"
+                v-if="isSelfhstContainerIcon" />
+              <v-icon left v-else>
+                {{ containerIcon }}
+              </v-icon>
+            </v-tab>
+            <v-tab v-if="container.error">
+              <span v-if="$vuetify.breakpoint.mdAndUp">Error</span>
+              <v-icon>mdi-alert</v-icon>
+            </v-tab>
+          </v-tabs>
 
-        <v-tabs-items v-model="tab">
-          <v-tab-item v-if="container.result">
-            <container-update
-              :result="container.result"
-              :semver="container.image.tag.semver"
-              :update-kind="container.updateKind"
-              :update-available="container.updateAvailable"
-            />
-          </v-tab-item>
-          <v-tab-item>
-            <container-triggers :container="container" />
-          </v-tab-item>
-          <v-tab-item>
-            <container-image :image="container.image" />
-          </v-tab-item>
-          <v-tab-item>
-            <container-detail :container="container" />
-          </v-tab-item>
-          <v-tab-item v-if="container.error">
-            <container-error :error="container.error" />
-          </v-tab-item>
-        </v-tabs-items>
+          <v-tabs-items v-model="tab">
+            <v-tab-item v-if="container.result">
+              <container-update :result="container.result" :semver="container.image.tag.semver"
+                :update-kind="container.updateKind" :update-available="container.updateAvailable" />
+            </v-tab-item>
+            <v-tab-item>
+              <container-triggers :container="container" />
+            </v-tab-item>
+            <v-tab-item>
+              <container-image :image="container.image" />
+            </v-tab-item>
+            <v-tab-item>
+              <container-detail :container="container" />
+            </v-tab-item>
+            <v-tab-item v-if="container.error">
+              <container-error :error="container.error" />
+            </v-tab-item>
+          </v-tabs-items>
 
-        <v-card-actions>
-          <v-row>
-            <v-col class="text-center">
-              <v-dialog v-model="dialogDelete" width="500" v-if="deleteEnabled">
-                <template v-slot:activator="{ on, attrs }">
-                  <v-btn small color="error" outlined v-bind="attrs" v-on="on">
-                    Delete
-                    <v-icon right>mdi-delete</v-icon>
-                  </v-btn>
-                </template>
+          <v-card-actions>
+            <v-row>
+              <v-col class="text-center">
+                <v-dialog v-model="dialogDelete" width="500" v-if="deleteEnabled">
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-btn small color="error" outlined v-bind="attrs" v-on="on">
+                      Delete
+                      <v-icon right>mdi-delete</v-icon>
+                    </v-btn>
+                  </template>
 
-                <v-card class="text-center">
-                  <v-app-bar color="error" dark flat dense>
-                    <v-toolbar-title class="text-body-1">
-                      Delete the container?
-                    </v-toolbar-title>
-                  </v-app-bar>
-                  <v-card-subtitle class="text-body-2">
-                    <v-row class="mt-2" no-gutters>
-                      <v-col>
-                        Delete
-                        <span class="font-weight-bold error--text">{{
-                          container.name
-                        }}</span>
-                        from the list?
-                        <br />
-                        <span class="font-italic"
-                          >(The real container won't be deleted)</span
-                        >
-                      </v-col>
-                    </v-row>
-                    <v-row>
-                      <v-col class="text-center">
-                        <v-btn outlined @click="dialogDelete = false" small>
-                          Cancel
-                        </v-btn>
-                        &nbsp;
-                        <v-btn
-                          color="error"
-                          small
-                          @click="
-                            dialogDelete = false;
-                            deleteContainer();
-                          "
-                        >
+                  <v-card class="text-center">
+                    <v-app-bar color="error" dark flat dense>
+                      <v-toolbar-title class="text-body-1">
+                        Delete the container?
+                      </v-toolbar-title>
+                    </v-app-bar>
+                    <v-card-subtitle class="text-body-2">
+                      <v-row class="mt-2" no-gutters>
+                        <v-col>
                           Delete
-                        </v-btn>
-                      </v-col>
-                    </v-row>
-                  </v-card-subtitle>
-                </v-card>
-              </v-dialog>
-            </v-col>
-          </v-row>
-        </v-card-actions>
-      </div>
-    </v-expand-transition>
-  </v-card>
+                          <span class="font-weight-bold error--text">{{
+                            container.name
+                          }}</span>
+                          from the list?
+                          <br />
+                          <span class="font-italic">(The real container won't be deleted)</span>
+                        </v-col>
+                      </v-row>
+                      <v-row>
+                        <v-col class="text-center">
+                          <v-btn outlined @click="dialogDelete = false" small>
+                            Cancel
+                          </v-btn>
+                          &nbsp;
+                          <v-btn color="error" small @click="
+                            dialogDelete = false;
+                          deleteContainer();
+                          ">
+                            Delete
+                          </v-btn>
+                        </v-col>
+                      </v-row>
+                    </v-card-subtitle>
+                  </v-card>
+                </v-dialog>
+              </v-col>
+            </v-row>
+          </v-card-actions>
+        </div>
+      </v-expand-transition>
+    </v-card>
+  </div>
 </template>
 
 <script>
@@ -212,6 +181,14 @@ export default {
       type: Object,
       required: true,
     },
+    previousContainer: {
+      type: Object,
+      required: false,
+    },
+    groupingLabel: {
+      type: String,
+      required: true,
+    }
   },
   data() {
     return {

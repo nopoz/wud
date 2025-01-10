@@ -12,7 +12,14 @@ function populateGauge() {
     gaugeContainer.reset();
     storeContainer.getContainers().forEach((container) => {
         try {
-            gaugeContainer.set(flatten(container), 1);
+            const flatContainer = flatten(container);
+            const flatContainerWithoutLabels = Object.keys(flatContainer)
+                .filter((key) => !key.startsWith('labels_'))
+                .reduce((obj, key) => {
+                    obj[key] = flatContainer[key];
+                    return obj;
+                }, {});
+            gaugeContainer.set(flatContainerWithoutLabels, 1);
         } catch (e) {
             log.warn(
                 `${container.id} - Error when adding container to the metrics (${e.message})`,

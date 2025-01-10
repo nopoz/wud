@@ -746,6 +746,7 @@ class Docker extends Component {
                 variant,
                 created,
             },
+            labels: container.Labels,
             result: {
                 tag: tagName,
             },

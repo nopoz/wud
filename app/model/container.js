@@ -69,6 +69,7 @@ const schema = joi.object({
         })
         .default({ kind: 'unknown' }),
     resultChanged: joi.function(),
+    labels: joi.object(),
 });
 
 /**
