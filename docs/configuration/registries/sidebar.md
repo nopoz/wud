@@ -1,4 +1,4 @@
-- [Introduction](introduction/)
+- [Introduction](?id=introduction)
 - [Quick start](quickstart/)
 - [Configuration](configuration/)
     - [Authentication](configuration/authentications/)
@@ -19,7 +19,6 @@
     - [Storage](configuration/storage/)    
     - [Triggers](configuration/triggers/)
     - [Watchers](configuration/watchers/)
-- [UI](ui/)
 - [Api](api/)
 - [Monitoring](monitoring/)
 - [FAQ](faq/)

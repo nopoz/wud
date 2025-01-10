@@ -1,8 +1,8 @@
 # Watcher API
 This API allows to query the state of the watchers.
 
-?> Need to add a new Watcher?  
-[Take a look at the documentation.](/watchers/)
+
+?> [Need to add a new Watcher?](/configuration/watchers/)
 
 ## Get all Watchers
 This operation lets you get all the configured watchers.

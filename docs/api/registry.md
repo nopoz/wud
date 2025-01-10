@@ -1,8 +1,7 @@
 # Registry API
 This API allows to query the state of the registries.
 
-?> Need to add a new Registry?  
-[Take a look at the documentation.](/registries/)
+?> [Need to add a new Registry?](/configuration/registries/)
 
 ## Get all Registries
 This operation lets you get all the configured registries.

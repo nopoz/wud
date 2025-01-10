@@ -54,7 +54,7 @@
 import { getOidcRedirection, getStrategies } from "@/services/auth";
 import LoginBasic from "@/components/LoginBasic";
 import LoginOidc from "@/components/LoginOidc";
-import logo from "@/assets/wud_logo_white.png";
+import logo from "@/assets/wud-logo.svg";
 
 export default {
   components: {

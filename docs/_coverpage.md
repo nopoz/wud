@@ -1,10 +1,9 @@
-![logo](wud_logo.png)
+<!-- markdownlint-disable first-line-h1 -->
 
-# **WUD**
+![logo](assets/wud-logo.svg)
 
-> Get notified when a new version of your Docker Container is available.
+# **[What's up Docker?](#introduction)**
 
-[Getting Started](introduction/)
+> Keep your containers up-to-date!
 
-
-
+[Getting Started](#introduction)
