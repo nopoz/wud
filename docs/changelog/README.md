@@ -1,5 +1,8 @@
 # Changelog
 
+## 8.0.1
+- :fire: Fix default healthcheck when http server is disabled
+
 ## 8.0.0
 - :star: [COMMAND] - Add support for [Command](/configuration/triggers/command/) trigger
 - :star: [DOCKER] - Add default healthcheck to the `wud` docker image
