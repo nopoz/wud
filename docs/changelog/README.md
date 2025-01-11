@@ -1,6 +1,6 @@
 # Changelog
 
-## 8.0.1
+## 8.0.1 (wip)
 - :fire: Fix default healthcheck when http server is disabled
 
 ## 8.0.0
