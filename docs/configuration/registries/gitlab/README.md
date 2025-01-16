@@ -7,9 +7,9 @@ The `gitlab` registry lets you configure [GITLAB](https://docs.gitlab.com/ee/use
 
 | Env var                                       |   Required   | Description                    | Supported values                         | Default value when missing  |
 |-----------------------------------------------|:------------:|--------------------------------| ---------------------------------------- |-----------------------------| 
-| `WUD_REGISTRY_GITLAB_{REGISTRY_NAME}_URL`     | :red_circle: | Gitlab Registry base url       |                                          | https://registry.gitlab.com |
 | `WUD_REGISTRY_GITLAB_{REGISTRY_NAME}_AUTHURL` | :red_circle: | Gitlab Authentication base url |                                          | https://gitlab.com          |
 | `WUD_REGISTRY_GITLAB_{REGISTRY_NAME}_TOKEN`   | :red_circle: | Gitlab Personal Access Token   |                                          |                             |
+| `WUD_REGISTRY_GITLAB_{REGISTRY_NAME}_URL`     | :red_circle: | Gitlab Registry base url       |                                          | https://registry.gitlab.com |
 
 ### Examples
 
@@ -23,12 +23,12 @@ services:
     image: getwud/wud
     ...
     environment:
-      - WUD_REGISTRY_GITLAB_TOKEN=xxxxx 
+      - WUD_REGISTRY_GITLAB_PUBLIC_TOKEN=xxxxx 
 ```
 #### **Docker**
 ```bash
 docker run \
-  -e WUD_REGISTRY_GITLAB_TOKEN="xxxxx" \
+  -e WUD_REGISTRY_GITLAB_PUBLIC_TOKEN="xxxxx" \
   ...
   getwud/wud
 ```
@@ -44,16 +44,16 @@ services:
     image: getwud/wud
     ...
     environment:
-      - WUD_REGISTRY_GITLAB_URL=https://registry.mygitlab.acme.com
-      - WUD_REGISTRY_GITLAB_AUTHURL=https://mygitlab.acme.com
-      - WUD_REGISTRY_GITLAB_TOKEN=xxxxx 
+      - WUD_REGISTRY_GITLAB_PRIVATE_URL=https://registry.mygitlab.acme.com
+      - WUD_REGISTRY_GITLAB_PRIVATE_AUTHURL=https://mygitlab.acme.com
+      - WUD_REGISTRY_GITLAB_PRIVATE_TOKEN=xxxxx 
 ```
 #### **Docker**
 ```bash
 docker run \
-  -e WUD_REGISTRY_GITLAB_URL="https://registry.mygitlab.acme.com"
-  -e WUD_REGISTRY_GITLAB_AUTHURL="https://mygitlab.acme.com"
-  -e WUD_REGISTRY_GITLAB_TOKEN="xxxxx" \
+  -e WUD_REGISTRY_GITLAB_PRIVATE_URL="https://registry.mygitlab.acme.com"
+  -e WUD_REGISTRY_GITLAB_PRIVATE_AUTHURL="https://mygitlab.acme.com"
+  -e WUD_REGISTRY_GITLAB_PRIVATE_TOKEN="xxxxx" \
   ...
   getwud/wud
 ```
