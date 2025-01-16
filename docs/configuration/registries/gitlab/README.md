@@ -5,11 +5,11 @@ The `gitlab` registry lets you configure [GITLAB](https://docs.gitlab.com/ee/use
 
 ### Variables
 
-| Env var                       |   Required   | Description                    | Supported values                         | Default value when missing  |
-|-------------------------------|:------------:|--------------------------------| ---------------------------------------- |-----------------------------| 
-| `WUD_REGISTRY_GITLAB_URL`     | :red_circle: | Gitlab Registry base url       |                                          | https://registry.gitlab.com |
-| `WUD_REGISTRY_GITLAB_AUTHURL` | :red_circle: | Gitlab Authentication base url |                                          | https://gitlab.com          |
-| `WUD_REGISTRY_GITLAB_TOKEN`   | :red_circle: | Gitlab Personal Access Token   |                                          |                             |
+| Env var                                       |   Required   | Description                    | Supported values                         | Default value when missing  |
+|-----------------------------------------------|:------------:|--------------------------------| ---------------------------------------- |-----------------------------| 
+| `WUD_REGISTRY_GITLAB_{REGISTRY_NAME}_URL`     | :red_circle: | Gitlab Registry base url       |                                          | https://registry.gitlab.com |
+| `WUD_REGISTRY_GITLAB_{REGISTRY_NAME}_AUTHURL` | :red_circle: | Gitlab Authentication base url |                                          | https://gitlab.com          |
+| `WUD_REGISTRY_GITLAB_{REGISTRY_NAME}_TOKEN`   | :red_circle: | Gitlab Personal Access Token   |                                          |                             |
 
 ### Examples
 
