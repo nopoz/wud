@@ -1,6 +1,6 @@
 const fs = require('fs/promises');
 const yaml = require('yaml');
-const Trigger = require('../docker/Docker');
+const Docker = require('../docker/Docker');
 const { getState } = require('../../../registry');
 
 /**
@@ -27,7 +27,7 @@ function doesContainerBelongToCompose(compose, container) {
 /**
  * Update a Docker compose stack with an updated one.
  */
-class Dockercompose extends Trigger {
+class Dockercompose extends Docker {
     /**
      * Get the Trigger configuration schema.
      * @returns {*}
@@ -53,6 +53,15 @@ class Dockercompose extends Trigger {
             );
             throw e;
         }
+    }
+
+    /**
+     * Update the container.
+     * @param container the container
+     * @returns {Promise<void>}
+     */
+    async trigger(container) {
+        return this.triggerBatch([container]);
     }
 
     /**
@@ -119,7 +128,7 @@ class Dockercompose extends Trigger {
         // Update all containers
         // (super.notify will take care of the dry-run mode for each container as well)
         await Promise.all(
-            containersFiltered.map((container) => this.trigger(container)),
+            containersFiltered.map((container) => super.trigger(container)),
         );
     }
 
