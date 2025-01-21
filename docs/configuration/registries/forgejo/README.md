@@ -5,11 +5,11 @@ The `forgejo` registry lets you configure a self-hosted [Forgejo](https://forgej
 
 ### Variables
 
-| Env var                                         |    Required    | Description                                                     | Supported values                                      | Default value when missing |
-|-------------------------------------------------|:--------------:|-----------------------------------------------------------------|-------------------------------------------------------|----------------------------| 
-| `WUD_REGISTRY_FORGEJO_{REGISTRY_NAME}_URL`      |  :red_circle:  | Registry URL (e.g. https://forgejo.acme.com)                    |                                                       |                            |
-| `WUD_REGISTRY_FORGEJO_{REGISTRY_NAME}_LOGIN`    | :red_circle:   | Gitea username                                                  | WUD_REGISTRY_FORGEJO_{REGISTRY_NAME}_PASSWORD must be defined         |                            |
-| `WUD_REGISTRY_FORGEJO_{REGISTRY_NAME}_PASSWORD` |  :red_circle:  | Gitea password                                                  | WUD_REGISTRY_FORGEJO_{REGISTRY_NAME}_LOGIN must be defined            |                            |
+| Env var                                         |    Required    | Description                                                     | Supported values                                                      | Default value when missing |
+|-------------------------------------------------|:--------------:|-----------------------------------------------------------------|-----------------------------------------------------------------------|----------------------------| 
+| `WUD_REGISTRY_FORGEJO_{REGISTRY_NAME}_URL`      | :red_circle:   | Registry URL (e.g. https://forgejo.acme.com)                    |                                                                       |                            |
+| `WUD_REGISTRY_FORGEJO_{REGISTRY_NAME}_LOGIN`    | :red_circle:   | Forgejo username                                                | WUD_REGISTRY_FORGEJO_{REGISTRY_NAME}_PASSWORD must be defined         |                            |
+| `WUD_REGISTRY_FORGEJO_{REGISTRY_NAME}_PASSWORD` | :red_circle:   | Forgejo password or personal access token                       | WUD_REGISTRY_FORGEJO_{REGISTRY_NAME}_LOGIN must be defined            |                            |
 | `WUD_REGISTRY_FORGEJO_{REGISTRY_NAME}_AUTH`     | :white_circle: | Htpasswd string (when htpasswd auth is enabled on the registry) | WUD_REGISTRY_FORGEJO_{REGISTRY_NAME}_LOGIN/TOKEN  must not be defined |                            |
 ### Examples
 
