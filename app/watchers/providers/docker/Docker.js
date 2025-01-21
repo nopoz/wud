@@ -276,6 +276,10 @@ class Docker extends Component {
             this.watchFromCron(),
         );
 
+        // Force watchatstart value based on the state store (empty or not)
+        this.configuration.watchatstart =
+            storeContainer.getContainers().length === 0;
+
         // watch at startup if enabled (after all components have been registered)
         if (this.configuration.watchatstart) {
             this.watchCronTimeout = setTimeout(

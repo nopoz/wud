@@ -1,6 +1,7 @@
 # Changelog
 
 ## 8.0.1 (wip)
+- :start: Force watcher to watch at startup only if store is empty ([#570](https://github.com/getwud/wud/issues/570))
 - :fire: Fix default healthcheck when http server is disabled ([#562](https://github.com/getwud/wud/issues/556))
 - :fire: Fix missing Prometheus label ([#562](https://github.com/getwud/wud/issues/562))
 - :fire: [DOCKER-COMPOSE] - Fix manual update ([#546](https://github.com/getwud/wud/issues/546))
