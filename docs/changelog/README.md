@@ -3,6 +3,7 @@
 ## 8.0.1 (wip)
 - :fire: Fix default healthcheck when http server is disabled ([#562](https://github.com/getwud/wud/issues/556))
 - :fire: Fix missing Prometheus label ([#562](https://github.com/getwud/wud/issues/562))
+- :fire: [DOCKER-COMPOSE] - Fix manual update ([#546](https://github.com/getwud/wud/issues/546))
 
 ## 8.0.0
 - :star: [COMMAND] - Add support for [Command](/configuration/triggers/command/) trigger

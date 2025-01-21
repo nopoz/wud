@@ -40,7 +40,7 @@ async function runTrigger(req, res) {
         res.status(200).json({});
     } catch (e) {
         log.warn(
-            `Trigger cannot be executed without container (type=${triggerType}, name=${triggerName})`,
+            `Error when running trigger ${triggerType}.${triggerName} (${e.message})`,
         );
         res.status(500).json({
             error: `Error when running trigger ${triggerType}.${triggerName} (${e.message})`,
