@@ -68,7 +68,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /opt/wud/store:/store
     healthcheck:
-      test: wget --no-verbose --tries=1 --no-check-certificate --spider http://localhost:3000
+      test: curl --fail http://localhost:${WUD_SERVER_PORT:-3000}/health || exit 1
       interval: 10s
       timeout: 10s
       retries: 3
