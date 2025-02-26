@@ -408,17 +408,18 @@ async function refreshContainer(req, res) {
   const { name, watcher } = req.query;
 
   // Normalize watcher name if empty (treat as local)
-  if (!watcher || watcher.trim() === '') {
-    watcher = 'local';
+  let watcherName = watcher || '';
+  if (!watcherName || watcherName.trim() === '') {
+    watcherName = 'local';
   }
 
   // Handle local watcher vs remote watcher instances
-  const watcherInstance = watcher === 'local' ? 
+  const watcherInstance = watcherName === 'local' ? 
     getWatchers()['watcher.docker.local'] : 
-    getWatchers()[`watcher.docker.${watcher}`];
+    getWatchers()[`watcher.docker.${watcherName}`];
 
   if (!watcherInstance) {
-    return res.status(404).json({ error: `Watcher ${watcher} not found` });
+    return res.status(404).json({ error: `Watcher ${watcherName} not found` });
   }
 
   try {
@@ -439,12 +440,12 @@ async function refreshContainer(req, res) {
     
     for (const existing of existingContainers) {
       // For local watcher, match either blank watcher or 'local'
-      const isLocalMatch = watcher === 'local' && 
+      const isLocalMatch = watcherName === 'local' && 
         (!existing.watcher || existing.watcher === 'local');
       
       // For remote watchers, exact match required
-      const isRemoteMatch = watcher !== 'local' && 
-        existing.watcher === watcher;
+      const isRemoteMatch = watcherName !== 'local' && 
+        existing.watcher === watcherName;
 
       if ((isLocalMatch || isRemoteMatch) && existing.id !== container.id) {
         console.log(`Removing old container ${existing.id} from store`);
