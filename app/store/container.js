@@ -102,12 +102,75 @@ function getContainers(query = {}) {
         const uniqueContainers = Object.values(
             containerList.reduce((acc, container) => {
                 const key = getContainerKey(container);
-                
-                // Always prefer the current running container over historical entries
                 const existing = acc[key];
-                if (!existing || container.status === 'running') {
+                
+                // If no existing container with this key, add this one
+                if (!existing) {
                     acc[key] = container;
+                    return acc;
                 }
+                
+                // Use a clear, prioritized approach to select the best container:
+                
+                // 1. Prefer running containers over non-running
+                if (container.status === 'running' && existing.status !== 'running') {
+                    acc[key] = container;
+                    return acc;
+                }
+                
+                if (existing.status === 'running' && container.status !== 'running') {
+                    return acc; // Keep existing
+                }
+                
+                // 2. If update status differs, prefer containers that don't need updates
+                if (container.updateAvailable === false && existing.updateAvailable === true) {
+                    acc[key] = container;
+                    return acc;
+                }
+                
+                if (existing.updateAvailable === false && container.updateAvailable === true) {
+                    return acc; // Keep existing
+                }
+                
+                // 3. If both are running or both stopped and update status is the same,
+                // prefer the one with the newer version
+                if (container.image && existing.image) {
+                    // If tags are different, try to make an informed choice
+                    if (container.image.tag && existing.image.tag && 
+                        container.image.tag.value !== existing.image.tag.value) {
+                        
+                        // If both containers use semver tags, compare them properly
+                        if (container.image.tag.semver && existing.image.tag.semver) {
+                            // Choose the container with the more recent tag value
+                            // This is a simplistic approach; proper semver comparison would be better
+                            if (container.image.tag.value > existing.image.tag.value) {
+                                acc[key] = container;
+                            }
+                            return acc;
+                        }
+                    }
+                    
+                    // If we couldn't decide based on tags, use image ID as last resort
+                    // This assumes newer images have "greater" IDs (not always true but often works)
+                    if (container.image.id && existing.image.id && 
+                        container.image.id !== existing.image.id) {
+                        
+                        // If the container has been recently updated from the UI
+                        if (container.notification && 
+                            container.notification.level === 'success' && 
+                            container.notification.message && 
+                            container.notification.message.includes('completed successfully')) {
+                            acc[key] = container;
+                            return acc;
+                        }
+                        
+                        // Otherwise try to compare image IDs (imperfect but can help)
+                        if (container.image.id > existing.image.id) {
+                            acc[key] = container;
+                        }
+                    }
+                }
+                
                 return acc;
             }, {})
         );

@@ -434,27 +434,8 @@ export default {
             console.log(`Polling for container update (attempt ${this.pollAttempts}/${this.maxPollAttempts})`);
             
             try {
-                // First try to get current container with strong cache busting
-                const containerResponse = await axios.get(`/api/containers/${this.container.id}`, {
-                    headers: {
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache',
-                        'Expires': '0'
-                    }
-                });
-                
-                // Check if the container has updated
-                if (containerResponse.data && 
-                    containerResponse.data.image && 
-                    containerResponse.data.image.id !== this.container.image.id) {
-                    
-                    console.log('Container image updated, refreshing page');
-                    this.finishUpdate(true);
-                    return;
-                }
-                
-                // If we didn't find an update based on ID, try getting all containers
-                // This handles the case where the container ID might have changed
+                // Instead of polling the old container directly, 
+                // first check if there's a container with the same name
                 const allContainersResponse = await axios.get('/api/containers', {
                     headers: {
                         'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -469,10 +450,31 @@ export default {
                     c.watcher === this.container.watcher
                 );
                 
+                // If we found a container with the same name but different ID, it was updated
                 if (updatedContainer && updatedContainer.id !== this.container.id) {
                     console.log('Container recreated with new ID, refreshing page');
                     this.finishUpdate(true);
                     return;
+                }
+                
+                // If we're still looking at the same container ID, check if its image changed
+                if (updatedContainer && updatedContainer.id === this.container.id) {
+                    // Check if the image has changed
+                    if (updatedContainer.image && 
+                        this.container.image && 
+                        updatedContainer.image.id !== this.container.image.id) {
+                        
+                        console.log('Container image updated, refreshing page');
+                        this.finishUpdate(true);
+                        return;
+                    }
+                    
+                    // Check if the updateAvailable flag has been reset to false
+                    if (this.container.updateAvailable && !updatedContainer.updateAvailable) {
+                        console.log('Container update status reset, refreshing page');
+                        this.finishUpdate(true);
+                        return;
+                    }
                 }
                 
                 // After max attempts, give up and just refresh the page

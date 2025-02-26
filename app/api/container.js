@@ -404,6 +404,13 @@ function setupScriptHandlers(id, containerName) {
     return { onOutput, onComplete };
 }
 
+/**
+ * Force refresh a container's status and image information directly from Docker.
+ * This is a more aggressive refresh that ensures the container shows the correct
+ * version information regardless of store state.
+ * @param {Object} req
+ * @param {Object} res
+ */
 async function refreshContainer(req, res) {
   const { name, watcher } = req.query;
 
@@ -412,6 +419,8 @@ async function refreshContainer(req, res) {
   if (!watcherName || watcherName.trim() === '') {
     watcherName = 'local';
   }
+
+  console.log(`Refreshing container ${name} (watcher: ${watcherName})`);
 
   // Handle local watcher vs remote watcher instances
   const watcherInstance = watcherName === 'local' ? 
@@ -423,49 +432,148 @@ async function refreshContainer(req, res) {
   }
 
   try {
-    // Fetch containers watched by this watcher
-    const containers = await watcherInstance.getContainers();
-
-    // Find the container by name
-    const container = containers.find(c => c.name === name);
-    if (!container) {
-      return res.status(404).json({ error: `Container ${name} not found` });
-    }
-
-    // Remove any existing containers with same name from store, handling blank watcher names
-    const existingContainers = storeContainer.getContainers({ 
-      name: name
-      // Don't filter by watcher here, we'll handle that in the filtering below
+    // Get containers directly from Docker API (source of truth)
+    const dockerContainers = await watcherInstance.dockerApi.listContainers({
+      filters: {
+        name: [name]
+      }
     });
     
-    for (const existing of existingContainers) {
-      // For local watcher, match either blank watcher or 'local'
-      const isLocalMatch = watcherName === 'local' && 
-        (!existing.watcher || existing.watcher === 'local');
+    if (dockerContainers.length === 0) {
+      return res.status(404).json({ error: `Container ${name} not found in Docker` });
+    }
+    
+    // Find the running container
+    const runningContainer = dockerContainers.find(c => 
+      c.State === 'running' && 
+      c.Names.some(n => n.replace('/', '') === name)
+    );
+    
+    if (!runningContainer) {
+      return res.status(404).json({ error: `No running container named ${name} found` });
+    }
+    
+    // Check if this is a container we have in our store
+    const existingContainers = storeContainer.getContainers({ 
+      name: name
+    }).filter(c => {
+      const cWatcher = c.watcher || '';
+      return watcherName === 'local' ? 
+        (!cWatcher || cWatcher === 'local') : 
+        (cWatcher === watcherName);
+    });
+    
+    // Get the full details of the Docker container
+    const dockerContainer = await watcherInstance.dockerApi.getContainer(runningContainer.Id).inspect();
+    const dockerImage = await watcherInstance.dockerApi.getImage(dockerContainer.Image).inspect();
+    
+    // Find the container in store with update information
+    const containerWithUpdateInfo = existingContainers.find(c => 
+      c.updateKind && c.updateKind.remoteValue && c.result
+    );
+    
+    let updatedContainer;
+    
+    if (existingContainers.some(c => c.id === runningContainer.Id)) {
+      // Get the existing container from store
+      const existingContainer = existingContainers.find(c => c.id === runningContainer.Id);
       
-      // For remote watchers, exact match required
-      const isRemoteMatch = watcherName !== 'local' && 
-        existing.watcher === watcherName;
-
-      if ((isLocalMatch || isRemoteMatch) && existing.id !== container.id) {
-        console.log(`Removing old container ${existing.id} from store`);
-        storeContainer.deleteContainer(existing.id);
+      // Update with latest Docker info
+      updatedContainer = {
+        ...existingContainer,
+        status: dockerContainer.State.Status,
+        image: {
+          ...existingContainer.image,
+          id: dockerContainer.Image
+        }
+      };
+      
+      // If dockerImage has RepoTags, use the first one to update the tag
+      if (dockerImage.RepoTags && dockerImage.RepoTags.length > 0) {
+        const tagName = dockerImage.RepoTags[0].split(':')[1] || 'latest';
+        
+        // Update the tag information
+        updatedContainer.image.tag = {
+          ...updatedContainer.image.tag,
+          value: tagName
+        };
+        
+        // Force updateAvailable to false if the tag matches the remoteValue
+        if (updatedContainer.updateKind && 
+            updatedContainer.updateKind.remoteValue === tagName) {
+          console.log(`Container ${name} appears to be updated to target version ${tagName}`);
+          updatedContainer.updateAvailable = false;
+          updatedContainer.updateKind.localValue = tagName;
+        }
+        
+        // If we don't have update info but there's another container with it
+        if ((!updatedContainer.updateKind || !updatedContainer.result) && containerWithUpdateInfo) {
+          console.log(`Transferring update info to container ${runningContainer.Id}`);
+          updatedContainer.updateKind = containerWithUpdateInfo.updateKind;
+          updatedContainer.result = containerWithUpdateInfo.result;
+          
+          // If the current tag matches the remote value, mark as updated
+          if (updatedContainer.updateKind && 
+              updatedContainer.updateKind.remoteValue === tagName) {
+            updatedContainer.updateAvailable = false;
+            updatedContainer.updateKind.localValue = tagName;
+          }
+        }
+      }
+      
+      // Always add a success notification if the container was updated
+      if (!updatedContainer.notification) {
+        updatedContainer.notification = {
+          message: `Update for ${name} completed successfully.`,
+          level: 'success'
+        };
+      }
+    } else {
+      console.log(`Creating new container record for ${runningContainer.Id}`);
+      
+      // This is a new container, we need to create it in the store
+      // Use the Docker watcher to add proper image details
+      const newContainer = await watcherInstance.addImageDetailsToContainer(runningContainer);
+      
+      // Transfer update info from old container if available
+      if (containerWithUpdateInfo) {
+        console.log(`Transferring update info from old container to new container`);
+        
+        // Copy update information
+        newContainer.updateKind = containerWithUpdateInfo.updateKind;
+        newContainer.result = containerWithUpdateInfo.result;
+        
+        // Set update flags based on tag comparison
+        if (newContainer.updateKind && 
+            newContainer.image.tag.value === newContainer.updateKind.remoteValue) {
+          newContainer.updateAvailable = false;
+          newContainer.updateKind.localValue = newContainer.updateKind.remoteValue;
+        }
+        
+        // Copy notification
+        newContainer.notification = {
+          message: `Update for ${name} completed successfully.`,
+          level: 'success'
+        };
+      }
+      
+      updatedContainer = newContainer;
+    }
+    
+    // Save the updated container to the store
+    const savedContainer = storeContainer.updateContainer(updatedContainer);
+    
+    // Now clean up any outdated containers
+    for (const existingContainer of existingContainers) {
+      if (existingContainer.id !== savedContainer.id) {
+        console.log(`Removing outdated container ${existingContainer.id}`);
+        storeContainer.deleteContainer(existingContainer.id);
       }
     }
-
-    // Update container information without querying registries
-    const updatedContainer = await watcherInstance.updateContainerStatus(container);
-
-    // Check if the container is still running
-    if (!updatedContainer) {
-      return res.status(404).json({ error: `Container ${name} is no longer running` });
-    }
-
-    // Update the store with the new container data
-    storeContainer.updateContainer(updatedContainer);
-
+    
     // Return the updated container
-    res.status(200).json(updatedContainer);
+    res.status(200).json(savedContainer);
+    
   } catch (error) {
     console.error(`Error refreshing container ${name}:`, error);
     res.status(500).json({ error: `Error refreshing container: ${error.message}` });

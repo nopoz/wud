@@ -174,11 +174,13 @@ async install(container) {
         console.log(`Starting cleanup of existing containers for ${container.name} (watcher: ${container.watcher})`);
         console.log(`Exclude IDs: ${excludeIds.length ? excludeIds.join(', ') : 'None'}`);
 
+        // Create a copy of excludeIds to avoid modifying the original
+        const safeExcludeIds = [...excludeIds];
         const MAX_RETRIES = 3;
         let attempts = 0;
 
         while (attempts < MAX_RETRIES) {
-            const containers = storeContainer.getContainers({ 
+            const containerList = storeContainer.getContainers({ 
                 name: container.name,
                 watcher: container.watcher 
             });
@@ -186,22 +188,64 @@ async install(container) {
             let cleanupNeeded = false;
             console.log(`Cleanup attempt #${attempts + 1} for ${container.name} (watcher: ${container.watcher})...`);
 
-            for (const existingContainer of containers) {
-                if (!excludeIds.includes(existingContainer.id)) {
-                    try {
-                        cleanupNeeded = true;
-                        console.log(`Found container to cleanup: ${existingContainer.id} (status: ${existingContainer.status}, tag: ${existingContainer.image.tag.value})`);
-                        await storeContainer.deleteContainer(existingContainer.id);
-                        
-                        // Remove duplicate messages - only log final status
-                        const stillExists = storeContainer.getContainer(existingContainer.id);
-                        if (stillExists) {
-                            console.warn(`Container ${existingContainer.id} still exists after deletion attempt`);
-                        } else {
-                            console.log(`Container ${existingContainer.id} deleted successfully.`);
+            // First, identify containers that aren't already excluded
+            const availableContainers = containerList.filter(c => !safeExcludeIds.includes(c.id));
+            
+            // If we have containers to potentially clean up
+            if (availableContainers.length > 0) {
+                // Find the best container to preserve using multiple criteria
+                let bestContainer = null;
+                
+                // 1. First, prefer running containers
+                const runningContainers = availableContainers.filter(c => c.status === 'running');
+                
+                if (runningContainers.length > 0) {
+                    // 2. Among running containers, prefer those without updateAvailable flag
+                    const upToDateContainers = runningContainers.filter(c => c.updateAvailable === false);
+                    
+                    if (upToDateContainers.length > 0) {
+                        // Choose the first up-to-date container
+                        bestContainer = upToDateContainers[0];
+                    } else {
+                        // If no up-to-date containers, choose the first running one
+                        bestContainer = runningContainers[0];
+                    }
+                } else if (availableContainers.length > 0) {
+                    // If no running containers, just pick the first available
+                    bestContainer = availableContainers[0];
+                }
+                
+                // If we found a container to preserve, add it to the exclusion list
+                if (bestContainer) {
+                    console.log(`Preserving container ${bestContainer.id} (status: ${bestContainer.status}) during cleanup`);
+                    safeExcludeIds.push(bestContainer.id);
+                }
+                
+                // Now perform the cleanup for all non-excluded containers
+                for (const containerToClean of availableContainers) {
+                    if (!safeExcludeIds.includes(containerToClean.id)) {
+                        try {
+                            cleanupNeeded = true;
+                            
+                            // Safe access to nested properties
+                            const tagValue = containerToClean.image && 
+                                            containerToClean.image.tag && 
+                                            containerToClean.image.tag.value || 'unknown';
+                                            
+                            console.log(`Found container to cleanup: ${containerToClean.id} (status: ${containerToClean.status}, tag: ${tagValue})`);
+                            
+                            await storeContainer.deleteContainer(containerToClean.id);
+                            
+                            // Verify deletion
+                            const stillExists = storeContainer.getContainer(containerToClean.id);
+                            if (stillExists) {
+                                console.warn(`Container ${containerToClean.id} still exists after deletion attempt`);
+                            } else {
+                                console.log(`Container ${containerToClean.id} deleted successfully.`);
+                            }
+                        } catch (err) {
+                            console.warn(`Failed to delete container ${containerToClean.id}: ${err.message}`);
                         }
-                    } catch (err) {
-                        console.warn(`Failed to delete container ${existingContainer.id}: ${err.message}`);
                     }
                 }
             }
@@ -215,7 +259,7 @@ async install(container) {
             const remainingContainers = storeContainer.getContainers({
                 name: container.name,
                 watcher: container.watcher,
-            }).filter(c => !excludeIds.includes(c.id));
+            }).filter(c => !safeExcludeIds.includes(c.id));
 
             if (remainingContainers.length === 0) {
                 console.log(`All old containers for ${container.name} (watcher: ${container.watcher}) have been cleaned up.`);
@@ -236,7 +280,7 @@ async install(container) {
             const remainingContainers = storeContainer.getContainers({
                 name: container.name,
                 watcher: container.watcher,
-            }).filter(c => !excludeIds.includes(c.id));
+            }).filter(c => !safeExcludeIds.includes(c.id));
             
             if (remainingContainers.length > 0) {
                 console.warn('Remaining containers after max retries:', 

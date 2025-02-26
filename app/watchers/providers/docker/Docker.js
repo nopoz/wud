@@ -124,45 +124,131 @@ function getOldContainers(newContainers, containersFromTheStore) {
 }
 
 /**
- * Prune old containers from the store.
- * @param newContainers
- * @param containersFromTheStore
+ * Prune old containers from the store with enhanced protection for updated containers.
+ * @param newContainers - Array of containers from Docker API
+ * @param containersFromTheStore - Array of containers from the store
  */
 function pruneOldContainers(newContainers, containersFromTheStore) {
-    if (process.env.DEBUG) {  // Only log full container lists in debug mode
-        console.log(`Pruning old containers. New containers: ${newContainers.map(c => `${c.id} (${c.status})`).join(', ')}`);
-        console.log(`Store containers: ${containersFromTheStore.map(c => `${c.id} (${c.status})`).join(', ')}`);
-    } else {
-        console.log(`Pruning old containers (${newContainers.length} new, ${containersFromTheStore.length} in store)`);
-    }
+    console.log(`Pruning old containers (${newContainers.length} new, ${containersFromTheStore.length} in store)`);
 
-    // Group new containers by name+watcher combo
-    const newContainersByKey = newContainers.reduce((acc, container) => {
-        const key = `${container.name}_${container.watcher}`;
-        if (!acc[key]) {
-            acc[key] = [];
+    // Group containers by name+watcher for easier processing
+    const storeContainersByKey = {};
+    const newContainersByKey = {};
+    
+    // Group store containers
+    for (const container of containersFromTheStore) {
+        const key = `${container.name}_${container.watcher || 'local'}`;
+        if (!storeContainersByKey[key]) {
+            storeContainersByKey[key] = [];
         }
-        acc[key].push(container);
-        return acc;
-    }, {});
-
-    for (const containerToCheck of containersFromTheStore) {
-        const key = `${containerToCheck.name}_${containerToCheck.watcher}`;
+        storeContainersByKey[key].push(container);
+    }
+    
+    // Group new containers
+    for (const container of newContainers) {
+        const key = `${container.name}_${container.watcher || 'local'}`;
+        if (!newContainersByKey[key]) {
+            newContainersByKey[key] = [];
+        }
+        newContainersByKey[key].push(container);
+    }
+    
+    // Process each group of containers
+    for (const [key, containersInStore] of Object.entries(storeContainersByKey)) {
         const newContainersForKey = newContainersByKey[key] || [];
-
-        // If we have new containers for this name+watcher combo
-        if (newContainersForKey.length > 0) {
-            // Check if this container's ID is in the new containers list
-            const stillExists = newContainersForKey.some(c => c.id === containerToCheck.id);
-            
-            if (!stillExists) {
-                console.log(`Removing old container ${containerToCheck.id} for ${containerToCheck.name}`);
-                storeContainer.deleteContainer(containerToCheck.id);
+        
+        // If there are no new containers for this key, remove all store containers
+        if (newContainersForKey.length === 0) {
+            for (const containerItem of containersInStore) {
+                console.log(`Removing orphaned container ${containerItem.id} for ${containerItem.name}`);
+                storeContainer.deleteContainer(containerItem.id);
             }
-        } else {
-            // No new containers for this name+watcher combo, remove the old one
-            console.log(`Removing orphaned container ${containerToCheck.id} for ${containerToCheck.name}`);
-            storeContainer.deleteContainer(containerToCheck.id);
+            continue;
+        }
+        
+        // If there's only one store container, and it has update info but isn't in newContainers,
+        // we need to transfer its info to one of the new containers before deleting
+        if (containersInStore.length === 1 && 
+            containersInStore[0].updateKind && 
+            containersInStore[0].result && 
+            !newContainersForKey.some(c => c.id === containersInStore[0].id)) {
+            
+            const oldContainer = containersInStore[0];
+            const newContainer = newContainersForKey[0]; // Use the first new container
+            
+            // Check if the new container might be an update of the old one
+            if (oldContainer.image && newContainer.image && 
+                oldContainer.image.tag && newContainer.image.tag &&
+                oldContainer.image.tag.value !== newContainer.image.tag.value) {
+                
+                console.log(`Found version change for ${oldContainer.name}: ${oldContainer.image.tag.value} -> ${newContainer.image.tag.value}`);
+                
+                // Create updated container with transferred information
+                const updatedContainer = { ...newContainer };
+                
+                // Transfer update info
+                updatedContainer.updateKind = {
+                    ...oldContainer.updateKind,
+                    localValue: newContainer.image.tag.value
+                };
+                
+                updatedContainer.result = oldContainer.result;
+                
+                // Reset update status if the tag matches target
+                if (newContainer.image.tag.value === oldContainer.updateKind.remoteValue) {
+                    updatedContainer.updateAvailable = false;
+                } else {
+                    updatedContainer.updateAvailable = true;
+                }
+                
+                // Add success notification
+                updatedContainer.notification = {
+                    message: `Update for ${newContainer.name} completed successfully.`,
+                    level: 'success'
+                };
+                
+                // Save the updated new container
+                storeContainer.updateContainer(updatedContainer);
+            }
+        }
+        
+        // Create a set to track containers we want to keep (don't delete)
+        const containersToKeep = new Set();
+        
+        // First pass - identify containers to keep
+        for (const containerItem of containersInStore) {
+            // Check if this container exists in the new containers
+            const stillExists = newContainersForKey.some(c => c.id === containerItem.id);
+            
+            // Protection logic - retain containers with success notifications even if not found in Docker
+            // unless there's another container with the same name that matches the target version
+            const hasSuccessNotification = containerItem.notification && 
+                                          containerItem.notification.level === 'success' &&
+                                          containerItem.notification.message &&
+                                          containerItem.notification.message.includes('completed successfully');
+                                          
+            // Find if there's a matching target version container
+            const matchesTargetVersion = containerItem.updateKind && 
+                                        newContainersForKey.some(c => 
+                                            c.image.tag && 
+                                            containerItem.updateKind.remoteValue === c.image.tag.value);
+            
+            if (stillExists || (hasSuccessNotification && !matchesTargetVersion)) {
+                // Keep this container
+                containersToKeep.add(containerItem.id);
+                
+                if (hasSuccessNotification && !stillExists) {
+                    console.log(`Protecting container ${containerItem.id} with success notification for ${containerItem.name}`);
+                }
+            }
+        }
+        
+        // Second pass - delete containers not in our keep set
+        for (const containerItem of containersInStore) {
+            if (!containersToKeep.has(containerItem.id)) {
+                console.log(`Removing old container ${containerItem.id} for ${containerItem.name}`);
+                storeContainer.deleteContainer(containerItem.id);
+            }
         }
     }
 }
@@ -520,8 +606,48 @@ async watchContainer(container, skipRegistryCheck = false) {
 
             if (replacement) {
                 logContainer.info(`Found replacement container ${replacement.Id} for ${container.name}`);
-                // Process the replacement container
+                
+                // Get the full details for the replacement container
                 const replacementContainer = await this.addImageDetailsToContainer(replacement);
+                
+                // Check if this is an update scenario - old container has update information
+                if (container.updateAvailable && container.updateKind) {
+                    logContainer.info(`Detected container update from ${container.id} to ${replacement.Id}`);
+                    
+                    // If the old container had an update available and this is a new container
+                    // with a different image ID, this is likely the update that was applied
+                    if (replacementContainer && 
+                        replacementContainer.image.id !== container.image.id) {
+                        
+                        logContainer.info(`Transferring update info to replacement container`);
+                        
+                        // Transfer update info to the new container and reset update flags
+                        replacementContainer.updateKind = {
+                            ...container.updateKind,
+                            localValue: container.updateKind.remoteValue
+                        };
+                        replacementContainer.updateAvailable = false;
+                        
+                        // Add a success notification
+                        replacementContainer.notification = {
+                            message: `Update for ${container.name} completed successfully.`,
+                            level: 'success'
+                        };
+                        
+                        // Copy other relevant fields
+                        if (container.result) {
+                            replacementContainer.result = container.result;
+                        }
+                        if (container.link) {
+                            replacementContainer.link = container.link;
+                        }
+                        if (container.linkTemplate) {
+                            replacementContainer.linkTemplate = container.linkTemplate;
+                        }
+                    }
+                }
+                
+                // Process the replacement container
                 return this.watchContainer(replacementContainer, skipRegistryCheck);
             }
 
