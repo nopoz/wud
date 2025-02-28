@@ -518,6 +518,20 @@ async function refreshContainer(req, res) {
             updatedContainer.updateAvailable = false;
             updatedContainer.updateKind.localValue = tagName;
           }
+          
+          // Transfer tag filtering metadata
+          if (containerWithUpdateInfo.includeTags !== null && containerWithUpdateInfo.includeTags !== undefined) {
+            updatedContainer.includeTags = containerWithUpdateInfo.includeTags;
+          }
+          if (containerWithUpdateInfo.excludeTags !== null && containerWithUpdateInfo.excludeTags !== undefined) {
+            updatedContainer.excludeTags = containerWithUpdateInfo.excludeTags;
+          }
+          if (containerWithUpdateInfo.transformTags !== null && containerWithUpdateInfo.transformTags !== undefined) {
+            updatedContainer.transformTags = containerWithUpdateInfo.transformTags;
+          }
+          if (containerWithUpdateInfo.linkTemplate !== null && containerWithUpdateInfo.linkTemplate !== undefined) {
+            updatedContainer.linkTemplate = containerWithUpdateInfo.linkTemplate;
+          }
         }
       }
       
@@ -555,6 +569,20 @@ async function refreshContainer(req, res) {
           message: `Update for ${name} completed successfully.`,
           level: 'success'
         };
+        
+        // Transfer tag filtering metadata
+        if (containerWithUpdateInfo.includeTags !== null && containerWithUpdateInfo.includeTags !== undefined) {
+          newContainer.includeTags = containerWithUpdateInfo.includeTags;
+        }
+        if (containerWithUpdateInfo.excludeTags !== null && containerWithUpdateInfo.excludeTags !== undefined) {
+          newContainer.excludeTags = containerWithUpdateInfo.excludeTags;
+        }
+        if (containerWithUpdateInfo.transformTags !== null && containerWithUpdateInfo.transformTags !== undefined) {
+          newContainer.transformTags = containerWithUpdateInfo.transformTags;
+        }
+        if (containerWithUpdateInfo.linkTemplate !== null && containerWithUpdateInfo.linkTemplate !== undefined) {
+          newContainer.linkTemplate = containerWithUpdateInfo.linkTemplate;
+        }
       }
       
       updatedContainer = newContainer;

@@ -183,32 +183,44 @@ function pruneOldContainers(newContainers, containersFromTheStore) {
                 
                 console.log(`Found version change for ${oldContainer.name}: ${oldContainer.image.tag.value} -> ${newContainer.image.tag.value}`);
                 
-                // Create updated container with transferred information
-                const updatedContainer = { ...newContainer };
-                
                 // Transfer update info
-                updatedContainer.updateKind = {
+                newContainer.updateKind = {
                     ...oldContainer.updateKind,
                     localValue: newContainer.image.tag.value
                 };
                 
-                updatedContainer.result = oldContainer.result;
+                newContainer.result = oldContainer.result;
                 
                 // Reset update status if the tag matches target
                 if (newContainer.image.tag.value === oldContainer.updateKind.remoteValue) {
-                    updatedContainer.updateAvailable = false;
+                    newContainer.updateAvailable = false;
                 } else {
-                    updatedContainer.updateAvailable = true;
+                    newContainer.updateAvailable = true;
                 }
                 
                 // Add success notification
-                updatedContainer.notification = {
+                newContainer.notification = {
                     message: `Update for ${newContainer.name} completed successfully.`,
                     level: 'success'
                 };
                 
+                // Transfer tag filtering metadata
+                // Only copy non-null properties to avoid overwriting with null
+                if (oldContainer.includeTags !== null && oldContainer.includeTags !== undefined) {
+                    newContainer.includeTags = oldContainer.includeTags;
+                }
+                if (oldContainer.excludeTags !== null && oldContainer.excludeTags !== undefined) {
+                    newContainer.excludeTags = oldContainer.excludeTags;
+                }
+                if (oldContainer.transformTags !== null && oldContainer.transformTags !== undefined) {
+                    newContainer.transformTags = oldContainer.transformTags;
+                }
+                if (oldContainer.linkTemplate !== null && oldContainer.linkTemplate !== undefined) {
+                    newContainer.linkTemplate = oldContainer.linkTemplate;
+                }
+                
                 // Save the updated new container
-                storeContainer.updateContainer(updatedContainer);
+                storeContainer.updateContainer(newContainer);
             }
         }
         
