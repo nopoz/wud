@@ -10,11 +10,13 @@
           :update-kinds="updateKinds"
           :update-kind-selected-init="updateKindSelected"
           :updateAvailable="updateAvailableSelected"
+          :oldestFirst="oldestFirst"
           :groupByLabel="groupByLabel"
           :groupLabels="allContainerLabels"
           @registry-changed="onRegistryChanged"
           @watcher-changed="onWatcherChanged"
           @update-available-changed="onUpdateAvailableChanged"
+          @oldest-first-changed="onOldestFirstChanged"
           @group-by-label-changed="onGroupByLabelChanged"
           @update-kind-changed="onUpdateKindChanged"
           @refresh-all-containers="onRefreshAllContainers"
@@ -29,6 +31,7 @@
               :groupingLabel="groupByLabel"
               :previousContainer="containersFiltered[index - 1]"
               :container="container"
+              :oldest-first="oldestFirst"
               @delete-container="deleteContainer(container)"
               @container-deleted="removeContainerFromList(container)"
             />
@@ -61,6 +64,7 @@ export default {
       updateKindSelected: "",
       updateAvailableSelected: false,
       groupByLabel: "",
+      oldestFirst: false,
     };
   },
   watch: {},
@@ -120,29 +124,23 @@ export default {
           this.updateAvailableSelected ? container.updateAvailable : true,
         )
         .sort((a, b) => {
+          const getImageDate = (item) => new Date(item.image.created);
+
           if (this.groupByLabel) {
-            if (
-              a.labels?.[this.groupByLabel] &&
-              !b.labels?.[this.groupByLabel]
-            ) {
-              return -1;
+            const aLabel = a.labels?.[this.groupByLabel];
+            const bLabel = b.labels?.[this.groupByLabel];
+
+            if (aLabel && !bLabel) return -1;
+            if (!aLabel && bLabel) return 1;
+
+            if (aLabel && bLabel) {
+              if (this.oldestFirst) return getImageDate(a) - getImageDate(b);
+
+              return aLabel.localeCompare(bLabel);
             }
-            if (
-              b.labels?.[this.groupByLabel] &&
-              !a.labels?.[this.groupByLabel]
-            ) {
-              return 1;
-            }
-            if (
-              a.labels?.[this.groupByLabel] &&
-              b.labels?.[this.groupByLabel]
-            ) {
-              return a.labels?.[this.groupByLabel].localeCompare(
-                b.labels?.[this.groupByLabel],
-              );
-            }
-            return a.displayName.localeCompare(b.displayName);
           }
+
+          if (this.oldestFirst) return getImageDate(a) - getImageDate(b);
           return a.displayName.localeCompare(b.displayName);
         });
       return filteredContainers;
@@ -160,6 +158,10 @@ export default {
     },
     onUpdateAvailableChanged() {
       this.updateAvailableSelected = !this.updateAvailableSelected;
+      this.updateQueryParams();
+    },
+    onOldestFirstChanged() {
+      this.oldestFirst = !this.oldestFirst;
       this.updateQueryParams();
     },
     onGroupByLabelChanged(groupByLabel) {
@@ -183,6 +185,9 @@ export default {
       }
       if (this.updateAvailableSelected) {
         query["update-available"] = this.updateAvailableSelected;
+      }
+      if (this.oldestFirst) {
+        query["oldest-first"] = this.oldestFirst;
       }
       if (this.groupByLabel) {
         query["group-by-label"] = this.groupByLabel;
@@ -214,6 +219,7 @@ export default {
     const watcherSelected = to.query["watcher"];
     const updateKindSelected = to.query["update-kind"];
     const updateAvailable = to.query["update-available"];
+    const oldestFirst = to.query["oldest-first"];
     const groupByLabel = to.query["group-by-label"];
     try {
       const containers = await getAllContainers();
@@ -229,6 +235,9 @@ export default {
         }
         if (updateAvailable) {
           vm.updateAvailableSelected = updateAvailable.toLowerCase() === "true";
+        }
+        if (oldestFirst) {
+          vm.oldestFirst = oldestFirst.toLowerCase() === "true";
         }
         if (groupByLabel) {
           vm.groupByLabel = groupByLabel;
