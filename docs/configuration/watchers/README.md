@@ -377,12 +377,13 @@ docker run -d --name mariadb --label 'wud.link.template=https://mariadb.com/kb/e
 You can customize the name & the icon of a container (displayed in the UI, in Home-Assistant...)
 
 Icons must be prefixed with:
-- `mdi:` or `mdi-` for [Material Design icons](https://materialdesignicons.com/) (`mdi:database`, `mdi-server`...)
 - `fab:` or `fab-` for [Fontawesome brand icons](https://fontawesome.com/) (`fab:github`, `fab-mailchimp`...)
 - `far:` or `far-` for [Fontawesome regular icons](https://fontawesome.com/) (`far:heart`, `far-house`...)
 - `fas:` or `fas-` for [Fontawesome solid icons](https://fontawesome.com/) (`fas:heart`, `fas-house`...)
-- `si:` or `si-` for [Simple icons](https://simpleicons.org/) (`si:mysql`, `si-plex`...)
+- `hl:` or `hl-` for [Homarr Labs icons](https://dashboardicons.com/) (`hl:plex`, `hl-authelia`...)
+- `mdi:` or `mdi-` for [Material Design icons](https://materialdesignicons.com/) (`mdi:database`, `mdi-server`...)
 - `sh:` or `sh-` for [Selfh.st](https://selfh.st/icons/) (`sh:authentik`, `sh-authelia-light`...) (only works for logo available as `png`)
+- `si:` or `si-` for [Simple icons](https://simpleicons.org/) (`si:mysql`, `si-plex`...)
 
 ?> If you want to display Fontawesome icons or Simple icons in Home-Assistant, you need to install first the [HASS-fontawesome](https://github.com/thomasloven/hass-fontawesome) and the [HASS-simpleicons](https://github.com/vigonotion/hass-simpleicons) components.
 
