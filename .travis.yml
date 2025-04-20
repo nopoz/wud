@@ -13,6 +13,8 @@ before_install:
 
   - export IMAGE_VERSION=${TRAVIS_BRANCH//\//\_}
   - export IMAGE_VERSION=${IMAGE_VERSION//\#/\_}
+  - export IMAGE_VERSION_MINOR=$(echo $IMAGE_VERSION | sed -rn 's/^(v?[[:digit:]]+.[[:digit:]]+).([[:digit:]]+)(.*)/\1/p')
+  - export IMAGE_VERSION_MAJOR=$(echo $IMAGE_VERSION | sed -rn 's/^(v?[[:digit:]]+).[[:digit:]]+.([[:digit:]]+)(.*)/\1/p')
 
   # Install docker with buildx
   - sudo install -m 0755 -d /etc/apt/keyrings
@@ -101,7 +103,7 @@ script:
 
   # Pull vaultwarden
   - docker pull vaultwarden/server
-  - docker pull vaultwarden/server:1.32.7-alpine
+  - docker pull vaultwarden/server:1.33.2-alpine
 
   # Pull youtubedl
   - docker pull jeeaaasustest/youtube-dl
@@ -148,7 +150,7 @@ script:
   - docker run -d --name hub_traefik_245          --label 'wud.watch=true' --label 'wud.tag.include=^\d+\.\d+.\d+$'                           traefik:2.4.5
   - docker run -d --name hub_traefik_latest       --label 'wud.watch=true' --label 'wud.watch.digest=true' --label 'wud.tag.include=^latest$' traefik
 
-  - docker run -d --name hub_vaultwarden_1222     --label 'wud.watch=true' --label 'wud.tag.include=^\d+\.\d+.\d+-alpine$'                    -e I_REALLY_WANT_VOLATILE_STORAGE=true vaultwarden/server:1.32.7-alpine
+  - docker run -d --name hub_vaultwarden_1222     --label 'wud.watch=true' --label 'wud.tag.include=^\d+\.\d+.\d+-alpine$'                    -e I_REALLY_WANT_VOLATILE_STORAGE=true vaultwarden/server:1.33.2-alpine
   - docker run -d --name hub_vaultwarden_latest   --label 'wud.watch=true' --label 'wud.watch.digest=true' --label 'wud.tag.include=^latest$' -e I_REALLY_WANT_VOLATILE_STORAGE=true vaultwarden/server
 
   - docker run -d --name hub_youtubedb_latest     --label 'wud.watch=true' --label 'wud.watch.digest=true' --label 'wud.tag.include=^latest$' jeeaaasustest/youtube-dl
@@ -194,6 +196,8 @@ script:
   - |
     if [ ! -z "$TRAVIS_TAG" ]
     then
+      export DOCKER_TAGS="${DOCKER_TAGS} -t ${DOCKER_USERNAME}/${IMAGE_NAME}:${IMAGE_VERSION_MAJOR} -t ghcr.io/${GITHUB_USERNAME}/${IMAGE_NAME}:${IMAGE_VERSION_MAJOR}"
+      export DOCKER_TAGS="${DOCKER_TAGS} -t ${DOCKER_USERNAME}/${IMAGE_NAME}:${IMAGE_VERSION_MINOR} -t ghcr.io/${GITHUB_USERNAME}/${IMAGE_NAME}:${IMAGE_VERSION_MINOR}"
       export DOCKER_TAGS="${DOCKER_TAGS} -t ${DOCKER_USERNAME}/${IMAGE_NAME}:latest -t ghcr.io/${GITHUB_USERNAME}/${IMAGE_NAME}:latest"
     fi
 

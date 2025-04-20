@@ -1,5 +1,9 @@
 # Changelog
 
+## develop
+- :star: [UI] - Add support for [Homarr Labs](https://github.com/homarr-labs/dashboard-icons) icons
+
+
 ## 8.0.1
 - :star: Force watcher to watch at startup only if store is empty ([#570](https://github.com/getwud/wud/issues/570))
 - :fire: Fix default healthcheck when http server is disabled ([#562](https://github.com/getwud/wud/issues/556))

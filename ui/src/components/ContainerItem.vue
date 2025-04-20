@@ -29,7 +29,12 @@
             </v-chip>
             /
           </span>
-          <span v-if="$vuetify.breakpoint.smAndUp && !selfhstContainerIconUrl">
+          <span
+            v-if="
+              $vuetify.breakpoint.mdAndUp &&
+              !(selfhstContainerIconUrl || homarrContainerIconUrl)
+            "
+          >
             <v-chip label color="info" outlined disabled>
               <v-icon left v-if="$vuetify.breakpoint.smAndUp">{{ registryIcon }}</v-icon>
               {{ container.image.registry.name }}
@@ -39,10 +44,14 @@
           <v-chip label color="info" outlined disabled>
             <span v-if="$vuetify.breakpoint.smAndUp">
               <img
-                :src="selfhstContainerIconUrl"
+                :src="
+                  isHomarrContainerIcon
+                    ? homarrContainerIconUrl
+                    : selfhstContainerIconUrl
+                "
                 style="width: 24px; height: 24px"
                 class="v-icon v-icon--left"
-                v-if="isSelfhstContainerIcon"
+                v-if="isHomarrContainerIcon || isSelfhstContainerIcon"
               />
               <v-icon left v-else>
                 {{ containerIcon }}
@@ -113,10 +122,14 @@
             <v-tab>
               <span v-if="$vuetify.breakpoint.smAndUp">Container</span>
               <img
-                :src="selfhstContainerIconUrl"
+                :src="
+                  isHomarrContainerIcon
+                    ? homarrContainerIconUrl
+                    : selfhstContainerIconUrl
+                "
                 style="width: 24px; height: 24px"
                 class="v-icon v-icon--left"
-                v-if="isSelfhstContainerIcon"
+                v-if="isHomarrContainerIcon || isSelfhstContainerIcon"
               />
               <v-icon left v-else>
                 {{ containerIcon }}
@@ -295,11 +308,25 @@ export default {
       );
     },
 
+    isHomarrContainerIcon() {
+      return (
+        this.container.displayIcon.startsWith("hl-") ||
+        this.container.displayIcon.startsWith("hl:")
+      );
+    },
+
     selfhstContainerIconUrl() {
       const iconName = this.container.displayIcon
         .replace("sh-", "")
         .replace("sh:", "");
       return `https://cdn.jsdelivr.net/gh/selfhst/icons/png/${iconName}.png`;
+    },
+
+    homarrContainerIconUrl() {
+      const iconName = this.container.displayIcon
+        .replace("hl-", "")
+        .replace("hl:", "");
+      return `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${iconName}.png`;
     },
 
     registryIcon() {

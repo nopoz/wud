@@ -23,7 +23,7 @@ Many triggers are supported.
 
 Some are intended to notify (mail, notification...).
 
-Some are intented to update the containers (docker-compose...).
+Some are intended to update the containers (docker-compose...).
 
 Some are intended to do whatever you want (script, webhook, messaging...).
 
