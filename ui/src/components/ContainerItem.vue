@@ -21,28 +21,28 @@
         @click="collapseDetail()"
         style="cursor: pointer"
       >
-        <v-toolbar-title class="text-body-3">
-          <v-chip label color="info" outlined disabled
-            ><v-icon left v-if="$vuetify.breakpoint.mdAndUp">mdi-update</v-icon
-            >{{ container.watcher }}
-          </v-chip>
-          /
-          <span
-            v-if="
-              $vuetify.breakpoint.mdAndUp &&
-              !(selfhstContainerIconUrl || homarrContainerIconUrl)
-            "
-          >
-            <v-chip label color="info" outlined disabled
-              ><v-icon left v-if="$vuetify.breakpoint.mdAndUp">{{
+        <v-toolbar-title
+          class="text-body-3 d-flex align-center"
+          style="gap: 5px"
+        >
+          <span v-if="$vuetify.breakpoint.smAndUp">
+            <v-chip label color="info" outlined disabled>
+              <v-icon left>mdi-update</v-icon>
+              {{ container.watcher }}
+            </v-chip>
+            /
+          </span>
+          <span v-if="$vuetify.breakpoint.mdAndUp">
+            <v-chip label color="info" outlined disabled>
+              <v-icon left v-if="$vuetify.breakpoint.smAndUp">{{
                 registryIcon
-              }}</v-icon
-              >{{ container.image.registry.name }}
+              }}</v-icon>
+              {{ container.image.registry.name }}
             </v-chip>
             /
           </span>
           <v-chip label color="info" outlined disabled>
-            <span v-if="$vuetify.breakpoint.mdAndUp">
+            <span v-if="$vuetify.breakpoint.smAndUp">
               <img
                 :src="
                   isHomarrContainerIcon
@@ -57,16 +57,18 @@
                 {{ containerIcon }}
               </v-icon>
             </span>
-            {{ container.displayName }}
+            <span style="overflow: hidden; text-overflow: ellipsis">
+              {{ container.displayName }}
+            </span>
           </v-chip>
-          <span v-if="$vuetify.breakpoint.mdAndUp">
+          <span>
             :
             <v-chip label outlined color="info" disabled>
               {{ container.image.tag.value }}
             </v-chip>
           </span>
         </v-toolbar-title>
-        <span v-if="$vuetify.breakpoint.mdAndUp && container.updateAvailable">
+        <span v-if="$vuetify.breakpoint.smAndUp && container.updateAvailable">
           <v-icon>mdi-arrow-right</v-icon>
           <v-tooltip bottom>
             <template v-slot:activator="{ on, attrs }">
@@ -90,6 +92,13 @@
         </span>
 
         <v-spacer />
+        <span
+          v-if="$vuetify.breakpoint.smAndUp && oldestFirst"
+          class="text-caption ml-2"
+        >
+          {{ this.$options.filters.date(container.image.created) }}
+        </span>
+
         <v-icon>{{
           showDetail ? "mdi-chevron-up" : "mdi-chevron-down"
         }}</v-icon>
@@ -97,25 +106,25 @@
       <v-expand-transition>
         <div v-show="showDetail">
           <v-tabs
-            :icons-and-text="$vuetify.breakpoint.mdAndUp"
+            :icons-and-text="$vuetify.breakpoint.smAndUp"
             fixed-tabs
             v-model="tab"
             ref="tabs"
           >
             <v-tab v-if="container.result">
-              <span v-if="$vuetify.breakpoint.mdAndUp">Update</span>
+              <span v-if="$vuetify.breakpoint.smAndUp">Update</span>
               <v-icon>mdi-package-down</v-icon>
             </v-tab>
             <v-tab>
-              <span v-if="$vuetify.breakpoint.mdAndUp">Triggers</span>
+              <span v-if="$vuetify.breakpoint.smAndUp">Triggers</span>
               <v-icon>mdi-bell-ring</v-icon>
             </v-tab>
             <v-tab>
-              <span v-if="$vuetify.breakpoint.mdAndUp">Image</span>
+              <span v-if="$vuetify.breakpoint.smAndUp">Image</span>
               <v-icon>mdi-package-variant-closed</v-icon>
             </v-tab>
             <v-tab>
-              <span v-if="$vuetify.breakpoint.mdAndUp">Container</span>
+              <span v-if="$vuetify.breakpoint.smAndUp">Container</span>
               <img
                 :src="
                   isHomarrContainerIcon
@@ -131,7 +140,7 @@
               </v-icon>
             </v-tab>
             <v-tab v-if="container.error">
-              <span v-if="$vuetify.breakpoint.mdAndUp">Error</span>
+              <span v-if="$vuetify.breakpoint.smAndUp">Error</span>
               <v-icon>mdi-alert</v-icon>
             </v-tab>
           </v-tabs>
@@ -260,6 +269,10 @@ export default {
       type: String,
       required: true,
     },
+    oldestFirst: {
+      type: Boolean,
+      required: false,
+    },
   },
   data() {
     return {
@@ -292,7 +305,6 @@ export default {
     },
 
     isSelfhstContainerIcon() {
-      console.log(this.container.displayIcon);
       return (
         this.container.displayIcon.startsWith("sh-") ||
         this.container.displayIcon.startsWith("sh:")
@@ -343,7 +355,9 @@ export default {
         this.container.result.created &&
         this.container.image.created !== this.container.result.created
       ) {
-        newVersion = this.$options.filters.date(this.container.result.created);
+        newVersion = this.$options.filters.dateTime(
+          this.container.result.created,
+        );
       }
       if (this.container.updateKind) {
         newVersion = this.container.updateKind.remoteValue;

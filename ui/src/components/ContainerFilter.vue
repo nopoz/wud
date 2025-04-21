@@ -64,6 +64,16 @@
           dense
         />
       </v-col>
+      <v-col>
+        <v-switch
+          class="switch-top"
+          label="Oldest first"
+          @change="emitOldestFirstChanged"
+          :value="oldestFirst"
+          :hide-details="true"
+          dense
+        />
+      </v-col>
       <v-col class="text-right">
         <v-btn
           color="secondary"
@@ -112,6 +122,10 @@ export default {
       type: Boolean,
       required: true,
     },
+    oldestFirst: {
+      type: Boolean,
+      required: true,
+    },
     groupLabels: {
       type: Array,
       required: true,
@@ -143,6 +157,9 @@ export default {
     },
     emitUpdateAvailableChanged() {
       this.$emit("update-available-changed");
+    },
+    emitOldestFirstChanged() {
+      this.$emit("oldest-first-changed");
     },
     emitGroupByLabelChanged(newLabel) {
       this.$emit("group-by-label-changed", newLabel ?? "");

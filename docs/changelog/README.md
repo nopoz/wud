@@ -2,7 +2,7 @@
 
 ## develop
 - :star: [UI] - Add support for [Homarr Labs](https://github.com/homarr-labs/dashboard-icons) icons
-
+- :star: [UI] - Add support for sorting containers by oldest creation date
 
 ## 8.0.1
 - :star: Force watcher to watch at startup only if store is empty ([#570](https://github.com/getwud/wud/issues/570))
