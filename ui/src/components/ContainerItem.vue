@@ -21,7 +21,10 @@
         @click="collapseDetail()"
         style="cursor: pointer"
       >
-        <v-toolbar-title class="text-body-3 d-flex align-center" style="gap: 5px">
+        <v-toolbar-title
+          class="text-body-3 d-flex align-center"
+          style="gap: 5px"
+        >
           <span v-if="$vuetify.breakpoint.smAndUp">
             <v-chip label color="info" outlined disabled>
               <v-icon left>mdi-update</v-icon>
@@ -29,14 +32,11 @@
             </v-chip>
             /
           </span>
-          <span
-            v-if="
-              $vuetify.breakpoint.mdAndUp &&
-              !(selfhstContainerIconUrl || homarrContainerIconUrl)
-            "
-          >
+          <span v-if="$vuetify.breakpoint.mdAndUp">
             <v-chip label color="info" outlined disabled>
-              <v-icon left v-if="$vuetify.breakpoint.smAndUp">{{ registryIcon }}</v-icon>
+              <v-icon left v-if="$vuetify.breakpoint.smAndUp">{{
+                registryIcon
+              }}</v-icon>
               {{ container.image.registry.name }}
             </v-chip>
             /
@@ -67,9 +67,6 @@
               {{ container.image.tag.value }}
             </v-chip>
           </span>
-          <span v-if="$vuetify.breakpoint.smAndUp && oldestFirst" class="text-caption ml-2">
-            {{ this.$options.filters.date(container.image.created) }}
-          </span>
         </v-toolbar-title>
         <span v-if="$vuetify.breakpoint.smAndUp && container.updateAvailable">
           <v-icon>mdi-arrow-right</v-icon>
@@ -95,6 +92,13 @@
         </span>
 
         <v-spacer />
+        <span
+          v-if="$vuetify.breakpoint.smAndUp && oldestFirst"
+          class="text-caption ml-2"
+        >
+          {{ this.$options.filters.date(container.image.created) }}
+        </span>
+
         <v-icon>{{
           showDetail ? "mdi-chevron-up" : "mdi-chevron-down"
         }}</v-icon>
@@ -301,7 +305,6 @@ export default {
     },
 
     isSelfhstContainerIcon() {
-      console.log(this.container.displayIcon);
       return (
         this.container.displayIcon.startsWith("sh-") ||
         this.container.displayIcon.startsWith("sh:")
@@ -352,7 +355,9 @@ export default {
         this.container.result.created &&
         this.container.image.created !== this.container.result.created
       ) {
-        newVersion = this.$options.filters.dateTime(this.container.result.created);
+        newVersion = this.$options.filters.dateTime(
+          this.container.result.created,
+        );
       }
       if (this.container.updateKind) {
         newVersion = this.container.updateKind.remoteValue;

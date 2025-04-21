@@ -13,7 +13,7 @@ function getRegistryIcon() {
  */
 function getRegistryProviderIcon(provider) {
   let icon = "mdi-help";
-  switch (provider) {
+  switch (provider.split(".")[0]) {
     case "acr":
       icon = "si-microsoftazure";
       break;
