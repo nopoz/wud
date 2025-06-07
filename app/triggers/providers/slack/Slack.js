@@ -13,6 +13,7 @@ class Slack extends Trigger {
         return this.joi.object().keys({
             token: this.joi.string().required(),
             channel: this.joi.string().required(),
+            disabletitle: this.joi.boolean().default(false),
         });
     }
 
@@ -42,11 +43,24 @@ class Slack extends Trigger {
      * @returns {Promise<void>}
      */
     async trigger(container) {
-        return this.postMessage(this.renderSimpleBody(container));
+        const body = this.renderSimpleBody(container);
+
+        if (this.configuration.disabletitle) {
+            return this.sendMessage(body);
+        }
+
+        const title = this.renderSimpleTitle(container);
+        return this.sendMessage(`*${title}*\n\n${body}`);
     }
 
     async triggerBatch(containers) {
-        return this.postMessage(this.renderBatchBody(containers));
+        const body = this.renderBatchBody(containers);
+        if (this.configuration.disabletitle) {
+            return this.sendMessage(body);
+        }
+
+        const title = this.renderBatchTitle(containers);
+        return this.sendMessage(`*${title}*\n\n${body}`);
     }
 
     /**
@@ -54,7 +68,7 @@ class Slack extends Trigger {
      * @param text the text to post
      * @returns {Promise<ChatPostMessageResponse>}
      */
-    async postMessage(text) {
+    async sendMessage(text) {
         return this.client.chat.postMessage({
             channel: this.configuration.channel,
             text,

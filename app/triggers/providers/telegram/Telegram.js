@@ -13,6 +13,8 @@ class Telegram extends Trigger {
         return this.joi.object().keys({
             bottoken: this.joi.string().required(),
             chatid: this.joi.string().required(),
+            disabletitle: this.joi.boolean().default(false),
+            messageformat: this.joi.string().valid('Markdown', 'HTML').insensitive().default('Markdown'),
         });
     }
 
@@ -40,14 +42,27 @@ class Telegram extends Trigger {
      * Post a message with new image version details.
      *
      * @param image the image
-     * @returns {Promise<void>}
      */
     async trigger(container) {
-        return this.sendMessage(this.renderSimpleBody(container));
+        const body = this.renderSimpleBody(container);
+
+        if (this.configuration.disabletitle) {
+            return this.sendMessage(body);
+        }
+
+        const title = this.renderSimpleTitle(container);
+
+        return this.sendMessage(`${this.bold(title)}\n\n${body}`);
     }
 
     async triggerBatch(containers) {
-        return this.sendMessage(this.renderBatchBody(containers));
+        const body = this.renderBatchBody(containers);
+        if (this.configuration.disabletitle) {
+            return this.sendMessage(body);
+        }
+
+        const title = this.renderBatchTitle(containers);
+        return this.sendMessage(`${this.bold(title)}\n\n${body}`);
     }
 
     /**
@@ -56,7 +71,17 @@ class Telegram extends Trigger {
      * @returns {Promise<>}
      */
     async sendMessage(text) {
-        return this.telegramBot.sendMessage(this.configuration.chatid, text);
+        return this.telegramBot.sendMessage(this.configuration.chatid, text, {
+            parse_mode: this.getParseMode(),
+        });
+    }
+
+    bold(text) {
+        return this.configuration.messageformat.toLowerCase() === 'markdown' ? `*${text}*` : `<b>${text}</b>`;
+    }
+
+    getParseMode() {
+        return this.configuration.messageformat.toLowerCase() === 'markdown' ? 'MarkdownV2' : 'HTML';
     }
 }
 
