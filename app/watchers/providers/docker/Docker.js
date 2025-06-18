@@ -253,6 +253,7 @@ class Docker extends Component {
             certfile: this.joi.string(),
             keyfile: this.joi.string(),
             cron: joi.string().cron().default('0 * * * *'),
+            jitter: this.joi.number().integer().min(0).default(60000),
             watchbydefault: this.joi.boolean().default(true),
             watchall: this.joi.boolean().default(false),
             watchdigest: this.joi.any(),
@@ -274,6 +275,7 @@ class Docker extends Component {
         this.log.info(`Cron scheduled (${this.configuration.cron})`);
         this.watchCron = cron.schedule(this.configuration.cron, () =>
             this.watchFromCron(),
+            { maxRandomDelay: this.configuration.jitter },
         );
 
         // Force watchatstart value based on the state store (empty or not)
