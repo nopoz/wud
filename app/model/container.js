@@ -100,7 +100,7 @@ function getLink(container, originalTagValue) {
         patch = versionSemver.patch;
         prerelease =
             versionSemver.prerelease && versionSemver.prerelease.length > 0
-                ? prerelease[0]
+                ? versionSemver.prerelease[0]
                 : '';
     }
     return eval('`' + container.linkTemplate + '`');
