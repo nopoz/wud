@@ -104,9 +104,7 @@ test('should send message with correct text', async () => {
     };
     slack.sendMessage = jest.fn();
     await slack.trigger({});
-    expect(slack.sendMessage).toHaveBeenCalledWith(
-        '*Test Title*\n\nTest Body'
-    );
+    expect(slack.sendMessage).toHaveBeenCalledWith('*Test Title*\n\nTest Body');
 });
 
 test('disabletitle should result in no title in message', async () => {

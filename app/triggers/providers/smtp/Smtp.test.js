@@ -45,24 +45,33 @@ test.each([
     { allowCustomTld: false, field: 'to' },
     { allowCustomTld: true, field: 'both' },
     { allowCustomTld: false, field: 'both' },
-])('trigger should $allowCustomTld allow custom tld for $field field', async ({ allowCustomTld, field }) => {
-    const config = {
-        ...configurationValid,
-        allowcustomtld: allowCustomTld,
-        from: field === 'from' || field == 'both' ? 'user@domain.lan' : configurationValid.from,
-        to: field === 'to' || field == 'both' ? 'user@domain.lan' : configurationValid.to
-    };
+])(
+    'trigger should $allowCustomTld allow custom tld for $field field',
+    async ({ allowCustomTld, field }) => {
+        const config = {
+            ...configurationValid,
+            allowcustomtld: allowCustomTld,
+            from:
+                field === 'from' || field == 'both'
+                    ? 'user@domain.lan'
+                    : configurationValid.from,
+            to:
+                field === 'to' || field == 'both'
+                    ? 'user@domain.lan'
+                    : configurationValid.to,
+        };
 
-    if (allowCustomTld) {
-        expect(() => {
-            smtp.validateConfiguration(config);
-        }).not.toThrow(ValidationError);
-    } else {
-        expect(() => {
-            smtp.validateConfiguration(config);
-        }).toThrow(ValidationError);
-    }
-});
+        if (allowCustomTld) {
+            expect(() => {
+                smtp.validateConfiguration(config);
+            }).not.toThrow(ValidationError);
+        } else {
+            expect(() => {
+                smtp.validateConfiguration(config);
+            }).toThrow(ValidationError);
+        }
+    },
+);
 
 test('validateConfiguration should throw error when invalid', () => {
     const configuration = {

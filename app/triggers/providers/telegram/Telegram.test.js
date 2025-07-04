@@ -67,7 +67,7 @@ test('should send message with correct text', async () => {
     telegram.sendMessage = jest.fn();
     await telegram.trigger({});
     expect(telegram.sendMessage).toHaveBeenCalledWith(
-        '*Test Title*\n\nTest Body'
+        '*Test Title*\n\nTest Body',
     );
 });
 
@@ -86,10 +86,8 @@ test.each([
         telegram.sendMessage = jest.fn();
         await telegram.trigger({});
         expect(telegram.sendMessage).toHaveBeenCalledWith(expected);
-    }
+    },
 );
-
-
 
 test('disabletitle should result in no title in message', async () => {
     telegram.configuration = {

@@ -19,23 +19,22 @@ class Smtp extends Trigger {
             port: this.joi.number().port().required(),
             user: this.joi.string(),
             pass: this.joi.string(),
-            from: this.joi.string().required().when(
-                'allowcustomtld',
-                {
+            from: this.joi
+                .string()
+                .required()
+                .when('allowcustomtld', {
                     is: true,
                     then: this.joi.string().email({ tlds: { allow: false } }),
                     otherwise: this.joi.string().email(),
-                }
-
-            ),
-            to: this.joi.string().required().when(
-                'allowcustomtld',
-                {
+                }),
+            to: this.joi
+                .string()
+                .required()
+                .when('allowcustomtld', {
                     is: true,
                     then: this.joi.string().email({ tlds: { allow: false } }),
                     otherwise: this.joi.string().email(),
-                }
-            ),
+                }),
             tls: this.joi
                 .object({
                     enabled: this.joi.boolean().default(false),

@@ -232,7 +232,6 @@ test('removeContainer should throw error when error occurs', async () => {
     ).rejects.toThrowError('No container');
 });
 
-
 test('waitContainerRemoved should wait for the container to be removed from dockerApi', async () => {
     await expect(
         docker.waitContainerRemoved(

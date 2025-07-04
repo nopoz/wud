@@ -220,14 +220,21 @@ class Docker extends Trigger {
     /**
      * Wait for a container to be removed.
      */
-    async waitContainerRemoved(container, containerName, containerId, logContainer) {
+    async waitContainerRemoved(
+        container,
+        containerName,
+        containerId,
+        logContainer,
+    ) {
         logContainer.info(
             `Wait container ${containerName} with id ${containerId}`,
         );
         try {
             await container.wait({
                 condition: 'removed',
-                abortSignal: AbortSignal.timeout(this.configuration.autoremovetimeout),
+                abortSignal: AbortSignal.timeout(
+                    this.configuration.autoremovetimeout,
+                ),
             });
             logContainer.info(
                 `Container ${containerName} with id ${containerId} auto-removed successfully`,
@@ -460,7 +467,7 @@ class Docker extends Trigger {
                         logContainer,
                     );
                 } else {
-                    // This is a special case when the container is set to be removed automatically when it stops. 
+                    // This is a special case when the container is set to be removed automatically when it stops.
                     // In this case, we need to wait for the container to be removed before creating the new one.
                     await this.waitContainerRemoved(
                         currentContainer,

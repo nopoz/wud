@@ -14,7 +14,11 @@ class Telegram extends Trigger {
             bottoken: this.joi.string().required(),
             chatid: this.joi.string().required(),
             disabletitle: this.joi.boolean().default(false),
-            messageformat: this.joi.string().valid('Markdown', 'HTML').insensitive().default('Markdown'),
+            messageformat: this.joi
+                .string()
+                .valid('Markdown', 'HTML')
+                .insensitive()
+                .default('Markdown'),
         });
     }
 
@@ -77,11 +81,15 @@ class Telegram extends Trigger {
     }
 
     bold(text) {
-        return this.configuration.messageformat.toLowerCase() === 'markdown' ? `*${text}*` : `<b>${text}</b>`;
+        return this.configuration.messageformat.toLowerCase() === 'markdown'
+            ? `*${text}*`
+            : `<b>${text}</b>`;
     }
 
     getParseMode() {
-        return this.configuration.messageformat.toLowerCase() === 'markdown' ? 'MarkdownV2' : 'HTML';
+        return this.configuration.messageformat.toLowerCase() === 'markdown'
+            ? 'MarkdownV2'
+            : 'HTML';
     }
 }
 

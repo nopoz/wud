@@ -273,8 +273,9 @@ class Docker extends Component {
             );
         }
         this.log.info(`Cron scheduled (${this.configuration.cron})`);
-        this.watchCron = cron.schedule(this.configuration.cron, () =>
-            this.watchFromCron(),
+        this.watchCron = cron.schedule(
+            this.configuration.cron,
+            () => this.watchFromCron(),
             { maxRandomDelay: this.configuration.jitter },
         );
 
