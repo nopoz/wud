@@ -1,8 +1,12 @@
 # Changelog
 
 ## develop
+- :star: Add 60s default jitter in docker watcher to avoid load spike on Docker Hub
+- :star: Add support for custom TLDs in SMTP trigger
+- :star: Add title to `telegram` and `slack` triggers
 - :star: [UI] - Add support for [Homarr Labs](https://github.com/homarr-labs/dashboard-icons) icons
 - :star: [UI] - Add support for sorting containers by oldest creation date
+- :fire: Fix prerelase variable in link template
 
 ## 8.0.1
 - :star: Force watcher to watch at startup only if store is empty ([#570](https://github.com/getwud/wud/issues/570))
