@@ -5,6 +5,7 @@ const log = require('../../../log');
 const smtp = new Smtp();
 
 const configurationValid = {
+    allowcustomtld: false,
     host: 'smtp.gmail.com',
     port: '465',
     user: 'user',
@@ -37,6 +38,32 @@ test('validateConfiguration should return validated configuration when valid', (
     });
 });
 
+test.each([
+    { allowCustomTld: true, field: 'from' },
+    { allowCustomTld: false, field: 'from' },
+    { allowCustomTld: true, field: 'to' },
+    { allowCustomTld: false, field: 'to' },
+    { allowCustomTld: true, field: 'both' },
+    { allowCustomTld: false, field: 'both' },
+])('trigger should $allowCustomTld allow custom tld for $field field', async ({ allowCustomTld, field }) => {
+    const config = {
+        ...configurationValid,
+        allowcustomtld: allowCustomTld,
+        from: field === 'from' || field == 'both' ? 'user@domain.lan' : configurationValid.from,
+        to: field === 'to' || field == 'both' ? 'user@domain.lan' : configurationValid.to
+    };
+
+    if (allowCustomTld) {
+        expect(() => {
+            smtp.validateConfiguration(config);
+        }).not.toThrow(ValidationError);
+    } else {
+        expect(() => {
+            smtp.validateConfiguration(config);
+        }).toThrow(ValidationError);
+    }
+});
+
 test('validateConfiguration should throw error when invalid', () => {
     const configuration = {
         host: 'smtp.gmail..com',
@@ -46,7 +73,7 @@ test('validateConfiguration should throw error when invalid', () => {
     };
     expect(() => {
         smtp.validateConfiguration(configuration);
-    }).toThrowError(ValidationError);
+    }).toThrow(ValidationError);
 });
 
 test('init should create a mailer transporter with expected configuration when called', () => {

@@ -15,11 +15,27 @@ class Smtp extends Trigger {
                 this.joi.string().hostname().required(),
                 this.joi.string().ip().required(),
             ],
+            allowcustomtld: this.joi.boolean().default(false),
             port: this.joi.number().port().required(),
             user: this.joi.string(),
             pass: this.joi.string(),
-            from: this.joi.string().email().required(),
-            to: this.joi.string().email().required(),
+            from: this.joi.string().required().when(
+                'allowcustomtld',
+                {
+                    is: true,
+                    then: this.joi.string().email({ tlds: { allow: false } }),
+                    otherwise: this.joi.string().email(),
+                }
+
+            ),
+            to: this.joi.string().required().when(
+                'allowcustomtld',
+                {
+                    is: true,
+                    then: this.joi.string().email({ tlds: { allow: false } }),
+                    otherwise: this.joi.string().email(),
+                }
+            ),
             tls: this.joi
                 .object({
                     enabled: this.joi.boolean().default(false),
