@@ -44,6 +44,7 @@ const configurationValid = {
     watchall: false,
     watchevents: true,
     cron: '0 * * * *',
+    jitter: 60000,
     watchatstart: true,
 };
 
