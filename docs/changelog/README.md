@@ -1,5 +1,8 @@
 # Changelog
 
+## 8.1.1
+- :fire: [TELEGRAM] - Fix markdown character escape
+
 ## 8.1.0
 - :star: Add 60s default jitter in docker watcher to avoid load spike on Docker Hub
 - :star: Add support for custom TLDs in SMTP trigger

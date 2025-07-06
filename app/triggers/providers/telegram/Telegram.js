@@ -2,6 +2,15 @@ const TelegramBot = require('node-telegram-bot-api');
 const Trigger = require('../Trigger');
 
 /**
+ * Escape special characters.
+ * @param {*} text
+ * @returns
+ */
+function escapeMarkdown(text) {
+    return text.replace(/([\\_*`|!.[\](){}>+#=~-])/gm, '\\$1');
+}
+
+/**
  * Telegram Trigger implementation
  */
 class Telegram extends Trigger {
@@ -56,7 +65,9 @@ class Telegram extends Trigger {
 
         const title = this.renderSimpleTitle(container);
 
-        return this.sendMessage(`${this.bold(title)}\n\n${body}`);
+        return this.sendMessage(
+            `${this.bold(title)}\n\n${escapeMarkdown(body)}`,
+        );
     }
 
     async triggerBatch(containers) {
@@ -75,14 +86,19 @@ class Telegram extends Trigger {
      * @returns {Promise<>}
      */
     async sendMessage(text) {
-        return this.telegramBot.sendMessage(this.configuration.chatid, text, {
-            parse_mode: this.getParseMode(),
-        });
+        let txtToSend = text;
+        return this.telegramBot.sendMessage(
+            this.configuration.chatid,
+            txtToSend,
+            {
+                parse_mode: this.getParseMode(),
+            },
+        );
     }
 
     bold(text) {
         return this.configuration.messageformat.toLowerCase() === 'markdown'
-            ? `*${text}*`
+            ? `*${escapeMarkdown(text)}*`
             : `<b>${text}</b>`;
     }
 
