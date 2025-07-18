@@ -8,6 +8,8 @@ Please find below the documentation for each of them:
 
 > [**Registries**](/configuration/registries/)
 
+> [**Server**](/configuration/server/)
+
 > [**Storage**](/configuration/storage/)
 
 > [**Timezone**](/configuration/timezone/)
