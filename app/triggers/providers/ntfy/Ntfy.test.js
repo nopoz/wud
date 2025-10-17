@@ -42,6 +42,23 @@ test('validateConfiguration should throw error when invalid', () => {
     }).toThrowError(ValidationError);
 });
 
+test('maskConfiguration should mask sensitive data', () => {
+    ntfy.configuration = {
+        auth: {
+            user: 'user',
+            password: 'password',
+            token: 'token',
+        },
+    };
+    expect(ntfy.maskConfiguration()).toEqual({
+        auth: {
+            user: 'u**r',
+            password: 'p******d',
+            token: 't***n',
+        },
+    });
+});
+
 test('trigger should call http client', async () => {
     ntfy.configuration = configurationValid;
     const container = {

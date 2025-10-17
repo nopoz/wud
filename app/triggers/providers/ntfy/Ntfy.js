@@ -36,9 +36,9 @@ class Ntfy extends Trigger {
             ...this.configuration,
             auth: this.configuration.auth
                 ? {
-                      user: Ntfy.mask(this.configuration.user),
-                      password: Ntfy.mask(this.configuration.password),
-                      token: Ntfy.mask(this.configuration.token),
+                      user: Ntfy.mask(this.configuration.auth.user),
+                      password: Ntfy.mask(this.configuration.auth.password),
+                      token: Ntfy.mask(this.configuration.auth.token),
                   }
                 : undefined,
         };
