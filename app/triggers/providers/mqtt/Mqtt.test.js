@@ -1,6 +1,7 @@
 const { ValidationError } = require('joi');
 const mqttClient = require('mqtt');
 const log = require('../../../log');
+const { flatten } = require('../../../model/container');
 
 jest.mock('mqtt');
 const Mqtt = require('./Mqtt');
@@ -36,8 +37,28 @@ const configurationValid = {
     batchtitle: '${containers.length} updates available',
 };
 
+const containerData = [
+    {
+        containerName: 'homeassistant',
+        data: {
+            name: 'homeassistant',
+            topic: 'wud/container/local/homeassistant',
+        },
+    },
+    {
+        containerName: 'home.assistant',
+        data: {
+            name: 'home.assistant',
+            topic: 'wud/container/local/home-assistant',
+        },
+    },
+];
+
 beforeEach(() => {
     jest.resetAllMocks();
+    mqtt.client = {
+        publish: jest.fn(() => {}),
+    };
 });
 
 test('validateConfiguration should return validated configuration when valid', () => {
@@ -108,44 +129,44 @@ test('initTrigger should init Mqtt client', async () => {
     });
 });
 
-test('trigger should format json message payload as expected', async () => {
-    mqtt.configuration = {
-        topic: 'wud/container',
-    };
-    mqtt.client = {
-        publish: (topic, message) => ({
-            topic,
-            message,
-        }),
-    };
-    const response = await mqtt.trigger({
-        id: '31a61a8305ef1fc9a71fa4f20a68d7ec88b28e32303bbc4a5f192e851165b816',
-        name: 'homeassistant',
-        watcher: 'local',
-        includeTags: '^\\d+\\.\\d+.\\d+$',
-        image: {
-            id: 'sha256:d4a6fafb7d4da37495e5c9be3242590be24a87d7edcc4f79761098889c54fca6',
-            registry: {
-                url: '123456789.dkr.ecr.eu-west-1.amazonaws.com',
+test.each(containerData)(
+    'trigger should format json message payload as expected',
+    async ({ containerName, data }) => {
+        mqtt.configuration = {
+            topic: 'wud/container',
+        };
+        const container = {
+            id: '31a61a8305ef1fc9a71fa4f20a68d7ec88b28e32303bbc4a5f192e851165b816',
+            name: containerName,
+            watcher: 'local',
+            includeTags: '^\\d+\\.\\d+.\\d+$',
+            image: {
+                id: 'sha256:d4a6fafb7d4da37495e5c9be3242590be24a87d7edcc4f79761098889c54fca6',
+                registry: {
+                    url: '123456789.dkr.ecr.eu-west-1.amazonaws.com',
+                },
+                name: 'test',
+                tag: {
+                    value: '2021.6.4',
+                    semver: true,
+                },
+                digest: {
+                    watch: false,
+                    repo: 'sha256:ca0edc3fb0b4647963629bdfccbb3ccfa352184b45a9b4145832000c2878dd72',
+                },
+                architecture: 'amd64',
+                os: 'linux',
+                created: '2021-06-12T05:33:38.440Z',
             },
-            name: 'test',
-            tag: {
-                value: '2021.6.4',
-                semver: true,
+            result: {
+                tag: '2021.6.5',
             },
-            digest: {
-                watch: false,
-                repo: 'sha256:ca0edc3fb0b4647963629bdfccbb3ccfa352184b45a9b4145832000c2878dd72',
-            },
-            architecture: 'amd64',
-            os: 'linux',
-            created: '2021-06-12T05:33:38.440Z',
-        },
-        result: {
-            tag: '2021.6.5',
-        },
-    });
-    expect(response.message).toEqual(
-        '{"id":"31a61a8305ef1fc9a71fa4f20a68d7ec88b28e32303bbc4a5f192e851165b816","name":"homeassistant","watcher":"local","include_tags":"^\\\\d+\\\\.\\\\d+.\\\\d+$","image_id":"sha256:d4a6fafb7d4da37495e5c9be3242590be24a87d7edcc4f79761098889c54fca6","image_registry_url":"123456789.dkr.ecr.eu-west-1.amazonaws.com","image_name":"test","image_tag_value":"2021.6.4","image_tag_semver":true,"image_digest_watch":false,"image_digest_repo":"sha256:ca0edc3fb0b4647963629bdfccbb3ccfa352184b45a9b4145832000c2878dd72","image_architecture":"amd64","image_os":"linux","image_created":"2021-06-12T05:33:38.440Z","result_tag":"2021.6.5"}',
-    );
-});
+        };
+        await mqtt.trigger(container);
+        expect(mqtt.client.publish).toHaveBeenCalledWith(
+            data.topic,
+            JSON.stringify(flatten(container)),
+            { retain: true },
+        );
+    },
+);
