@@ -1,5 +1,5 @@
 # Common Stage
-FROM node:23-slim as base
+FROM node:24-slim as base
 
 LABEL maintainer="fmartinou"
 EXPOSE 3000

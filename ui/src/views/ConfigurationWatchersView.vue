@@ -30,7 +30,7 @@ export default {
       const watchers = await getAllWatchers();
       next((vm) => (vm.watchers = watchers));
     } catch (e) {
-      this.$root.$emit(
+      this.$eventBus.emit(
         "notify",
         `Error when trying to load the watchers (${e.message})`,
         "error",

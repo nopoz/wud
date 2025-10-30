@@ -38,7 +38,7 @@ export default {
         .sort((r1, r2) => r1.id.localeCompare(r2.id));
       next((vm) => (vm.registries = registriesWithIcons));
     } catch (e) {
-      this.$root.$emit(
+      this.$eventBus.emit(
         "notify",
         `Error when trying to load the registries (${e.message})`,
         "error",

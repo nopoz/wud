@@ -3,7 +3,7 @@ function getAuthenticationIcon() {
 }
 
 async function getAllAuthentications() {
-  const response = await fetch("/api/authentications");
+  const response = await fetch("/api/authentications", { credentials: "include" });
   return response.json();
 }
 

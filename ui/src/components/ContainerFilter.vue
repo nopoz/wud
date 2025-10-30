@@ -1,20 +1,16 @@
 <template>
-  <v-container
-    fluid
-    class="ma-0 mb-3"
-    :class="$vuetify.breakpoint.mdAndUp ? 'pa-0' : ''"
-  >
+  <v-container fluid class="ma-0 mb-3 pa-md-0">
     <v-row dense>
       <v-col>
         <v-select
           :hide-details="true"
           v-model="watcherSelected"
           :items="watchers"
-          @change="emitWatcherChanged"
+          @update:modelValue="emitWatcherChanged"
           :clearable="true"
           label="Watcher"
-          outlined
-          dense
+          variant="outlined"
+          density="compact"
         ></v-select>
       </v-col>
       <v-col>
@@ -22,11 +18,11 @@
           :hide-details="true"
           v-model="registrySelected"
           :items="registries"
-          @change="emitRegistryChanged"
+          @update:modelValue="emitRegistryChanged"
           :clearable="true"
           label="Registry"
-          outlined
-          dense
+          variant="outlined"
+          density="compact"
         ></v-select>
       </v-col>
       <v-col>
@@ -34,11 +30,11 @@
           :hide-details="true"
           v-model="updateKindSelected"
           :items="updateKinds"
-          @change="emitUpdateKindChanged"
+          @update:modelValue="emitUpdateKindChanged"
           :clearable="true"
           label="Update kind"
-          outlined
-          dense
+          variant="outlined"
+          density="compact"
         ></v-select>
       </v-col>
 
@@ -46,11 +42,11 @@
         <v-autocomplete
           label="Group by label"
           :items="groupLabels"
-          :value="groupByLabel"
-          @change="emitGroupByLabelChanged"
+          v-model="groupByLabelLocal"
+          @update:modelValue="emitGroupByLabelChanged"
           clearable
-          outlined
-          dense
+          variant="outlined"
+          density="compact"
         >
         </v-autocomplete>
       </v-col>
@@ -58,20 +54,20 @@
         <v-switch
           class="switch-top"
           label="Update available"
-          @change="emitUpdateAvailableChanged"
-          :value="updateAvailable"
+          v-model="updateAvailableLocal"
+          @update:modelValue="emitUpdateAvailableChanged"
           :hide-details="true"
-          dense
+          density="compact"
         />
       </v-col>
       <v-col>
         <v-switch
           class="switch-top"
           label="Oldest first"
-          @change="emitOldestFirstChanged"
-          :value="oldestFirst"
+          v-model="oldestFirstLocal"
+          @update:modelValue="emitOldestFirstChanged"
           :hide-details="true"
-          dense
+          density="compact"
         />
       </v-col>
       <v-col class="text-right">
@@ -142,6 +138,9 @@ export default {
       registrySelected: "",
       watcherSelected: "",
       updateKindSelected: "",
+      updateAvailableLocal: this.updateAvailable,
+      oldestFirstLocal: this.oldestFirst,
+      groupByLabelLocal: this.groupByLabel,
     };
   },
 
@@ -168,10 +167,10 @@ export default {
       this.isRefreshing = true;
       try {
         const body = await refreshAllContainers();
-        this.$root.$emit("notify", "All containers refreshed");
+        this.$eventBus.emit("notify", "All containers refreshed");
         this.$emit("refresh-all-containers", body);
       } catch (e) {
-        this.$root.$emit(
+        this.$eventBus.emit(
           "notify",
           `Error when trying to refresh all containers (${e.message})`,
           "error",
@@ -186,6 +185,9 @@ export default {
     this.registrySelected = this.registrySelectedInit;
     this.watcherSelected = this.watcherSelectedInit;
     this.updateKindSelected = this.updateKindSelectedInit;
+    this.updateAvailableLocal = this.updateAvailable;
+    this.oldestFirstLocal = this.oldestFirst;
+    this.groupByLabelLocal = this.groupByLabel;
   },
 };
 </script>

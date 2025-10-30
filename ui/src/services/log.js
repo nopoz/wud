@@ -3,7 +3,7 @@ function getLogIcon() {
 }
 
 async function getLog() {
-  const response = await fetch("/api/log");
+  const response = await fetch("/api/log", { credentials: "include" });
   return response.json();
 }
 

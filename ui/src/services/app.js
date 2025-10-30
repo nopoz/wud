@@ -1,5 +1,5 @@
 async function getAppInfos() {
-  const response = await fetch("/api/app");
+  const response = await fetch("/api/app", { credentials: "include" });
   return response.json();
 }
 

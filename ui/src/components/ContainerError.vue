@@ -1,15 +1,13 @@
 <template>
-  <v-list dense>
+  <v-list density="compact">
     <v-list-item>
-      <v-list-item-avatar>
+      <template v-slot:prepend>
         <v-icon color="secondary">mdi-tag</v-icon>
-      </v-list-item-avatar>
-      <v-list-item-content>
-        <v-list-item-title>Error</v-list-item-title>
-        <v-list-item-subtitle>
-          {{ error.message }}
-        </v-list-item-subtitle>
-      </v-list-item-content>
+      </template>
+      <v-list-item-title>Error</v-list-item-title>
+      <v-list-item-subtitle>
+        {{ error.message }}
+      </v-list-item-subtitle>
     </v-list-item>
   </v-list>
 </template>

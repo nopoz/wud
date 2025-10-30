@@ -21,7 +21,7 @@ export default {
       const appInfos = await getAppInfos();
       this.version = appInfos.version || "unknown";
     } catch (e) {
-      this.$root.$emit(
+      this.$eventBus.emit(
         "notify",
         `Error when trying to get app version (${e.message})`,
         "error",

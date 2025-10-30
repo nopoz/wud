@@ -1,131 +1,130 @@
 <template>
   <v-card>
-    <v-app-bar flat dense tile @click="collapse()" style="cursor: pointer">
-      <v-toolbar-title class="text-body-3">
-        <v-chip label color="info" outlined>{{ trigger.type }}</v-chip>
+    <v-card-title
+      @click="collapse()"
+      style="cursor: pointer"
+      class="pa-3 d-flex align-center bg-surface"
+    >
+      <div class="text-body-3">
+        <v-chip label color="info" variant="outlined">{{ trigger.type }}</v-chip>
         /
-        <v-chip label color="info" outlined>{{ trigger.name }}</v-chip>
-      </v-toolbar-title>
+        <v-chip label color="info" variant="outlined">{{ trigger.name }}</v-chip>
+      </div>
       <v-spacer />
       <v-icon>{{ trigger.icon }}</v-icon>
       <v-icon>{{ showDetail ? "mdi-chevron-up" : "mdi-chevron-down" }}</v-icon>
-    </v-app-bar>
-    <v-expand-transition>
+    </v-card-title>
+    <transition name="expand-transition">
       <v-card-text v-show="showDetail">
         <v-row>
           <v-col cols="8">
-            <v-list dense v-if="configurationItems.length > 0">
+            <v-list density="compact" v-if="configurationItems.length > 0">
               <v-list-item
                 v-for="configurationItem in configurationItems"
                 :key="configurationItem.key"
               >
-                <v-list-item-content>
-                  <v-list-item-title class="text-capitalize">{{
-                    configurationItem.key
-                  }}</v-list-item-title>
-                  <v-list-item-subtitle>
-                    {{ configurationItem.value | formatValue }}
-                  </v-list-item-subtitle>
-                </v-list-item-content>
+                <v-list-item-title class="text-capitalize">{{
+                  configurationItem.key
+                }}</v-list-item-title>
+                <v-list-item-subtitle>
+                  {{ formatValue(configurationItem.value) }}
+                </v-list-item-subtitle>
               </v-list-item>
             </v-list>
             <span v-else>Default configuration</span>
           </v-col>
           <v-col cols="4" class="text-right">
-            <v-btn outlined small class="accent" @click="showTestForm = true">
+            <v-btn variant="outlined" size="small" color="accent" @click="showTestForm = true">
               Test
               <v-icon right>mdi-test-tube</v-icon>
             </v-btn>
 
             <v-navigation-drawer
               v-model="showTestForm"
-              absolute
-              right
+              location="right"
               temporary
-              width="512"
+              width="400"
+              style="position: absolute;"
             >
-              <v-container class="text-left">
-                <v-card-subtitle class="text-body-1">
-                  <v-icon>mdi-test-tube</v-icon>
-                  Test trigger</v-card-subtitle
-                >
+              <div class="pa-3">
+                <div class="text-subtitle-2 mb-2">
+                  <v-icon size="small">mdi-test-tube</v-icon>
+                  Test trigger
+                </div>
                 <v-text-field
                   label="Container ID"
                   v-model="container.id"
-                  append-icon="mdi-identifier"
-                  outlined
-                  dense
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  class="mb-2"
                 />
                 <v-text-field
                   label="Container Name"
                   v-model="container.name"
-                  append-icon="mdi-pencil"
-                  outlined
-                  dense
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  class="mb-2"
                 />
                 <v-text-field
                   label="Container Watcher"
                   v-model="container.watcher"
-                  append-icon="mdi-update"
-                  outlined
-                  dense
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  class="mb-2"
                 />
                 <v-select
                   label="Update kind"
                   v-model="container.updateKind.kind"
                   :items="['digest', 'tag']"
-                  :append-icon="
-                    container.updateKind.kind === 'tag'
-                      ? 'mdi-tag'
-                      : 'mdi-pound'
-                  "
-                  outlined
-                  dense
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  class="mb-2"
                 />
                 <v-select
                   v-if="container.updateKind.kind === 'tag'"
                   label="Update semver diff"
                   v-model="container.updateKind.semverDiff"
                   :items="['major', 'minor', 'patch']"
-                  :append-icon="
-                    container.updateKind.semverDiff === 'major'
-                      ? 'mdi-alert'
-                      : container.updateKind.semverDiff === 'minor'
-                        ? 'mdi-alert-decagram'
-                        : 'mdi-information'
-                  "
-                  outlined
-                  dense
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  class="mb-2"
                 />
                 <v-text-field
                   label="Container local value"
                   v-model="container.updateKind.localValue"
-                  append-icon="mdi-tag"
-                  outlined
-                  dense
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  class="mb-2"
                 />
                 <v-text-field
                   label="Container remote value"
                   v-model="container.updateKind.remoteValue"
-                  append-icon="mdi-tag-check"
-                  outlined
-                  dense
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  class="mb-3"
                 />
                 <v-btn
-                  outlined
-                  small
-                  class="accent"
+                  variant="outlined"
+                  size="small"
+                  color="accent"
                   block
                   @click="runTrigger"
                   :loading="isTriggering"
                   >Run trigger</v-btn
                 >
-              </v-container>
+              </div>
             </v-navigation-drawer>
           </v-col>
         </v-row>
       </v-card-text>
-    </v-expand-transition>
+    </transition>
   </v-card>
 </template>
 
@@ -184,9 +183,9 @@ export default {
           triggerName: this.trigger.name,
           container: this.container,
         });
-        this.$root.$emit("notify", "Trigger executed with success");
+        this.$eventBus.emit("notify", "Trigger executed with success");
       } catch (err) {
-        this.$root.$emit(
+        this.$eventBus.emit(
           "notify",
           `Trigger executed with error (${err.message}})`,
           "error",
@@ -195,8 +194,6 @@ export default {
         this.isTriggering = false;
       }
     },
-  },
-  filters: {
     formatValue(value) {
       if (value === undefined || value === null || value === "") {
         return "<empty>";

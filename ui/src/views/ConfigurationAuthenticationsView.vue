@@ -32,7 +32,7 @@ export default {
       const authentications = await getAllAuthentications();
       next((vm) => (vm.authentications = authentications));
     } catch (e) {
-      this.$root.$emit(
+      this.$eventBus.emit(
         "notify",
         `Error when trying to load the authentications (${e.message})`,
         "error",

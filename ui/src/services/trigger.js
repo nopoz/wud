@@ -3,13 +3,14 @@ function getTriggerIcon() {
 }
 
 async function getAllTriggers() {
-  const response = await fetch("/api/triggers");
+  const response = await fetch("/api/triggers", { credentials: "include" });
   return response.json();
 }
 
 async function runTrigger({ triggerType, triggerName, container }) {
   const response = await fetch(`/api/triggers/${triggerType}/${triggerName}`, {
     method: "POST",
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(container),
   });

@@ -3,7 +3,7 @@ function getServerIcon() {
 }
 
 async function getServer() {
-  const response = await fetch("/api/server");
+  const response = await fetch("/api/server", { credentials: "include" });
   return response.json();
 }
 

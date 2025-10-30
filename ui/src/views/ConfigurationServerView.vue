@@ -74,7 +74,7 @@ export default {
         vm.log = log;
       });
     } catch (e) {
-      this.$root.$emit(
+      this.$eventBus.emit(
         "notify",
         `Error when trying to load the state configuration (${e.message})`,
         "error",

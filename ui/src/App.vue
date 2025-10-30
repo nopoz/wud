@@ -24,12 +24,21 @@
 </template>
 
 <script>
-import Vue from "vue";
+import {
+  ref,
+  computed,
+  onMounted,
+  onUpdated,
+  inject,
+  getCurrentInstance,
+  watch,
+} from "vue";
 import NavigationDrawer from "@/components/NavigationDrawer";
 import AppBar from "@/components/AppBar";
 import SnackBar from "@/components/SnackBar";
 import AppFooter from "@/components/AppFooter";
 import { getServer } from "@/services/server";
+import { useRoute } from "vue-router";
 
 export default {
   components: {
@@ -38,17 +47,18 @@ export default {
     SnackBar,
     AppFooter,
   },
-  data() {
-    return {
-      snackbarMessage: "",
-      snackbarShow: false,
-      snackbarLevel: "info",
-      user: undefined,
-    };
-  },
-  computed: {
-    items() {
-      return this.$route.fullPath
+  setup() {
+    const route = useRoute();
+    const eventBus = inject("eventBus");
+    const instance = getCurrentInstance();
+
+    const snackbarMessage = ref("");
+    const snackbarShow = ref(false);
+    const snackbarLevel = ref("info");
+    const user = ref(undefined);
+
+    const items = computed(() => {
+      return route.fullPath
         .replace("/", "")
         .split("/")
         .map((item) => ({
@@ -56,60 +66,74 @@ export default {
           disabled: false,
           href: "",
         }));
-    },
+    });
 
-    /**
-     * Is user authenticated?
-     * @returns {boolean}
-     */
-    authenticated() {
-      return this.user !== undefined;
-    },
-  },
-  methods: {
-    /**
-     * Save current user when authenticated.
-     * @param user
-     */
-    onAuthenticated(user) {
-      this.user = user;
-    },
+    const authenticated = computed(() => {
+      return user.value !== undefined;
+    });
 
-    /**
-     * Display a notification.
-     * @param message
-     * @param level
-     */
-    notify(message, level = "info") {
-      this.snackbarMessage = message;
-      this.snackbarShow = true;
-      this.snackbarLevel = level;
-    },
+    const onAuthenticated = (userData) => {
+      user.value = userData;
+    };
 
-    /**
-     * Close a notification.
-     */
-    notifyClose() {
-      this.snackbarMessage = "";
-      this.snackbarShow = false;
-    },
-  },
+    const notify = (message, level = "info") => {
+      snackbarMessage.value = message;
+      snackbarShow.value = true;
+      snackbarLevel.value = level;
+    };
 
-  /**
-   * Listen to root events.
-   * @returns {Promise<void>}
-   */
-  async beforeMount() {
-    this.$root.$on("authenticated", this.onAuthenticated);
-    this.$root.$on("notify", this.notify);
-    this.$root.$on("notify:close", this.notifyClose);
-  },
+    const notifyClose = () => {
+      snackbarMessage.value = "";
+      snackbarShow.value = false;
+    };
 
-  async beforeUpdate() {
-    if (this.authenticated && !this.$serverConfig) {
-      const server = await getServer();
-      Vue.prototype.$serverConfig = server.configuration;
-    }
+    onMounted(async () => {
+      eventBus.on("authenticated", onAuthenticated);
+      eventBus.on("notify", notify);
+      eventBus.on("notify:close", notifyClose);
+    });
+
+    // Watch route changes to clear user on login page and check auth state
+    watch(route, async (newRoute) => {
+      if (newRoute.name === 'login') {
+        user.value = undefined;
+      } else if (!user.value) {
+        // Fallback auth check if user not set by router guard
+        try {
+          const response = await fetch("/auth/user", {
+            credentials: "include",
+          });
+          if (response.ok) {
+            const currentUser = await response.json();
+            if (currentUser && currentUser.username) {
+              onAuthenticated(currentUser);
+            }
+          }
+        } catch (e) {
+          console.log("Fallback auth check failed:", e);
+        }
+      }
+    });
+
+    onUpdated(async () => {
+      if (
+        authenticated.value &&
+        !instance.appContext.config.globalProperties.$serverConfig
+      ) {
+        const server = await getServer();
+        instance.appContext.config.globalProperties.$serverConfig =
+          server.configuration;
+      }
+    });
+
+    return {
+      snackbarMessage,
+      snackbarShow,
+      snackbarLevel,
+      user,
+      items,
+      authenticated,
+    };
   },
 };
 </script>

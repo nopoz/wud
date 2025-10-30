@@ -53,7 +53,7 @@ function getRegistryProviderIcon(provider) {
  * @returns {Promise<any>}
  */
 async function getAllRegistries() {
-  const response = await fetch("/api/registries");
+  const response = await fetch("/api/registries", { credentials: "include" });
   return response.json();
 }
 
