@@ -69,10 +69,6 @@ class Trigger extends Component {
                     thresholdPassing =
                         containerResult.updateKind.semverDiff == 'minor';
                     break;
-                case 'patch-only':
-                    thresholdPassing =
-                        containerResult.updateKind.semverDiff == 'patch';
-                    break;
                 case 'minor':
                     thresholdPassing =
                         containerResult.updateKind.semverDiff !== 'major';
@@ -108,9 +104,6 @@ class Trigger extends Component {
                     break;
                 case 'minor-only':
                     includeOrExcludeTrigger.threshold = 'minor-only';
-                    break;
-                case 'patch-only':
-                    includeOrExcludeTrigger.threshold = 'patch-only';
                     break;
                 case 'major':
                     includeOrExcludeTrigger.threshold = 'major';
@@ -297,7 +290,7 @@ class Trigger extends Component {
             threshold: this.joi
                 .string()
                 .insensitive()
-                .valid('all', 'major', 'minor', 'patch', 'major-only', 'minor-only', 'patch-only')
+                .valid('all', 'major', 'minor', 'patch', 'major-only', 'minor-only')
                 .default('all'),
             mode: this.joi
                 .string()
