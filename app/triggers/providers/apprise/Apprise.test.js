@@ -86,3 +86,100 @@ test('trigger should send POST http request to notify endpoint', async () => {
         uri: 'http://xxx.com/notify',
     });
 });
+
+test('trigger should use config and tag when configured', async () => {
+    apprise.configuration = {
+        url: 'http://xxx.com',
+        config: 'myconfig',
+        tag: 'mytag',
+    };
+
+    const container = {
+        name: 'test',
+        updateKind: { kind: 'tag', localValue: '1.0', remoteValue: '2.0' },
+    };
+    await apprise.trigger(container);
+
+    expect(rp).toHaveBeenCalledWith({
+        body: {
+            title: expect.any(String),
+            body: expect.any(String),
+            format: 'text',
+            type: 'info',
+            tag: 'mytag',
+        },
+        json: true,
+        method: 'POST',
+        uri: 'http://xxx.com/notify/myconfig',
+    });
+});
+
+test('trigger should use config without tag', async () => {
+    apprise.configuration = {
+        url: 'http://xxx.com',
+        config: 'myconfig',
+    };
+
+    const container = {
+        name: 'test',
+        updateKind: { kind: 'tag', localValue: '1.0', remoteValue: '2.0' },
+    };
+    await apprise.trigger(container);
+
+    expect(rp).toHaveBeenCalledWith({
+        body: {
+            title: expect.any(String),
+            body: expect.any(String),
+            format: 'text',
+            type: 'info',
+        },
+        json: true,
+        method: 'POST',
+        uri: 'http://xxx.com/notify/myconfig',
+    });
+});
+
+test('triggerBatch should send batch notification', async () => {
+    apprise.configuration = {
+        url: 'http://xxx.com',
+        urls: 'mailto://test@example.com',
+    };
+
+    const containers = [
+        {
+            name: 'test1',
+            updateKind: { kind: 'tag', localValue: '1.0', remoteValue: '2.0' },
+        },
+        {
+            name: 'test2',
+            updateKind: { kind: 'tag', localValue: '1.1', remoteValue: '2.1' },
+        },
+    ];
+
+    await apprise.triggerBatch(containers);
+
+    expect(rp).toHaveBeenCalledWith({
+        body: {
+            urls: 'mailto://test@example.com',
+            title: expect.any(String),
+            body: expect.any(String),
+            format: 'text',
+            type: 'info',
+        },
+        json: true,
+        method: 'POST',
+        uri: 'http://xxx.com/notify',
+    });
+});
+
+test('maskConfiguration should mask urls', () => {
+    apprise.configuration = {
+        url: 'http://xxx.com',
+        urls: 'mailto://secret@example.com',
+    };
+
+    const masked = apprise.maskConfiguration();
+
+    expect(masked.url).toBe('http://xxx.com');
+    expect(masked.urls).toBe('m*************************m');
+});

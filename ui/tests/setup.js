@@ -153,7 +153,7 @@ config.global.stubs = {
 // Global plugins
 config.global.plugins = [vuetify];
 
-// Mock display composable
+// Mock display composable and Vue Router
 config.global.provide = {
   'Symbol(vuetify:display)': {
     xs: false,
@@ -170,5 +170,18 @@ config.global.provide = {
     mdAndDown: true,
     lgAndDown: true,
     xlAndDown: true
+  },
+  'Symbol(route location)': {
+    name: 'test',
+    path: '/test',
+    query: {},
+    params: {}
+  },
+  'Symbol(router)': {
+    push: jest.fn(),
+    replace: jest.fn(),
+    go: jest.fn(),
+    back: jest.fn(),
+    forward: jest.fn()
   }
 };

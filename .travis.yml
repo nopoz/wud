@@ -7,7 +7,7 @@ env:
     - CC_TEST_REPORTER_ID=46ef31dae5b656e0f4be410a86bd83bdcf73e7d27ab33a704c197e6fe4bf02a0
     - DOCKER_PLATFORMS=linux/arm64/v8,linux/amd64
     - IMAGE_NAME=wud
-    - NODE_VERSION=23
+    - NODE_VERSION=24
 
 before_install:
 

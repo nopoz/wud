@@ -51,3 +51,51 @@ test('maskConfiguration should mask configuration secrets', () => {
         timeout: 5000,
     });
 });
+
+test('getStrategyDescription should return strategy description', () => {
+    oidc.logoutUrl = 'https://idp/logout';
+    expect(oidc.getStrategyDescription()).toEqual({
+        type: 'oidc',
+        name: oidc.name,
+        redirect: false,
+        logoutUrl: 'https://idp/logout',
+    });
+});
+
+test('verify should return user on valid token', async () => {
+    const mockUserInfo = { email: 'test@example.com' };
+    oidc.client.userinfo = jest.fn().mockResolvedValue(mockUserInfo);
+
+    const done = jest.fn();
+    await oidc.verify('valid-token', done);
+
+    expect(done).toHaveBeenCalledWith(null, { username: 'test@example.com' });
+});
+
+test('verify should return false on invalid token', async () => {
+    oidc.client.userinfo = jest
+        .fn()
+        .mockRejectedValue(new Error('Invalid token'));
+    oidc.log = { warn: jest.fn() };
+
+    const done = jest.fn();
+    await oidc.verify('invalid-token', done);
+
+    expect(done).toHaveBeenCalledWith(null, false);
+});
+
+test('getUserFromAccessToken should return user with email', async () => {
+    const mockUserInfo = { email: 'user@example.com' };
+    oidc.client.userinfo = jest.fn().mockResolvedValue(mockUserInfo);
+
+    const user = await oidc.getUserFromAccessToken('token');
+    expect(user).toEqual({ username: 'user@example.com' });
+});
+
+test('getUserFromAccessToken should return unknown for missing email', async () => {
+    const mockUserInfo = {};
+    oidc.client.userinfo = jest.fn().mockResolvedValue(mockUserInfo);
+
+    const user = await oidc.getUserFromAccessToken('token');
+    expect(user).toEqual({ username: 'unknown' });
+});

@@ -156,3 +156,35 @@ test('trigger should send message to pushover', async () => {
         title: 'New tag found for container container1',
     });
 });
+
+test('triggerBatch should send batch notification', async () => {
+    pushover.configuration = configurationValid;
+    const containers = [
+        {
+            name: 'container1',
+            updateKind: {
+                kind: 'tag',
+                localValue: '1.0.0',
+                remoteValue: '2.0.0',
+            },
+        },
+        {
+            name: 'container2',
+            updateKind: {
+                kind: 'tag',
+                localValue: '1.1.0',
+                remoteValue: '2.1.0',
+            },
+        },
+    ];
+    const result = await pushover.triggerBatch(containers);
+    expect(result).toStrictEqual({
+        device: undefined,
+        message:
+            '- Container container1 running with tag 1.0.0 can be updated to tag 2.0.0\n- Container container2 running with tag 1.1.0 can be updated to tag 2.1.0',
+        priority: 0,
+        sound: 'pushover',
+        html: 0,
+        title: '2 updates available',
+    });
+});

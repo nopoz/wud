@@ -12,9 +12,12 @@ class Http extends Trigger {
      */
     getConfigurationSchema() {
         return this.joi.object().keys({
-            url: this.joi.string().uri({
-                scheme: ['http', 'https'],
-            }),
+            url: this.joi
+                .string()
+                .uri({
+                    scheme: ['http', 'https'],
+                })
+                .required(),
             method: this.joi
                 .string()
                 .allow('GET')

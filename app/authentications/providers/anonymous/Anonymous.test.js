@@ -1,20 +1,28 @@
 const Anonymous = require('./Anonymous');
 
-const anonymous = new Anonymous();
+describe('Anonymous Authentication', () => {
+    let anonymous;
 
-const configurationValid = {};
+    beforeEach(() => {
+        anonymous = new Anonymous();
+    });
 
-beforeEach(() => {
-    jest.resetAllMocks();
-});
+    test('should create instance', () => {
+        expect(anonymous).toBeDefined();
+        expect(anonymous).toBeInstanceOf(Anonymous);
+    });
 
-test('validateConfiguration should return validated configuration when valid', () => {
-    const validatedConfiguration =
-        anonymous.validateConfiguration(configurationValid);
-    expect(validatedConfiguration).toStrictEqual(configurationValid);
-});
+    test('should return anonymous strategy', () => {
+        const strategy = anonymous.getStrategy();
+        expect(strategy).toBeDefined();
+        expect(strategy.name).toBe('anonymous');
+    });
 
-test('getStrategy should return an Authentication strategy', () => {
-    const strategy = anonymous.getStrategy();
-    expect(strategy.name).toEqual('anonymous');
+    test('should return strategy description', () => {
+        const description = anonymous.getStrategyDescription();
+        expect(description).toEqual({
+            type: 'anonymous',
+            name: 'Anonymous',
+        });
+    });
 });

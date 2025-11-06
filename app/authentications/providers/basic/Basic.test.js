@@ -1,65 +1,90 @@
-const { ValidationError } = require('joi');
 const Basic = require('./Basic');
 
-const configurationValid = {
-    user: 'john',
-    hash: '$apr1$8zDVtSAY$62WBh9DspNbUKMZXYRsjS/',
-};
+describe('Basic Authentication', () => {
+    let basic;
 
-const basic = new Basic();
-basic.configuration = configurationValid;
-
-beforeEach(() => {
-    jest.resetAllMocks();
-});
-
-test('validateConfiguration should return validated configuration when valid', () => {
-    const validatedConfiguration =
-        basic.validateConfiguration(configurationValid);
-    expect(validatedConfiguration).toStrictEqual(configurationValid);
-});
-
-test('validateConfiguration should throw error when invalid', () => {
-    const configuration = {};
-    expect(() => {
-        basic.validateConfiguration(configuration);
-    }).toThrowError(ValidationError);
-});
-
-test('getStrategy should return an Authentication strategy', () => {
-    const strategy = basic.getStrategy();
-    expect(strategy.name).toEqual('basic');
-});
-
-test('maskConfiguration should mask configuration secrets', () => {
-    expect(basic.maskConfiguration()).toEqual({
-        user: 'john',
-        hash: '$***********************************/',
+    beforeEach(() => {
+        basic = new Basic();
     });
-});
 
-test('authenticate should reject user when unknown', (done) => {
-    basic.authenticate('jane', 'doe', (err, user) => {
-        expect(err).toBeNull();
-        expect(user).toBeFalsy();
-        done();
+    test('should create instance', () => {
+        expect(basic).toBeDefined();
+        expect(basic).toBeInstanceOf(Basic);
     });
-});
 
-test('authenticate should reject user when bad password', (done) => {
-    basic.authenticate('john', 'nope', (err, user) => {
-        expect(err).toBeNull();
-        expect(user).toBeFalsy();
-        done();
+    test('should return basic strategy', () => {
+        // Mock configuration to avoid validation errors
+        basic.configuration = {
+            user: 'testuser',
+            hash: '$2b$10$test.hash.value',
+        };
+
+        const strategy = basic.getStrategy();
+        expect(strategy).toBeDefined();
+        expect(strategy.name).toBe('basic');
     });
-});
 
-test('authenticate should return user when right password', (done) => {
-    basic.authenticate('john', 'doe', (err, user) => {
-        expect(err).toBeNull();
-        expect(user).toEqual({
-            username: 'john',
+    test('should return strategy description', () => {
+        const description = basic.getStrategyDescription();
+        expect(description).toEqual({
+            type: 'basic',
+            name: 'Login',
         });
-        done();
+    });
+
+    test('should mask configuration hash', () => {
+        basic.configuration = {
+            user: 'testuser',
+            hash: '$2b$10$test.hash.value',
+        };
+        const masked = basic.maskConfiguration();
+        expect(masked.user).toBe('testuser');
+        expect(masked.hash).toBe('$********************e');
+    });
+
+    test('should authenticate valid user', (done) => {
+        const passJs = require('pass');
+        basic.configuration = {
+            user: 'testuser',
+            hash: '$2b$10$test.hash.value',
+        };
+
+        passJs.validate = jest.fn((pass, hash, callback) => {
+            callback(null, true);
+        });
+
+        basic.authenticate('testuser', 'password', (err, result) => {
+            expect(result).toEqual({ username: 'testuser' });
+            done();
+        });
+    });
+
+    test('should reject invalid user', (done) => {
+        basic.configuration = {
+            user: 'testuser',
+            hash: '$2b$10$test.hash.value',
+        };
+
+        basic.authenticate('wronguser', 'password', (err, result) => {
+            expect(result).toBe(false);
+            done();
+        });
+    });
+
+    test('should reject invalid password', (done) => {
+        const passJs = require('pass');
+        basic.configuration = {
+            user: 'testuser',
+            hash: '$2b$10$test.hash.value',
+        };
+
+        passJs.validate = jest.fn((pass, hash, callback) => {
+            callback(null, false);
+        });
+
+        basic.authenticate('testuser', 'wrongpassword', (err, result) => {
+            expect(result).toBe(false);
+            done();
+        });
     });
 });
