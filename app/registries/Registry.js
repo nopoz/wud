@@ -77,14 +77,16 @@ class Registry extends Component {
         let hasNext = true;
         let link;
         while (hasNext) {
-            const lastItem = page
-                ? page.body.tags[page.body.tags.length - 1]
-                : undefined;
+            const lastItem =
+                page && page.data && page.data.tags
+                    ? page.data.tags[page.data.tags.length - 1]
+                    : undefined;
 
             page = await this.getTagsPage(image, lastItem, link);
-            const pageTags = page.body.tags ? page.body.tags : [];
-            link = page.headers.link;
-            hasNext = page.headers.link !== undefined;
+            const pageTags =
+                page && page.data && page.data.tags ? page.data.tags : [];
+            link = page && page.headers ? page.headers.link : undefined;
+            hasNext = page && page.headers && page.headers.link !== undefined;
             tags.push(...pageTags);
         }
 

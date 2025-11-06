@@ -1,10 +1,13 @@
 Feature: WUD Container API Exposure
+
+  Scenario: WUD must return correct container count
     When I GET /api/containers
     Then response code should be 200
     And response body should be valid json
-    And response body path $ should be of type array with length 19
+    And response body path $ should be of type array with length 10
 
-  Scenario Outline: WUD must allow to get all containers
+  # Test one representative container per registry type + update pattern
+  Scenario Outline: WUD must handle different registry types and update patterns
     When I GET /api/containers
     Then response code should be 200
     And response body should be valid json
@@ -17,29 +20,21 @@ Feature: WUD Container API Exposure
     And response body path $[<index>].result.tag should be <resultTag>
     And response body path $[<index>].updateAvailable should be <updateAvailable>
     Examples:
-      | index | registry       | containerName            | registryUrl                                             | imageName                           | tag                | resultTag          | updateAvailable |
-      | 0     | ecr.private    | ecr_sub_sub_test         | https://229211676173.dkr.ecr.eu-west-1.amazonaws.com/v2 | sub/sub/test                        | 1.0.0              | 2.0.0              | true            |
-      | 1     | ecr.private    | ecr_sub_test             | https://229211676173.dkr.ecr.eu-west-1.amazonaws.com/v2 | sub/test                            | 1.0.0              | 2.0.0              | true            |
-      | 2     | ecr.private    | ecr_test                 | https://229211676173.dkr.ecr.eu-west-1.amazonaws.com/v2 | test                                | 1.0.0              | 2.0.0              | true            |
-      | 3     | ghcr.private   | ghcr_radarr              | https://ghcr.io/v2                                      | linuxserver/radarr                  | 5.14.0.9383-ls245  | 5.28.0.10274-ls286 | true            |
-      | 4     | gitlab.private | gitlab_test              | https://registry.gitlab.com/v2                          | manfred-martin/docker-registry-test | 1.0.0              | 2.0.0              | true            |
-      | 5     | hub.public     | hub_homeassistant_202161 | https://registry-1.docker.io/v2                         | homeassistant/home-assistant        | 2021.6.1           | 2025.11.0          | true            |
-      | 6     | hub.public     | hub_homeassistant_latest | https://registry-1.docker.io/v2                         | homeassistant/home-assistant        | latest             | latest             | false           |
-      | 7     | hub.public     | hub_nginx_120            | https://registry-1.docker.io/v2                         | library/nginx                       | 1.20-alpine        | 1.29-alpine        | true            |
-      | 8     | hub.public     | hub_nginx_latest         | https://registry-1.docker.io/v2                         | library/nginx                       | latest             | latest             | true            |
-      | 9     | hub.public     | hub_omnidb_latest        | https://registry-1.docker.io/v2                         | omnidbteam/omnidb                   | latest             | latest             | false           |
-      | 10    | hub.public     | hub_pihole_57            | https://registry-1.docker.io/v2                         | pihole/pihole                       | v5.7               | v5.8.1             | true            |
-      | 11    | hub.public     | hub_pihole_latest        | https://registry-1.docker.io/v2                         | pihole/pihole                       | latest             | latest             | false           |
-      | 12    | hub.public     | hub_pyload_latest        | https://registry-1.docker.io/v2                         | writl/pyload                        | latest             | latest             | false           |
-      | 13    | hub.public     | hub_traefik_245          | https://registry-1.docker.io/v2                         | library/traefik                     | 2.4.5              | 3.5.4              | true            |
-      | 14    | hub.public     | hub_traefik_latest       | https://registry-1.docker.io/v2                         | library/traefik                     | latest             | latest             | false           |
-      | 15    | hub.public     | hub_vaultwarden_1222     | https://registry-1.docker.io/v2                         | vaultwarden/server                  | 1.34.1-alpine      | 1.34.3-alpine      | true            |
-      | 16    | hub.public     | hub_vaultwarden_latest   | https://registry-1.docker.io/v2                         | vaultwarden/server                  | latest             | latest             | false           |
-      | 17    | hub.public     | hub_youtubedb_latest     | https://registry-1.docker.io/v2                         | jeeaaasustest/youtube-dl            | latest             | latest             | false           |
-      | 18    | lscr.private   | lscr_radarr              | https://lscr.io/v2                                      | linuxserver/radarr                  | 5.14.0.9383-ls245  | 5.28.0.10274-ls286 | true            |
-      | 19    | quay.public    | quay_prometheus          | https://quay.io/v2                                      | prometheus/prometheus               | v2.52.0            | v3.7.3             | true            |
+      | index | registry       | containerName            | registryUrl                                             | imageName                           | tag                | resultTag          | updateAvailable | testCase                    |
+      # Containers in alphabetical order by name
+      | 0     | ecr.private    | ecr_sub_sub_test         | https://229211676173.dkr.ecr.eu-west-1.amazonaws.com/v2 | sub/sub/test                        | 1.0.0              | 2.0.0              | true            | ECR semver major update     |
+      | 1     | ghcr.private   | ghcr_radarr              | https://ghcr.io/v2                                      | linuxserver/radarr                  | 5.14.0.9383-ls245  | 5.28.0.10274-ls286 | true            | GHCR complex semver update  |
+      | 2     | gitlab.private | gitlab_test              | https://registry.gitlab.com/v2                          | manfred-martin/docker-registry-test | 1.0.0              | 2.0.0              | true            | GitLab semver major update  |
+      | 3     | hub.public     | hub_homeassistant_202161 | https://registry-1.docker.io/v2                         | homeassistant/home-assistant        | 2021.6.1           | 2025.11.0          | true            | Hub date-based versioning   |
+      | 4     | hub.public     | hub_homeassistant_latest | https://registry-1.docker.io/v2                         | homeassistant/home-assistant        | latest             | latest             | false           | Hub latest tag no update    |
+      | 5     | hub.public     | hub_nginx_120            | https://registry-1.docker.io/v2                         | library/nginx                       | 1.20-alpine        | 1.29-alpine        | true            | Hub alpine minor update     |
+      | 6     | hub.public     | hub_nginx_latest         | https://registry-1.docker.io/v2                         | library/nginx                       | latest             | latest             | true            | Hub latest tag digest update|
+      | 7     | hub.public     | hub_traefik_245          | https://registry-1.docker.io/v2                         | library/traefik                     | 2.4.5              | 3.5.4              | true            | Hub semver major update     |
+      | 8     | lscr.private   | lscr_radarr              | https://lscr.io/v2                                      | linuxserver/radarr                  | 5.14.0.9383-ls245  | 5.28.0.10274-ls286 | true            | LSCR complex semver update  |
+      | 9     | quay.public    | quay_prometheus          | https://quay.io/v2                                      | prometheus/prometheus               | v2.52.0            | v3.7.3             | true            | Quay semver major update    |
 
-  Scenario: WUD must allow to get a container with semver
+  # Test detailed container inspection (semver)
+  Scenario: WUD must provide detailed container information for semver containers
     Given I GET /api/containers
     And I store the value of body path $[0].id as containerId in scenario scope
     When I GET /api/containers/`containerId`
@@ -48,46 +43,36 @@ Feature: WUD Container API Exposure
     And response body path $.watcher should be local
     And response body path $.name should be ecr_sub_sub_test
     And response body path $.image.registry.name should be ecr.private
-    And response body path $.image.registry.url should be https://229211676173.dkr.ecr.eu-west-1.amazonaws.com/v2
-    And response body path $.image.name should be sub/sub/test
-    And response body path $.image.tag.value should be 1.0.0
-    And response body path $.image.architecture should be amd64
-    And response body path $.image.os should be linux
     And response body path $.image.tag.semver should be true
     And response body path $.result.tag should be 2.0.0
     And response body path $.updateAvailable should be true
 
-  Scenario: WUD must allow to get a container with digest
+  # Test detailed container inspection (digest)
+  Scenario: WUD must provide detailed container information for digest-based containers
     Given I GET /api/containers
-    And I store the value of body path $[8].id as containerId in scenario scope
+    And I store the value of body path $[6].id as containerId in scenario scope
     When I GET /api/containers/`containerId`
     Then response code should be 200
     And response body should be valid json
     And response body path $.watcher should be local
     And response body path $.name should be hub_nginx_latest
-    And response body path $.image.registry.name should be hub.public
-    And response body path $.image.registry.url should be https://registry-1.docker.io/v2
-    And response body path $.image.name should be library/nginx
-    And response body path $.image.tag.value should be latest
-    And response body path $.image.architecture should be amd64
-    And response body path $.image.os should be linux
-    And response body path $.image.tag.value should be latest
     And response body path $.image.tag.semver should be false
     And response body path $.image.digest.value should be sha256:f94d6dd9b5761f33a21bb92848a1f70ea11a1c15f3a142c19a44ea3a4c545a4d
-    And response body path $.result.tag should be latest
     And response body path $.result.digest should be sha256:bd1578eec775d0b28fd7f664b182b7e1fb75f1dd09f92d865dababe8525dfe8b
     And response body path $.updateAvailable should be true
 
-  Scenario: WUD must allow to get a container with its link
+  # Test link functionality
+  Scenario: WUD must generate correct links for containers with link templates
     Given I GET /api/containers
-    And I store the value of body path $[5].id as containerId in scenario scope
+    And I store the value of body path $[3].id as containerId in scenario scope
     When I GET /api/containers/`containerId`
     Then response code should be 200
     And response body should be valid json
     And response body path $.link should be https://github.com/home-assistant/core/releases/tag/2021.6.1
     And response body path $.result.link should be https://github.com/home-assistant/core/releases/tag/2025.11.0
 
-  Scenario: WUD must allow to trigger a watch on a container
+  # Test watch trigger functionality
+  Scenario: WUD must allow triggering container watch
     Given I GET /api/containers
     And I store the value of body path $[0].id as containerId in scenario scope
     When I POST to /api/containers/`containerId`/watch

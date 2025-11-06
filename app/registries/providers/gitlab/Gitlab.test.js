@@ -75,7 +75,9 @@ test('match should return true when registry url is from custom gitlab', () => {
 
 test('authenticate should perform authenticate request', () => {
     axios.mockImplementation(() => ({
-        token: 'token',
+        data: {
+            token: 'token',
+        },
     }));
     expect(
         gitlab.authenticate(

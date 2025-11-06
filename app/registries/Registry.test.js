@@ -41,7 +41,7 @@ test('getTags should sort tags z -> a', () => {
     registryMocked.log = log;
     registryMocked.callRegistry = () => ({
         headers: {},
-        body: { tags: ['v1', 'v2', 'v3'] },
+        data: { tags: ['v1', 'v2', 'v3'] },
     });
     expect(
         registryMocked.getTags({ name: 'test', registry: { url: 'test' } }),

@@ -1,9 +1,9 @@
-const Registry = require('../../Registry');
+const BaseRegistry = require('../../BaseRegistry');
 
 /**
  * Docker Custom Registry V2 integration.
  */
-class Custom extends Registry {
+class Custom extends BaseRegistry {
     getConfigurationSchema() {
         return this.joi.alternatives([
             this.joi.string().allow(''),
@@ -33,16 +33,8 @@ class Custom extends Registry {
         ]);
     }
 
-    /**
-     * Sanitize sensitive data
-     * @returns {*}
-     */
     maskConfiguration() {
-        return {
-            ...this.configuration,
-            password: Custom.mask(this.configuration.password),
-            auth: Custom.mask(this.configuration.auth),
-        };
+        return this.maskSensitiveFields(['password', 'auth']);
     }
 
     /**
@@ -65,46 +57,11 @@ class Custom extends Registry {
         return imageNormalized;
     }
 
-    /**
-     * Authenticate to Registry.
-     * @param image
-     * @param requestOptions
-     * @returns {Promise<*>}
-     */
     async authenticate(image, requestOptions) {
-        const requestOptionsWithAuth = requestOptions;
-        const credentials = this.getAuthCredentials();
-        if (credentials) {
-            requestOptionsWithAuth.headers.Authorization = `Basic ${credentials}`;
-        }
-        return requestOptionsWithAuth;
-    }
-
-    /**
-     * Return Base64 credentials if any.
-     * @returns {string|undefined|*}
-     */
-    getAuthCredentials() {
-        if (this.configuration.auth) {
-            return this.configuration.auth;
-        }
-        if (this.configuration.login && this.configuration.password) {
-            return Custom.base64Encode(
-                this.configuration.login,
-                this.configuration.password,
-            );
-        }
-        return undefined;
-    }
-
-    getAuthPull() {
-        if (this.configuration.login) {
-            return {
-                username: this.configuration.login,
-                password: this.configuration.password,
-            };
-        }
-        return undefined;
+        return this.authenticateBasic(
+            requestOptions,
+            this.getAuthCredentials(),
+        );
     }
 }
 

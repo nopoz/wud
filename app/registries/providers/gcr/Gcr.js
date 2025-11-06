@@ -1,10 +1,10 @@
 const axios = require('axios');
-const Registry = require('../../Registry');
+const BaseRegistry = require('../../BaseRegistry');
 
 /**
  * Google Container Registry integration.
  */
-class Gcr extends Registry {
+class Gcr extends BaseRegistry {
     getConfigurationSchema() {
         return this.joi.alternatives([
             this.joi.string().allow(''),
@@ -15,40 +15,16 @@ class Gcr extends Registry {
         ]);
     }
 
-    /**
-     * Sanitize sensitive data
-     * @returns {*}
-     */
     maskConfiguration() {
-        return {
-            ...this.configuration,
-            clientemail: this.configuration.clientemail,
-            privatekey: Gcr.mask(this.configuration.privatekey),
-        };
+        return this.maskSensitiveFields(['privatekey']);
     }
-
-    /**
-     * Return true if image has not registry url.
-     * @param image the image
-     * @returns {boolean}
-     */
 
     match(image) {
-        return /^.*\.?gcr.io$/.test(image.registry.url);
+        return this.matchUrlPattern(image, /^.*\.?gcr.io$/);
     }
 
-    /**
-     * Normalize image according to AWS ECR characteristics.
-     * @param image
-     * @returns {*}
-     */
-
     normalizeImage(image) {
-        const imageNormalized = image;
-        if (!imageNormalized.registry.url.startsWith('https://')) {
-            imageNormalized.registry.url = `https://${imageNormalized.registry.url}/v2`;
-        }
-        return imageNormalized;
+        return this.normalizeImageUrl(image);
     }
 
     async authenticate(image, requestOptions) {

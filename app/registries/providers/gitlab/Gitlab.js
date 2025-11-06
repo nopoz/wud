@@ -70,7 +70,7 @@ class Gitlab extends Registry {
         };
         const response = await axios(request);
         const requestOptionsWithAuth = requestOptions;
-        requestOptionsWithAuth.headers.Authorization = `Bearer ${response.token}`;
+        requestOptionsWithAuth.headers.Authorization = `Bearer ${response.data.token}`;
         return requestOptionsWithAuth;
     }
 
