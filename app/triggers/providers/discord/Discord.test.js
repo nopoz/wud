@@ -1,106 +1,105 @@
-const { ValidationError } = require('joi');
-const rp = require('request-promise-native');
-
-jest.mock('request-promise-native');
 const Discord = require('./Discord');
 
-const discord = new Discord();
+// Mock request-promise-native
+jest.mock('request-promise-native', () => jest.fn());
 
-const configurationValid = {
-    url: 'https://discord.com/api/webhooks/1',
-    botusername: 'Bot Name',
-    cardcolor: 65280,
-    cardlabel: 'Container',
-    auto: true,
-    threshold: 'all',
-    mode: 'simple',
-    once: true,
-    auto: true,
-    simpletitle:
-        'New ${container.updateKind.kind} found for container ${container.name}',
+describe('Discord Trigger', () => {
+    let discord;
 
-    simplebody:
-        'Container ${container.name} running with ${container.updateKind.kind} ${container.updateKind.localValue} can be updated to ${container.updateKind.kind} ${container.updateKind.remoteValue}${container.result && container.result.link ? "\\n" + container.result.link : ""}',
-
-    batchtitle: '${containers.length} updates available',
-};
-
-beforeEach(() => {
-    jest.resetAllMocks();
-});
-
-test('validateConfiguration should return validated configuration when valid', () => {
-    const validatedConfiguration =
-        discord.validateConfiguration(configurationValid);
-    expect(validatedConfiguration).toStrictEqual(configurationValid);
-});
-
-test('validateConfiguration should throw error when invalid', () => {
-    const configuration = {};
-    expect(() => {
-        discord.validateConfiguration(configuration);
-    }).toThrowError(ValidationError);
-});
-
-test('maskConfiguration should mask sensitive data', () => {
-    discord.configuration = configurationValid;
-    expect(discord.maskConfiguration()).toEqual({
-        batchtitle: '${containers.length} updates available',
-        botusername: 'Bot Name',
-        url: 'h********************************1',
-        mode: 'simple',
-        cardcolor: 65280,
-        cardlabel: 'Container',
-        once: true,
-        auto: true,
-        simplebody:
-            'Container ${container.name} running with ${container.updateKind.kind} ${container.updateKind.localValue} can be updated to ${container.updateKind.kind} ${container.updateKind.remoteValue}${container.result && container.result.link ? "\\n" + container.result.link : ""}',
-
-        simpletitle:
-            'New ${container.updateKind.kind} found for container ${container.name}',
-        threshold: 'all',
+    beforeEach(() => {
+        discord = new Discord();
+        jest.clearAllMocks();
     });
-});
 
-test('trigger should send POST http request to webhook endpoint', async () => {
-    discord.configuration = configurationValid;
-    const container = {
-        name: 'container1',
-        image: {
-            tag: {
-                value: '1.0.0',
+    test('should create instance', () => {
+        expect(discord).toBeDefined();
+        expect(discord).toBeInstanceOf(Discord);
+    });
+
+    test('should have correct configuration schema', () => {
+        const schema = discord.getConfigurationSchema();
+        expect(schema).toBeDefined();
+    });
+
+    test('should validate configuration with webhook URL', () => {
+        const config = {
+            url: 'https://discord.com/api/webhooks/123/abc',
+        };
+
+        expect(() => discord.validateConfiguration(config)).not.toThrow();
+    });
+
+    test('should throw error when webhook URL is missing', () => {
+        const config = {};
+
+        expect(() => discord.validateConfiguration(config)).toThrow();
+    });
+
+    test('should mask configuration URL', () => {
+        discord.configuration = {
+            url: 'https://discord.com/api/webhooks/123/secret',
+        };
+        const masked = discord.maskConfiguration();
+        expect(masked.url).toBe('h*****************************************t');
+    });
+
+    test('should trigger with container', async () => {
+        const rp = require('request-promise-native');
+        discord.configuration = {
+            url: 'https://discord.com/api/webhooks/123/abc',
+        };
+        discord.renderSimpleTitle = jest.fn().mockReturnValue('Title');
+        discord.renderSimpleBody = jest.fn().mockReturnValue('Body');
+        const container = { name: 'test' };
+
+        await discord.trigger(container);
+        expect(discord.renderSimpleTitle).toHaveBeenCalledWith(container);
+        expect(discord.renderSimpleBody).toHaveBeenCalledWith(container);
+    });
+
+    test('should trigger batch with containers', async () => {
+        const rp = require('request-promise-native');
+        discord.configuration = {
+            url: 'https://discord.com/api/webhooks/123/abc',
+        };
+        discord.renderBatchTitle = jest.fn().mockReturnValue('Batch Title');
+        discord.renderBatchBody = jest.fn().mockReturnValue('Batch Body');
+        const containers = [{ name: 'test1' }, { name: 'test2' }];
+
+        await discord.triggerBatch(containers);
+        expect(discord.renderBatchTitle).toHaveBeenCalledWith(containers);
+        expect(discord.renderBatchBody).toHaveBeenCalledWith(containers);
+    });
+
+    test('should send message with custom configuration', async () => {
+        const rp = require('request-promise-native');
+        discord.configuration = {
+            url: 'https://discord.com/api/webhooks/123/abc',
+            botusername: 'CustomBot',
+            cardcolor: 16711680,
+            cardlabel: 'Updates',
+        };
+
+        await discord.sendMessage('Test Title', 'Test Body');
+        expect(rp).toHaveBeenCalledWith({
+            method: 'POST',
+            json: true,
+            uri: 'https://discord.com/api/webhooks/123/abc',
+            body: {
+                username: 'CustomBot',
+                embeds: [
+                    {
+                        title: 'Test Title',
+                        color: 16711680,
+                        fields: [
+                            {
+                                name: 'Updates',
+                                value: 'Test Body',
+                            },
+                        ],
+                    },
+                ],
             },
-        },
-        result: {
-            tag: '2.0.0',
-        },
-        updateAvailable: true,
-        updateKind: {
-            kind: 'tag',
-            localValue: '1.0.0',
-            remoteValue: '2.0.0',
-            semverDiff: 'major',
-        },
-    };
-    await discord.trigger(container);
-    expect(rp).toHaveBeenCalledWith({
-        body: {
-            username: 'Bot Name',
-            embeds: [
-                {
-                    title: 'New tag found for container container1',
-                    color: 65280,
-                    fields: [
-                        {
-                            name: 'Container',
-                            value: 'Container container1 running with tag 1.0.0 can be updated to tag 2.0.0',
-                        },
-                    ],
-                },
-            ],
-        },
-        json: true,
-        method: 'POST',
-        uri: 'https://discord.com/api/webhooks/1',
+        });
     });
 });

@@ -44,3 +44,57 @@ test('validateConfiguration should throw error when invalid', () => {
         command.validateConfiguration(configuration);
     }).toThrowError(ValidationError);
 });
+
+test('should trigger with container', async () => {
+    const cmd = new Command();
+    await cmd.register('trigger', 'command', 'test', { cmd: 'echo test' });
+    const logSpy = jest.spyOn(cmd.log, 'info');
+
+    const container = { name: 'test', id: '123' };
+    await cmd.trigger(container);
+
+    expect(logSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Command echo test'),
+    );
+});
+
+test('should trigger batch with containers', async () => {
+    const cmd = new Command();
+    await cmd.register('trigger', 'command', 'test', { cmd: 'echo batch' });
+    const logSpy = jest.spyOn(cmd.log, 'info');
+
+    const containers = [{ name: 'test1' }, { name: 'test2' }];
+    await cmd.triggerBatch(containers);
+
+    expect(logSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Command echo batch'),
+    );
+});
+
+test('should handle command execution error', async () => {
+    const cmd = new Command();
+    await cmd.register('trigger', 'command', 'test', {
+        cmd: 'invalid-command',
+    });
+    const logSpy = jest.spyOn(cmd.log, 'warn');
+
+    const container = { name: 'test' };
+    await cmd.trigger(container);
+
+    expect(logSpy).toHaveBeenCalledWith(
+        expect.stringContaining('execution error'),
+    );
+});
+
+test('should log stderr when present', async () => {
+    const cmd = new Command();
+    await cmd.register('trigger', 'command', 'test', {
+        cmd: 'echo warning >&2',
+    });
+    const logSpy = jest.spyOn(cmd.log, 'warn');
+
+    const container = { name: 'test' };
+    await cmd.trigger(container);
+
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('stderr'));
+});

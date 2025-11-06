@@ -120,3 +120,30 @@ test('disabletitle should result in no title in message', async () => {
 
     expect(slack.sendMessage).toHaveBeenCalledWith('Test Body');
 });
+
+test('triggerBatch should send batch notification', async () => {
+    slack.configuration = configurationValid;
+    slack.sendMessage = jest.fn();
+    const containers = [
+        {
+            name: 'container1',
+            updateKind: {
+                kind: 'tag',
+                localValue: '1.0.0',
+                remoteValue: '2.0.0',
+            },
+        },
+        {
+            name: 'container2',
+            updateKind: {
+                kind: 'tag',
+                localValue: '1.1.0',
+                remoteValue: '2.1.0',
+            },
+        },
+    ];
+    await slack.triggerBatch(containers);
+    expect(slack.sendMessage).toHaveBeenCalledWith(
+        '*2 updates available*\n\n- Container container1 running with tag 1.0.0 can be updated to tag 2.0.0\n\n- Container container2 running with tag 1.1.0 can be updated to tag 2.1.0\n',
+    );
+});

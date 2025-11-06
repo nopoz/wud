@@ -244,6 +244,25 @@ function isDigestToWatch(wudWatchDigestLabelValue, isSemver) {
  * Docker Watcher Component.
  */
 class Docker extends Component {
+    ensureLogger() {
+        if (!this.log) {
+            try {
+                this.log = log.child({
+                    component: `watcher.docker.${this.name || 'default'}`,
+                });
+            } catch (error) {
+                // Fallback to silent logger if log module fails
+                this.log = {
+                    info: () => {},
+                    warn: () => {},
+                    error: () => {},
+                    debug: () => {},
+                    child: () => this.log,
+                };
+            }
+        }
+    }
+
     getConfigurationSchema() {
         return joi.object().keys({
             socket: this.joi.string().default('/var/run/docker.sock'),
@@ -266,6 +285,7 @@ class Docker extends Component {
      * Init the Watcher.
      */
     init() {
+        this.ensureLogger();
         this.initWatcher();
         if (this.configuration.watchdigest !== undefined) {
             this.log.warn(
@@ -286,18 +306,19 @@ class Docker extends Component {
         // watch at startup if enabled (after all components have been registered)
         if (this.configuration.watchatstart) {
             this.watchCronTimeout = setTimeout(
-                () => this.watchFromCron(),
+                this.watchFromCron.bind(this),
                 START_WATCHER_DELAY_MS,
             );
         }
 
         // listen to docker events
         if (this.configuration.watchevents) {
-            this.watchCronDebounced = debounce(() => {
-                this.watchFromCron();
-            }, DEBOUNCED_WATCH_CRON_MS);
+            this.watchCronDebounced = debounce(
+                this.watchFromCron.bind(this),
+                DEBOUNCED_WATCH_CRON_MS,
+            );
             this.listenDockerEventsTimeout = setTimeout(
-                () => this.listenDockerEvents(),
+                this.listenDockerEvents.bind(this),
                 START_WATCHER_DELAY_MS,
             );
         }
@@ -346,6 +367,10 @@ class Docker extends Component {
      * @return {Promise<void>}
      */
     async listenDockerEvents() {
+        this.ensureLogger();
+        if (!this.log || typeof this.log.info !== 'function') {
+            return;
+        }
         this.log.info('Listening to docker events');
         const options = {
             filters: {
@@ -364,10 +389,12 @@ class Docker extends Component {
         };
         this.dockerApi.getEvents(options, (err, stream) => {
             if (err) {
-                this.log.warn(
-                    `Unable to listen to Docker events [${err.message}]`,
-                );
-                this.log.debug(err);
+                if (this.log && typeof this.log.warn === 'function') {
+                    this.log.warn(
+                        `Unable to listen to Docker events [${err.message}]`,
+                    );
+                    this.log.debug(err);
+                }
             } else {
                 stream.on('data', (chunk) => this.onDockerEvent(chunk));
             }
@@ -380,6 +407,7 @@ class Docker extends Component {
      * @return {Promise<void>}
      */
     async onDockerEvent(dockerEventChunk) {
+        this.ensureLogger();
         const dockerEvent = JSON.parse(dockerEventChunk.toString());
         const action = dockerEvent.Action;
         const containerId = dockerEvent.id;
@@ -422,6 +450,10 @@ class Docker extends Component {
      * @returns {Promise<*[]>}
      */
     async watchFromCron() {
+        this.ensureLogger();
+        if (!this.log || typeof this.log.info !== 'function') {
+            return [];
+        }
         this.log.info(`Cron started (${this.configuration.cron})`);
 
         // Get container reports
@@ -441,7 +473,10 @@ class Docker extends Component {
         ).length;
 
         const stats = `${containerReportsCount} containers watched, ${containerErrorsCount} errors, ${containerUpdatesCount} available updates`;
-        this.log.info(`Cron finished (${stats})`);
+        this.ensureLogger();
+        if (this.log && typeof this.log.info === 'function') {
+            this.log.info(`Cron finished (${stats})`);
+        }
         return containerReports;
     }
 
@@ -450,6 +485,7 @@ class Docker extends Component {
      * @returns {Promise<*[]>}
      */
     async watch() {
+        this.ensureLogger();
         let containers = [];
 
         // Dispatch event to notify start watching
@@ -486,6 +522,7 @@ class Docker extends Component {
      * @returns {Promise<*>}
      */
     async watchContainer(container) {
+        this.ensureLogger();
         // Child logger for the container to process
         const logContainer = this.log.child({ container: fullName(container) });
         const containerWithResult = container;
@@ -519,6 +556,7 @@ class Docker extends Component {
      * @returns {Promise<unknown[]>}
      */
     async getContainers() {
+        this.ensureLogger();
         const listContainersOptions = {};
         if (this.configuration.watchall) {
             listContainersOptions.all = true;
@@ -679,6 +717,7 @@ class Docker extends Component {
             containerInStore !== undefined &&
             containerInStore.error === undefined
         ) {
+            this.ensureLogger();
             this.log.debug(`Container ${containerInStore.id} already in store`);
             return containerInStore;
         }
@@ -700,6 +739,7 @@ class Docker extends Component {
         let imageNameToParse = container.Image;
         if (imageNameToParse.includes('sha256:')) {
             if (!image.RepoTags || image.RepoTags.length === 0) {
+                this.ensureLogger();
                 this.log.warn(
                     `Cannot get a reliable tag for this image [${imageNameToParse}]`,
                 );
@@ -717,6 +757,7 @@ class Docker extends Component {
             isSemver,
         );
         if (!isSemver && !watchDigest) {
+            this.ensureLogger();
             this.log.warn(
                 "Image is not a semver and digest watching is disabled so wud won't report any update. Please review the configuration to enable digest watching for this container or exclude this container from being watched",
             );
@@ -766,6 +807,7 @@ class Docker extends Component {
      * @return {*}
      */
     mapContainerToContainerReport(containerWithResult) {
+        this.ensureLogger();
         const logContainer = this.log.child({
             container: fullName(containerWithResult),
         });

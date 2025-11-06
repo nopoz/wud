@@ -23,14 +23,6 @@ describe('AppBar', () => {
             eventBus: {
               emit: jest.fn()
             }
-          },
-          mocks: {
-            $route: {
-              name: 'test'
-            },
-            $router: {
-              push: jest.fn()
-            }
           }
         }
       });

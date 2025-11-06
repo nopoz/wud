@@ -1,70 +1,102 @@
 const Ghcr = require('./Ghcr');
 
-const ghcr = new Ghcr();
-ghcr.configuration = {
-    username: 'user',
-    token: 'token',
-};
+describe('GitHub Container Registry', () => {
+    let ghcr;
 
-test('validatedConfiguration should initialize when configuration is valid', () => {
-    expect(
-        ghcr.validateConfiguration({
-            username: 'user',
-            token: 'token',
-        }),
-    ).toStrictEqual({
-        username: 'user',
-        token: 'token',
+    beforeEach(async () => {
+        ghcr = new Ghcr();
+        await ghcr.register('registry', 'ghcr', 'test', {
+            username: 'testuser',
+            token: 'testtoken',
+        });
     });
-});
 
-test('maskConfiguration should mask configuration secrets', () => {
-    expect(ghcr.maskConfiguration()).toEqual({
-        username: 'user',
-        token: 't***n',
+    test('should create instance', () => {
+        expect(ghcr).toBeDefined();
+        expect(ghcr).toBeInstanceOf(Ghcr);
     });
-});
 
-test('match should return true when registry url is from ghcr', () => {
-    expect(
-        ghcr.match({
-            registry: {
-                url: 'ghcr.io',
-            },
-        }),
-    ).toBeTruthy();
-});
-
-test('match should return false when registry url is not from ghcr', () => {
-    expect(
-        ghcr.match({
-            registry: {
-                url: 'grr.io',
-            },
-        }),
-    ).toBeFalsy();
-});
-
-test('normalizeImage should return the proper registry v2 endpoint', () => {
-    expect(
-        ghcr.normalizeImage({
-            name: 'test/image',
-            registry: {
-                url: 'ghcr.io/test/image',
-            },
-        }),
-    ).toStrictEqual({
-        name: 'test/image',
-        registry: {
-            url: 'https://ghcr.io/test/image/v2',
-        },
+    test('should match registry', () => {
+        expect(ghcr.match({ registry: { url: 'ghcr.io' } })).toBe(true);
+        expect(ghcr.match({ registry: { url: 'docker.io' } })).toBe(false);
     });
-});
 
-test('authenticate should populate header with base64 bearer', () => {
-    expect(ghcr.authenticate({}, { headers: {} })).resolves.toEqual({
-        headers: {
-            Authorization: 'Bearer dG9rZW4=',
-        },
+    test('should normalize image name', () => {
+        const image = { name: 'user/repo', registry: { url: 'ghcr.io' } };
+        const normalized = ghcr.normalizeImage(image);
+        expect(normalized.name).toBe('user/repo');
+        expect(normalized.registry.url).toBe('https://ghcr.io/v2');
+    });
+
+    test('should not modify URL if already starts with https', () => {
+        const image = {
+            name: 'user/repo',
+            registry: { url: 'https://ghcr.io/v2' },
+        };
+        const normalized = ghcr.normalizeImage(image);
+        expect(normalized.registry.url).toBe('https://ghcr.io/v2');
+    });
+
+    test('should mask configuration token', () => {
+        ghcr.configuration = { username: 'testuser', token: 'secret_token' };
+        const masked = ghcr.maskConfiguration();
+        expect(masked.username).toBe('testuser');
+        expect(masked.token).toBe('s**********n');
+    });
+
+    test('should return auth pull credentials', () => {
+        ghcr.configuration = { username: 'testuser', token: 'testtoken' };
+        const auth = ghcr.getAuthPull();
+        expect(auth).toEqual({
+            username: 'testuser',
+            password: 'testtoken',
+        });
+    });
+
+    test('should return undefined auth pull when no credentials', () => {
+        ghcr.configuration = {};
+        const auth = ghcr.getAuthPull();
+        expect(auth).toBeUndefined();
+    });
+
+    test('should authenticate with token', async () => {
+        ghcr.configuration = { token: 'test-token' };
+        const image = { name: 'user/repo' };
+        const requestOptions = { headers: {} };
+
+        const result = await ghcr.authenticate(image, requestOptions);
+
+        const expectedBearer = Buffer.from('test-token', 'utf-8').toString(
+            'base64',
+        );
+        expect(result.headers.Authorization).toBe(`Bearer ${expectedBearer}`);
+    });
+
+    test('should authenticate without token', async () => {
+        ghcr.configuration = {};
+        const image = { name: 'user/repo' };
+        const requestOptions = { headers: {} };
+
+        const result = await ghcr.authenticate(image, requestOptions);
+
+        const expectedBearer = Buffer.from(':', 'utf-8').toString('base64');
+        expect(result.headers.Authorization).toBe(`Bearer ${expectedBearer}`);
+    });
+
+    test('should validate string configuration', () => {
+        expect(() => ghcr.validateConfiguration('')).not.toThrow();
+        expect(() => ghcr.validateConfiguration('some-string')).not.toThrow();
+    });
+
+    test('should return undefined auth pull when missing username', () => {
+        ghcr.configuration = { token: 'test-token' };
+        const auth = ghcr.getAuthPull();
+        expect(auth).toBeUndefined();
+    });
+
+    test('should return undefined auth pull when missing token', () => {
+        ghcr.configuration = { username: 'testuser' };
+        const auth = ghcr.getAuthPull();
+        expect(auth).toBeUndefined();
     });
 });

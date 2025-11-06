@@ -24,4 +24,7 @@ export default [
             },
         },
     },
+    {
+        ignores: ['coverage/**/*'],
+    },
 ];

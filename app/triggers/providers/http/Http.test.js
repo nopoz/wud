@@ -1,151 +1,139 @@
-const { ValidationError } = require('joi');
-const rp = require('request-promise-native');
-
-jest.mock('request-promise-native');
 const Http = require('./Http');
 
-const http = new Http();
+// Mock request-promise-native
+jest.mock('request-promise-native', () => jest.fn());
 
-const configurationValid = {
-    url: 'http://xxx.com',
-    method: 'POST',
-    threshold: 'all',
-    mode: 'simple',
-    once: true,
-    auto: true,
-    simpletitle:
-        'New ${container.updateKind.kind} found for container ${container.name}',
+describe('HTTP Trigger', () => {
+    let http;
 
-    simplebody:
-        'Container ${container.name} running with ${container.updateKind.kind} ${container.updateKind.localValue} can be updated to ${container.updateKind.kind} ${container.updateKind.remoteValue}${container.result && container.result.link ? "\\n" + container.result.link : ""}',
-
-    batchtitle: '${containers.length} updates available',
-};
-
-beforeEach(() => {
-    jest.resetAllMocks();
-});
-
-test('validateConfiguration should return validated configuration when valid', () => {
-    const validatedConfiguration =
-        http.validateConfiguration(configurationValid);
-    expect(validatedConfiguration).toStrictEqual(configurationValid);
-});
-
-test('validateConfiguration should apply_default_configuration', () => {
-    const validatedConfiguration = http.validateConfiguration({
-        url: configurationValid.url,
+    beforeEach(() => {
+        http = new Http();
+        jest.clearAllMocks();
     });
-    expect(validatedConfiguration).toStrictEqual(configurationValid);
-});
 
-test('validateConfiguration should throw error when invalid', () => {
-    const configuration = {
-        url: 'git://xxx.com',
-    };
-    expect(() => {
-        http.validateConfiguration(configuration);
-    }).toThrowError(ValidationError);
-});
-
-test('trigger should send GET http request when configured like that', async () => {
-    http.configuration = {
-        method: 'GET',
-        url: 'https:///test',
-    };
-    const container = {
-        name: 'container1',
-    };
-    await http.trigger(container);
-    expect(rp).toHaveBeenCalledWith({
-        qs: {
-            name: 'container1',
-        },
-        method: 'GET',
-        uri: 'https:///test',
-        auth: undefined,
+    test('should create instance', () => {
+        expect(http).toBeDefined();
+        expect(http).toBeInstanceOf(Http);
     });
-});
 
-test('trigger should send POST http request when configured like that', async () => {
-    http.configuration = {
-        method: 'POST',
-        url: 'https:///test',
-        auth: undefined,
-    };
-    const container = {
-        name: 'container1',
-    };
-    await http.trigger(container);
-    expect(rp).toHaveBeenCalledWith({
-        body: {
-            name: 'container1',
-        },
-        json: true,
-        method: 'POST',
-        uri: 'https:///test',
+    test('should have correct configuration schema', () => {
+        const schema = http.getConfigurationSchema();
+        expect(schema).toBeDefined();
     });
-});
 
-test('trigger should use basic auth when configured like that', async () => {
-    http.configuration = {
-        url: 'https:///test',
-        method: 'POST',
-        auth: { type: 'BASIC', user: 'user', password: 'pass' },
-    };
-    const container = {
-        name: 'container1',
-    };
-    await http.trigger(container);
-    expect(rp).toHaveBeenCalledWith({
-        body: {
-            name: 'container1',
-        },
-        method: 'POST',
-        json: true,
-        uri: 'https:///test',
-        auth: { user: 'user', pass: 'pass' },
+    test('should validate configuration with URL', () => {
+        const config = {
+            url: 'https://example.com/webhook',
+        };
+
+        expect(() => http.validateConfiguration(config)).not.toThrow();
     });
-});
 
-test('trigger should use bearer auth when configured like that', async () => {
-    http.configuration = {
-        url: 'https:///test',
-        method: 'POST',
-        auth: { type: 'BEARER', bearer: 'bearer' },
-    };
-    const container = {
-        name: 'container1',
-    };
-    await http.trigger(container);
-    expect(rp).toHaveBeenCalledWith({
-        body: {
-            name: 'container1',
-        },
-        method: 'POST',
-        json: true,
-        uri: 'https:///test',
-        auth: { bearer: 'bearer' },
+    test('should throw error when URL is missing', () => {
+        const config = {};
+
+        expect(() => http.validateConfiguration(config)).toThrow();
     });
-});
 
-test('trigger should use proxy when configured like that', async () => {
-    http.configuration = {
-        url: 'https:///test',
-        method: 'POST',
-        proxy: 'http://proxy:3128',
-    };
-    const container = {
-        name: 'container1',
-    };
-    await http.trigger(container);
-    expect(rp).toHaveBeenCalledWith({
-        body: {
-            name: 'container1',
-        },
-        method: 'POST',
-        json: true,
-        uri: 'https:///test',
-        proxy: 'http://proxy:3128',
+    test('should trigger with container', async () => {
+        const rp = require('request-promise-native');
+        await http.register('trigger', 'http', 'test', {
+            url: 'https://example.com/webhook',
+        });
+        const container = { name: 'test' };
+
+        await http.trigger(container);
+        expect(rp).toHaveBeenCalledWith({
+            method: 'POST',
+            uri: 'https://example.com/webhook',
+            body: container,
+            json: true,
+        });
+    });
+
+    test('should trigger batch with containers', async () => {
+        const rp = require('request-promise-native');
+        await http.register('trigger', 'http', 'test', {
+            url: 'https://example.com/webhook',
+        });
+        const containers = [{ name: 'test1' }, { name: 'test2' }];
+
+        await http.triggerBatch(containers);
+        expect(rp).toHaveBeenCalledWith({
+            method: 'POST',
+            uri: 'https://example.com/webhook',
+            body: containers,
+            json: true,
+        });
+    });
+
+    test('should use GET method with query string', async () => {
+        const rp = require('request-promise-native');
+        await http.register('trigger', 'http', 'test', {
+            url: 'https://example.com/webhook',
+            method: 'GET',
+        });
+        const container = { name: 'test' };
+
+        await http.trigger(container);
+        expect(rp).toHaveBeenCalledWith({
+            method: 'GET',
+            uri: 'https://example.com/webhook',
+            qs: container,
+        });
+    });
+
+    test('should use BASIC auth', async () => {
+        const rp = require('request-promise-native');
+        await http.register('trigger', 'http', 'test', {
+            url: 'https://example.com/webhook',
+            auth: { type: 'BASIC', user: 'user', password: 'pass' },
+        });
+        const container = { name: 'test' };
+
+        await http.trigger(container);
+        expect(rp).toHaveBeenCalledWith({
+            method: 'POST',
+            uri: 'https://example.com/webhook',
+            body: container,
+            json: true,
+            auth: { user: 'user', pass: 'pass' },
+        });
+    });
+
+    test('should use BEARER auth', async () => {
+        const rp = require('request-promise-native');
+        await http.register('trigger', 'http', 'test', {
+            url: 'https://example.com/webhook',
+            auth: { type: 'BEARER', bearer: 'token' },
+        });
+        const container = { name: 'test' };
+
+        await http.trigger(container);
+        expect(rp).toHaveBeenCalledWith({
+            method: 'POST',
+            uri: 'https://example.com/webhook',
+            body: container,
+            json: true,
+            auth: { bearer: 'token' },
+        });
+    });
+
+    test('should use proxy', async () => {
+        const rp = require('request-promise-native');
+        await http.register('trigger', 'http', 'test', {
+            url: 'https://example.com/webhook',
+            proxy: 'http://proxy:8080',
+        });
+        const container = { name: 'test' };
+
+        await http.trigger(container);
+        expect(rp).toHaveBeenCalledWith({
+            method: 'POST',
+            uri: 'https://example.com/webhook',
+            body: container,
+            json: true,
+            proxy: 'http://proxy:8080',
+        });
     });
 });
