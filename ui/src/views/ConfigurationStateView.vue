@@ -36,7 +36,7 @@ export default {
       const state = await getStore();
       next((vm) => (vm.state = state));
     } catch (e) {
-      this.$root.$emit(
+      this.$eventBus.emit(
         "notify",
         `Error when trying to load the state configuration (${e.message})`,
         "error",

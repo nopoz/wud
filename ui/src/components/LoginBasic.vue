@@ -1,12 +1,13 @@
 <template>
-  <v-form @keyup.native.enter="login">
+  <v-form @keyup.enter="login">
     <v-card-text>
       <v-text-field
         label="Username"
         v-model="username"
         append-icon="mdi-account"
         :rules="[rules.required]"
-        outlined
+        autocomplete="username"
+        variant="outlined"
         autofocus
       />
       <v-text-field
@@ -15,7 +16,8 @@
         v-model="password"
         append-icon="mdi-lock"
         :rules="[rules.required]"
-        outlined
+        autocomplete="current-password"
+        variant="outlined"
       />
       <v-btn block color="primary" :disabled="!valid" @click="login">
         Login
@@ -59,7 +61,7 @@ export default {
           await loginBasic(this.username, this.password);
           this.$emit("authentication-success");
         } catch (e) {
-          this.$root.$emit("notify", "Username or password error", "error");
+          this.$eventBus.emit("notify", "Username or password error", "error");
         }
       }
     },

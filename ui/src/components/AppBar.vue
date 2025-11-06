@@ -1,28 +1,35 @@
 <template>
-  <v-app-bar app flat dark tile clipped-left dense>
+  <v-app-bar app flat dark tile clipped-left dense color="primary">
     <v-toolbar-title
       v-if="viewName && 'home'.toLowerCase() !== viewName.toLowerCase()"
       class="text-body-1 text-capitalize ma-0 pl-4"
       >{{ viewName }}</v-toolbar-title
     >
     <v-spacer />
-    <v-menu left bottom v-if="user && user.username !== 'anonymous'">
-      <template v-slot:activator="{ on, attrs }">
-        <v-btn v-bind="attrs" v-on="on" text small class="text-lowercase">
+    <v-menu v-if="user && user.username !== 'anonymous'">
+      <template v-slot:activator="{ props }">
+        <v-btn
+          v-bind="props"
+          variant="text"
+          size="small"
+          class="text-lowercase"
+        >
           {{ user.username }}
           &nbsp;
-          <v-icon dense>mdi-account</v-icon>
+          <v-icon size="small">mdi-account</v-icon>
         </v-btn>
       </template>
-      <v-list dense>
+      <v-list density="compact">
         <v-list-item @click="logout">
-          <v-list-item-content class="text-body-2">Log out</v-list-item-content>
+          <v-list-item-title class="text-body-2">Log out</v-list-item-title>
         </v-list-item>
       </v-list>
     </v-menu>
   </v-app-bar>
 </template>
 <script>
+import { computed, inject } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { logout } from "@/services/auth";
 
 export default {
@@ -32,38 +39,38 @@ export default {
       required: true,
     },
   },
-  data() {
-    return {};
-  },
-  computed: {
-    viewName() {
-      return this.$route.name;
-    },
-  },
+  setup() {
+    const route = useRoute();
+    const router = useRouter();
+    const eventBus = inject("eventBus");
 
-  methods: {
-    /**
-     * Perform logout.
-     * @returns {Promise<void>}
-     */
-    async logout() {
+    const viewName = computed(() => {
+      return route.name;
+    });
+
+    const performLogout = async () => {
       try {
         const logoutResult = await logout();
         if (logoutResult.logoutUrl) {
           window.location = logoutResult.logoutUrl;
         } else {
-          await this.$router.push({
+          await router.push({
             name: "login",
           });
         }
       } catch (e) {
-        this.$root.$emit(
+        eventBus.emit(
           "notify",
           `Error when trying to logout (${e.message})`,
           "error",
         );
       }
-    },
+    };
+
+    return {
+      viewName,
+      logout: performLogout,
+    };
   },
 };
 </script>

@@ -23,22 +23,21 @@
         />
       </v-col>
     </v-row>
-    <v-fade-transition group hide-on-leave mode="in-out">
-      <template v-for="(container, index) in containersFiltered">
-        <v-row :key="container.id">
-          <v-col class="pt-2 pb-2">
-            <container-item
-              :groupingLabel="groupByLabel"
-              :previousContainer="containersFiltered[index - 1]"
-              :container="container"
-              :oldest-first="oldestFirst"
-              @delete-container="deleteContainer(container)"
-              @container-deleted="removeContainerFromList(container)"
-            />
-          </v-col>
-        </v-row>
-      </template>
-    </v-fade-transition>
+<v-row
+        v-for="(container, index) in containersFiltered"
+        :key="container.id"
+      >
+        <v-col class="pt-2 pb-2">
+          <container-item
+            :groupingLabel="groupByLabel"
+            :previousContainer="containersFiltered[index - 1]"
+            :container="container"
+            :oldest-first="oldestFirst"
+            @delete-container="deleteContainer(container)"
+            @container-deleted="removeContainerFromList(container)"
+          />
+        </v-col>
+      </v-row>
     <v-row v-if="containersFiltered.length === 0">
       <v-card-subtitle class="text-h6">No containers found</v-card-subtitle>
     </v-row>
@@ -70,9 +69,10 @@ export default {
   watch: {},
   computed: {
     allContainerLabels() {
-      return this.containers.reduce((acc, container) => {
+      const allLabels = this.containers.reduce((acc, container) => {
         return [...acc, ...Object.keys(container.labels ?? {})];
       }, []);
+      return [...new Set(allLabels)].sort();
     },
     registries() {
       return [
@@ -205,7 +205,7 @@ export default {
         await deleteContainer(container.id);
         this.removeContainerFromList(container);
       } catch (e) {
-        this.$root.$emit(
+        this.$eventBus.emit(
           "notify",
           `Error when trying to delete the container (${e.message})`,
           "error",
@@ -245,13 +245,14 @@ export default {
         vm.containers = containers;
       });
     } catch (e) {
-      this.$root.$emit(
-        "notify",
-        `Error when trying to get the containers (${e.message})`,
-        "error",
-      );
+      next((vm) => {
+        vm.$eventBus.emit(
+          "notify",
+          `Error when trying to get the containers (${e.message})`,
+          "error",
+        );
+      });
     }
-    next();
   },
 };
 </script>

@@ -1,8 +1,6 @@
-import Vue from "vue";
-import VueRouter from "vue-router";
+import { createRouter, createWebHistory } from "vue-router";
 import { getUser } from "@/services/auth";
-
-Vue.use(VueRouter);
+import { nextTick } from "vue";
 
 const routes = [
   {
@@ -47,9 +45,8 @@ const routes = [
   },
 ];
 
-const router = new VueRouter({
-  mode: "history",
-  base: process.env.BASE_URL,
+const router = createRouter({
+  history: createWebHistory(process.env.BASE_URL),
   routes,
 });
 
@@ -57,35 +54,38 @@ const router = new VueRouter({
  * Apply authentication navigation guard.
  * @param to
  * @param from
- * @param next
  * @returns {Promise<void>}
  */
-async function applyAuthNavigationGuard(to, from, next) {
+async function applyAuthNavigationGuard(to) {
   if (to.name === "login") {
-    next();
+    return true;
   } else {
     // Get current user
     const user = await getUser();
 
     // User is authenticated => go to route
     if (user !== undefined) {
-      // Notify authenticated
-      router.app.$root.$emit("authenticated", user);
-
+      // Emit authenticated event after navigation
+      nextTick(() => {
+        if (router.app?.config?.globalProperties?.$eventBus) {
+          router.app.config.globalProperties.$eventBus.emit("authenticated", user);
+        }
+      });
+      
       // Next route in param? redirect
       if (to.query.next) {
-        next(to.query.next);
+        return to.query.next;
       } else {
-        next();
+        return true;
       }
     } else {
       // User is not authenticated => save destination as next & go to login
-      next({
+      return {
         name: "login",
         query: {
           next: to.path,
         },
-      });
+      };
     }
   }
 }
@@ -93,8 +93,10 @@ async function applyAuthNavigationGuard(to, from, next) {
 /**
  * Apply navigation guards.
  */
-router.beforeEach(async (to, from, next) => {
-  await applyAuthNavigationGuard(to, from, next);
+router.beforeEach(async (to) => {
+  return await applyAuthNavigationGuard(to);
 });
+
+
 
 export default router;

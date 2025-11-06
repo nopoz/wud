@@ -14,159 +14,146 @@
       <v-divider class="pb-3"></v-divider>
     </div>
     <v-card>
-      <v-app-bar
-        flat
-        dense
-        tile
+      <v-card-title
         @click="collapseDetail()"
         style="cursor: pointer"
+        class="pa-3 d-flex align-center bg-surface"
       >
-        <v-toolbar-title
+        <div
           class="text-body-3 d-flex align-center"
           style="gap: 5px"
         >
-          <span v-if="$vuetify.breakpoint.smAndUp">
-            <v-chip label color="info" outlined disabled>
+          <span v-if="smAndUp">
+            <v-chip label color="info" variant="outlined" disabled>
               <v-icon left>mdi-update</v-icon>
               {{ container.watcher }}
             </v-chip>
             /
           </span>
-          <span v-if="$vuetify.breakpoint.mdAndUp">
-            <v-chip label color="info" outlined disabled>
-              <v-icon left v-if="$vuetify.breakpoint.smAndUp">{{
-                registryIcon
-              }}</v-icon>
+          <span v-if="mdAndUp">
+            <v-chip label color="info" variant="outlined" disabled>
+              <IconRenderer 
+                v-if="smAndUp" 
+                :icon="registryIcon"
+                :size="24"
+                :margin-right="8"
+              />
               {{ container.image.registry.name }}
             </v-chip>
             /
           </span>
-          <v-chip label color="info" outlined disabled>
-            <span v-if="$vuetify.breakpoint.smAndUp">
-              <img
-                :src="
-                  isHomarrContainerIcon
-                    ? homarrContainerIconUrl
-                    : selfhstContainerIconUrl
-                "
-                style="width: 24px; height: 24px"
-                class="v-icon v-icon--left"
-                v-if="isHomarrContainerIcon || isSelfhstContainerIcon"
-              />
-              <v-icon left v-else>
-                {{ containerIcon }}
-              </v-icon>
-            </span>
+          <v-chip label color="info" variant="outlined" disabled>
+            <IconRenderer 
+              v-if="smAndUp" 
+              :icon="container.displayIcon"
+              :size="24"
+              :margin-right="8"
+            />
             <span style="overflow: hidden; text-overflow: ellipsis">
               {{ container.displayName }}
             </span>
           </v-chip>
           <span>
             :
-            <v-chip label outlined color="info" disabled>
+            <v-chip label variant="outlined" color="info" disabled>
               {{ container.image.tag.value }}
             </v-chip>
           </span>
-        </v-toolbar-title>
-        <span v-if="$vuetify.breakpoint.smAndUp && container.updateAvailable">
-          <v-icon>mdi-arrow-right</v-icon>
-          <v-tooltip bottom>
-            <template v-slot:activator="{ on, attrs }">
-              <v-chip
-                label
-                outlined
-                :color="newVersionClass"
-                v-bind="attrs"
-                v-on="on"
-                @click="
-                  copyToClipboard('container new version', newVersion);
-                  $event.stopImmediatePropagation();
-                "
-              >
-                {{ newVersion }}
-                <v-icon right small>mdi-clipboard-outline</v-icon>
-              </v-chip>
-            </template>
-            <span class="text-caption">Copy to clipboard</span>
-          </v-tooltip>
-        </span>
-
+        </div>
+        
         <v-spacer />
-        <span
-          v-if="$vuetify.breakpoint.smAndUp && oldestFirst"
-          class="text-caption ml-2"
-        >
-          {{ this.$options.filters.date(container.image.created) }}
-        </span>
+        
+        <div class="d-flex align-center" style="gap: 8px">
+          <span v-if="smAndUp && container.updateAvailable" class="d-flex align-center" style="gap: 4px">
+            <v-icon>mdi-arrow-right</v-icon>
+            <v-tooltip bottom>
+              <template v-slot:activator="{ props }">
+                <v-chip
+                  label
+                  variant="outlined"
+                  :color="newVersionClass"
+                  v-bind="props"
+                  @click="
+                    copyToClipboard('container new version', newVersion);
+                    $event.stopImmediatePropagation();
+                  "
+                >
+                  {{ newVersion }}
+                  <v-icon end size="small">mdi-clipboard-outline</v-icon>
+                </v-chip>
+              </template>
+              <span class="text-caption">Copy to clipboard</span>
+            </v-tooltip>
+          </span>
 
-        <v-icon>{{
-          showDetail ? "mdi-chevron-up" : "mdi-chevron-down"
-        }}</v-icon>
-      </v-app-bar>
-      <v-expand-transition>
+          <span
+            v-if="smAndUp && oldestFirst"
+            class="text-caption"
+          >
+            {{ this.$filters.date(container.image.created) }}
+          </span>
+
+          <v-icon>{{
+            showDetail ? "mdi-chevron-up" : "mdi-chevron-down"
+          }}</v-icon>
+        </div>
+      </v-card-title>
+      <transition name="expand-transition">
         <div v-show="showDetail">
           <v-tabs
-            :icons-and-text="$vuetify.breakpoint.smAndUp"
+            :stacked="smAndUp"
             fixed-tabs
             v-model="tab"
             ref="tabs"
           >
             <v-tab v-if="container.result">
-              <span v-if="$vuetify.breakpoint.smAndUp">Update</span>
+              <span v-if="smAndUp">Update</span>
               <v-icon>mdi-package-down</v-icon>
             </v-tab>
             <v-tab>
-              <span v-if="$vuetify.breakpoint.smAndUp">Triggers</span>
+              <span v-if="smAndUp">Triggers</span>
               <v-icon>mdi-bell-ring</v-icon>
             </v-tab>
             <v-tab>
-              <span v-if="$vuetify.breakpoint.smAndUp">Image</span>
+              <span v-if="smAndUp">Image</span>
               <v-icon>mdi-package-variant-closed</v-icon>
             </v-tab>
             <v-tab>
-              <span v-if="$vuetify.breakpoint.smAndUp">Container</span>
-              <img
-                :src="
-                  isHomarrContainerIcon
-                    ? homarrContainerIconUrl
-                    : selfhstContainerIconUrl
-                "
-                style="width: 24px; height: 24px"
-                class="v-icon v-icon--left"
-                v-if="isHomarrContainerIcon || isSelfhstContainerIcon"
+              <span v-if="smAndUp">Container</span>
+              <IconRenderer 
+                :icon="container.displayIcon"
+                :size="24"
+                :margin-right="8"
               />
-              <v-icon left v-else>
-                {{ containerIcon }}
-              </v-icon>
             </v-tab>
             <v-tab v-if="container.error">
-              <span v-if="$vuetify.breakpoint.smAndUp">Error</span>
+              <span v-if="smAndUp">Error</span>
               <v-icon>mdi-alert</v-icon>
             </v-tab>
           </v-tabs>
 
-          <v-tabs-items v-model="tab">
-            <v-tab-item v-if="container.result">
+          <v-window v-model="tab">
+            <v-window-item v-if="container.result">
               <container-update
                 :result="container.result"
                 :semver="container.image.tag.semver"
                 :update-kind="container.updateKind"
                 :update-available="container.updateAvailable"
               />
-            </v-tab-item>
-            <v-tab-item>
+            </v-window-item>
+            <v-window-item>
               <container-triggers :container="container" />
-            </v-tab-item>
-            <v-tab-item>
+            </v-window-item>
+            <v-window-item>
               <container-image :image="container.image" />
-            </v-tab-item>
-            <v-tab-item>
+            </v-window-item>
+            <v-window-item>
               <container-detail :container="container" />
-            </v-tab-item>
-            <v-tab-item v-if="container.error">
+            </v-window-item>
+            <v-window-item v-if="container.error">
               <container-error :error="container.error" />
-            </v-tab-item>
-          </v-tabs-items>
+            </v-window-item>
+          </v-window>
 
           <v-card-actions>
             <v-row>
@@ -176,13 +163,12 @@
                   width="500"
                   v-if="deleteEnabled"
                 >
-                  <template v-slot:activator="{ on, attrs }">
+                  <template v-slot:activator="{ props }">
                     <v-btn
                       small
                       color="error"
-                      outlined
-                      v-bind="attrs"
-                      v-on="on"
+                      variant="outlined"
+                      v-bind="props"
                     >
                       Delete
                       <v-icon right>mdi-delete</v-icon>
@@ -211,7 +197,7 @@
                       </v-row>
                       <v-row>
                         <v-col class="text-center">
-                          <v-btn outlined @click="dialogDelete = false" small>
+                          <v-btn variant="outlined" @click="dialogDelete = false" small>
                             Cancel
                           </v-btn>
                           &nbsp;
@@ -234,26 +220,33 @@
             </v-row>
           </v-card-actions>
         </div>
-      </v-expand-transition>
+      </transition>
     </v-card>
   </div>
 </template>
 
 <script>
+import { useDisplay } from "vuetify";
 import { getRegistryProviderIcon } from "@/services/registry";
 import ContainerDetail from "@/components/ContainerDetail";
 import ContainerError from "@/components/ContainerError";
 import ContainerImage from "@/components/ContainerImage";
 import ContainerTriggers from "@/components/ContainerTriggers";
 import ContainerUpdate from "@/components/ContainerUpdate";
+import IconRenderer from "@/components/IconRenderer";
 
 export default {
+  setup() {
+    const { smAndUp, mdAndUp } = useDisplay();
+    return { smAndUp, mdAndUp };
+  },
   components: {
     ContainerDetail,
     ContainerError,
     ContainerImage,
     ContainerTriggers,
     ContainerUpdate,
+    IconRenderer,
   },
 
   props: {
@@ -283,55 +276,6 @@ export default {
     };
   },
   computed: {
-    containerIcon() {
-      let icon = this.container.displayIcon;
-      icon = icon
-        .replace("mdi:", "mdi-")
-        .replace("fa:", "fa-")
-        .replace("fab:", "fab-")
-        .replace("far:", "far-")
-        .replace("fas:", "fas-")
-        .replace("si:", "si-");
-      if (icon.startsWith("fab-")) {
-        icon = this.normalizeFontawesome(icon, "fab");
-      }
-      if (icon.startsWith("far-")) {
-        icon = this.normalizeFontawesome(icon, "far");
-      }
-      if (icon.startsWith("fas-")) {
-        icon = this.normalizeFontawesome(icon, "fas");
-      }
-      return icon;
-    },
-
-    isSelfhstContainerIcon() {
-      return (
-        this.container.displayIcon.startsWith("sh-") ||
-        this.container.displayIcon.startsWith("sh:")
-      );
-    },
-
-    isHomarrContainerIcon() {
-      return (
-        this.container.displayIcon.startsWith("hl-") ||
-        this.container.displayIcon.startsWith("hl:")
-      );
-    },
-
-    selfhstContainerIconUrl() {
-      const iconName = this.container.displayIcon
-        .replace("sh-", "")
-        .replace("sh:", "");
-      return `https://cdn.jsdelivr.net/gh/selfhst/icons/png/${iconName}.png`;
-    },
-
-    homarrContainerIconUrl() {
-      const iconName = this.container.displayIcon
-        .replace("hl-", "")
-        .replace("hl:", "");
-      return `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${iconName}.png`;
-    },
-
     registryIcon() {
       return getRegistryProviderIcon(this.container.image.registry.name);
     },
@@ -355,7 +299,7 @@ export default {
         this.container.result.created &&
         this.container.image.created !== this.container.result.created
       ) {
-        newVersion = this.$options.filters.dateTime(
+        newVersion = this.$filters.dateTime(
           this.container.result.created,
         );
       }
@@ -363,7 +307,7 @@ export default {
         newVersion = this.container.updateKind.remoteValue;
       }
       if (this.container.updateKind.kind === "digest") {
-        newVersion = this.$options.filters.short(newVersion, 15);
+        newVersion = this.$filters.short(newVersion, 15);
       }
       return newVersion;
     },
@@ -396,8 +340,8 @@ export default {
     },
 
     copyToClipboard(kind, value) {
-      this.$clipboard(value);
-      this.$root.$emit("notify", `${kind} copied to clipboard`);
+      navigator.clipboard.writeText(value);
+      this.$eventBus.emit("notify", `${kind} copied to clipboard`);
     },
 
     collapseDetail() {
@@ -406,8 +350,10 @@ export default {
         this.showDetail = !this.showDetail;
       }
 
-      // Hack because of a render bu on tabs inside a collapsible element
-      this.$refs.tabs.onResize();
+      // Hack because of a render bug on tabs inside a collapsible element
+      if (this.$refs.tabs && this.$refs.tabs.onResize) {
+        this.$refs.tabs.onResize();
+      }
     },
 
     normalizeFontawesome(iconString, prefix) {
@@ -416,7 +362,7 @@ export default {
   },
 
   mounted() {
-    this.deleteEnabled = this.$serverConfig.feature.delete;
+    this.deleteEnabled = this.$serverConfig?.feature?.delete || false;
   },
 };
 </script>

@@ -1,5 +1,3 @@
-import Vue from "vue";
-
 /**
  * Truncate an id to x chars.
  * @param fullId
@@ -47,12 +45,14 @@ function date(dateStr) {
 }
 
 /**
- * Register all filters.
+ * Register all global properties (replacing filters).
  */
-function registerFilters() {
-  Vue.filter("short", short);
-  Vue.filter("dateTime", dateTime);
-  Vue.filter("date", date);
+function registerGlobalProperties(app) {
+  app.config.globalProperties.$filters = {
+    short,
+    dateTime,
+    date,
+  };
 }
 
-export { registerFilters };
+export { registerGlobalProperties, short, dateTime, date };

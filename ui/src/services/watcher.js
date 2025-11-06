@@ -3,7 +3,7 @@ function getWatcherIcon() {
 }
 
 async function getAllWatchers() {
-  const response = await fetch("/api/watchers");
+  const response = await fetch("/api/watchers", { credentials: "include" });
   return response.json();
 }
 

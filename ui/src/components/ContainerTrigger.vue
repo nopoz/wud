@@ -1,29 +1,29 @@
 <template>
-  <v-card outlined>
+  <v-card variant="outlined">
     <v-list-item>
-      <v-list-item-content>
-        <v-list-item-title class="text-capitalize">
-          <router-link to="/configuration/triggers">
-            <a>{{ trigger.type }} {{ trigger.name }}</a>
-          </router-link>
-        </v-list-item-title>
-        <v-list-item-subtitle
-          >(threshold
-          {{ trigger.configuration.threshold }})</v-list-item-subtitle
-        >
-      </v-list-item-content>
-      <v-list-item-action>
+      <template v-slot:prepend>
+        <v-icon>mdi-bell-ring</v-icon>
+      </template>
+      <v-list-item-title class="text-capitalize">
+        <router-link to="/configuration/triggers">
+          {{ trigger.type }} {{ trigger.name }}
+        </router-link>
+      </v-list-item-title>
+      <v-list-item-subtitle>
+        (threshold {{ trigger.configuration.threshold }})
+      </v-list-item-subtitle>
+      <template v-slot:append>
         <v-btn
-          outlined
-          class="accent"
+          variant="outlined"
+          color="accent"
           :disabled="!updateAvailable"
           @click="runTrigger"
           :loading="isTriggering"
         >
           Run
-          <v-icon right>mdi-gesture-tap</v-icon>
+          <v-icon end>mdi-gesture-tap</v-icon>
         </v-btn>
-      </v-list-item-action>
+      </template>
     </v-list-item>
   </v-card>
 </template>
@@ -62,9 +62,9 @@ export default {
           triggerType: this.trigger.type,
           triggerName: this.trigger.name,
         });
-        this.$root.$emit("notify", "Trigger executed with success");
+        this.$eventBus.emit("notify", "Trigger executed with success");
       } catch (err) {
-        this.$root.$emit(
+        this.$eventBus.emit(
           "notify",
           `Trigger executed with error (${err.message}})`,
           "error",

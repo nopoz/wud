@@ -39,7 +39,7 @@ export default {
       const log = await getLog();
       next((vm) => (vm.log = log));
     } catch (e) {
-      this.$root.$emit(
+      this.$eventBus.emit(
         "notify",
         `Error when trying to load the log configuration (${e.message})`,
         "error",

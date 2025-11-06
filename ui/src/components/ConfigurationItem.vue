@@ -1,40 +1,47 @@
 <template>
   <v-card>
-    <v-app-bar flat dense tile @click="collapse()" style="cursor: pointer">
-      <v-toolbar-title class="text-body-3">
-        <v-chip label color="info" outlined>{{ item.type }}</v-chip>
+    <v-card-title
+      @click="collapse()"
+      style="cursor: pointer"
+      class="pa-3 d-flex align-center bg-surface"
+    >
+      <div class="text-body-3">
+        <v-chip label color="info" variant="outlined">{{ item.type }}</v-chip>
         /
-        <v-chip label color="info" outlined>{{ item.name }}</v-chip>
-      </v-toolbar-title>
+        <v-chip label color="info" variant="outlined">{{ item.name }}</v-chip>
+      </div>
       <v-spacer />
-      <v-icon>{{ item.icon }}</v-icon>
+      <IconRenderer :icon="item.icon" :size="24" :margin-right="8" />
       <v-icon>{{ showDetail ? "mdi-chevron-up" : "mdi-chevron-down" }}</v-icon>
-    </v-app-bar>
-    <v-expand-transition>
+    </v-card-title>
+    <transition name="expand-transition">
       <v-card-text v-show="showDetail">
-        <v-list dense v-if="configurationItems.length > 0">
+        <v-list density="compact" v-if="configurationItems.length > 0">
           <v-list-item
             v-for="configurationItem in configurationItems"
             :key="configurationItem.key"
           >
-            <v-list-item-content>
-              <v-list-item-title class="text-capitalize">{{
-                configurationItem.key
-              }}</v-list-item-title>
-              <v-list-item-subtitle>
-                {{ configurationItem.value | formatValue }}
-              </v-list-item-subtitle>
-            </v-list-item-content>
+            <v-list-item-title class="text-capitalize">{{
+              configurationItem.key
+            }}</v-list-item-title>
+            <v-list-item-subtitle>
+              {{ formatValue(configurationItem.value) }}
+            </v-list-item-subtitle>
           </v-list-item>
         </v-list>
         <span v-else>Default configuration</span>
       </v-card-text>
-    </v-expand-transition>
+    </transition>
   </v-card>
 </template>
 
 <script>
+import IconRenderer from "@/components/IconRenderer";
+
 export default {
+  components: {
+    IconRenderer,
+  },
   props: {
     item: {
       type: Object,
@@ -75,8 +82,6 @@ export default {
     collapse() {
       this.showDetail = !this.showDetail;
     },
-  },
-  filters: {
     formatValue(value) {
       if (value === undefined || value === null || value === "") {
         return "<empty>";

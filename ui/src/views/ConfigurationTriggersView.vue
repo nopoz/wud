@@ -30,13 +30,14 @@ export default {
       const triggers = await getAllTriggers();
       next((vm) => (vm.triggers = triggers));
     } catch (e) {
-      this.$root.$emit(
-        "notify",
-        `Error when trying to load the triggers (${e.message})`,
-        "error",
-      );
+      next((vm) => {
+        vm.$eventBus.emit(
+          "notify",
+          `Error when trying to load the triggers (${e.message})`,
+          "error",
+        );
+      });
     }
-    next();
   },
 };
 </script>
