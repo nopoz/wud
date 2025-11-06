@@ -1,6 +1,6 @@
 const ECR = require('aws-sdk/clients/ecr');
 require('aws-sdk/lib/maintenance_mode_message').suppress = true; // Disable aws sdk maintenance mode message at startup
-const rp = require('request-promise-native');
+const axios = require('axios');
 const Registry = require('../../Registry');
 
 const ECR_PUBLIC_GALLERY_HOSTNAME = 'public.ecr.aws';
@@ -81,15 +81,14 @@ class Ecr extends Registry {
 
             // Public ECR gallery
         } else if (image.registry.url.includes(ECR_PUBLIC_GALLERY_HOSTNAME)) {
-            const response = await rp({
+            const response = await axios({
                 method: 'GET',
-                uri: 'https://public.ecr.aws/token/',
+                url: 'https://public.ecr.aws/token/',
                 headers: {
                     Accept: 'application/json',
                 },
-                json: true,
             });
-            requestOptionsWithAuth.headers.Authorization = `Bearer ${response.token}`;
+            requestOptionsWithAuth.headers.Authorization = `Bearer ${response.data.token}`;
         }
         return requestOptionsWithAuth;
     }

@@ -1,7 +1,7 @@
 const Hub = require('./Hub');
 
-// Mock request-promise-native
-jest.mock('request-promise-native', () => jest.fn());
+// Mock axios
+jest.mock('axios', () => jest.fn());
 
 describe('Docker Hub Registry', () => {
     let hub;
@@ -80,8 +80,8 @@ describe('Docker Hub Registry', () => {
     });
 
     test('should authenticate with credentials', async () => {
-        const rp = require('request-promise-native');
-        rp.mockResolvedValue({ token: 'auth-token' });
+        const axios = require('axios');
+        axios.mockResolvedValue({ data: { token: 'auth-token' } });
 
         hub.getAuthCredentials = jest.fn().mockReturnValue('base64credentials');
 
@@ -90,21 +90,20 @@ describe('Docker Hub Registry', () => {
 
         const result = await hub.authenticate(image, requestOptions);
 
-        expect(rp).toHaveBeenCalledWith({
+        expect(axios).toHaveBeenCalledWith({
             method: 'GET',
-            uri: 'https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/nginx:pull&grant_type=password',
+            url: 'https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/nginx:pull&grant_type=password',
             headers: {
                 Accept: 'application/json',
                 Authorization: 'Basic base64credentials',
             },
-            json: true,
         });
         expect(result.headers.Authorization).toBe('Bearer auth-token');
     });
 
     test('should authenticate without credentials', async () => {
-        const rp = require('request-promise-native');
-        rp.mockResolvedValue({ token: 'public-token' });
+        const axios = require('axios');
+        axios.mockResolvedValue({ data: { token: 'public-token' } });
 
         hub.getAuthCredentials = jest.fn().mockReturnValue(null);
 
@@ -113,13 +112,12 @@ describe('Docker Hub Registry', () => {
 
         const result = await hub.authenticate(image, requestOptions);
 
-        expect(rp).toHaveBeenCalledWith({
+        expect(axios).toHaveBeenCalledWith({
             method: 'GET',
-            uri: 'https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/nginx:pull&grant_type=password',
+            url: 'https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/nginx:pull&grant_type=password',
             headers: {
                 Accept: 'application/json',
             },
-            json: true,
         });
         expect(result.headers.Authorization).toBe('Bearer public-token');
     });

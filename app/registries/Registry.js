@@ -1,4 +1,4 @@
-const rp = require('request-promise-native');
+const axios = require('axios');
 const log = require('../log');
 const Component = require('../registry/Component');
 const { getSummaryTags } = require('../prometheus/registry');
@@ -271,25 +271,34 @@ class Registry extends Component {
         const start = new Date().getTime();
 
         // Request options
-        const getRequestOptions = {
-            uri: url,
+        const axiosOptions = {
+            url,
             method,
             headers,
-            json: true,
-            resolveWithFullResponse,
+            responseType: 'json',
         };
 
-        const getRequestOptionsWithAuth = await this.authenticate(
+        const axiosOptionsWithAuth = await this.authenticate(
             image,
-            getRequestOptions,
+            axiosOptions,
         );
-        const response = await rp(getRequestOptionsWithAuth);
-        const end = new Date().getTime();
-        getSummaryTags().observe(
-            { type: this.type, name: this.name },
-            (end - start) / 1000,
-        );
-        return response;
+
+        try {
+            const response = await axios(axiosOptionsWithAuth);
+            const end = new Date().getTime();
+            getSummaryTags().observe(
+                { type: this.type, name: this.name },
+                (end - start) / 1000,
+            );
+            return resolveWithFullResponse ? response : response.data;
+        } catch (error) {
+            const end = new Date().getTime();
+            getSummaryTags().observe(
+                { type: this.type, name: this.name },
+                (end - start) / 1000,
+            );
+            throw error;
+        }
     }
 
     getImageFullName(image, tagOrDigest) {

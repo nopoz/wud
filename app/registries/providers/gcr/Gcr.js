@@ -1,4 +1,4 @@
-const rp = require('request-promise-native');
+const axios = require('axios');
 const Registry = require('../../Registry');
 
 /**
@@ -57,7 +57,7 @@ class Gcr extends Registry {
         }
         const request = {
             method: 'GET',
-            uri: `https://gcr.io/v2/token?scope=repository:${image.name}:pull`,
+            url: `https://gcr.io/v2/token?scope=repository:${image.name}:pull`,
             headers: {
                 Accept: 'application/json',
                 Authorization: `Basic ${Gcr.base64Encode(
@@ -68,12 +68,11 @@ class Gcr extends Registry {
                     }),
                 )}`,
             },
-            json: true,
         };
 
-        const response = await rp(request);
+        const response = await axios(request);
         const requestOptionsWithAuth = requestOptions;
-        requestOptionsWithAuth.headers.Authorization = `Bearer ${response.token}`;
+        requestOptionsWithAuth.headers.Authorization = `Bearer ${response.data.token}`;
         return requestOptionsWithAuth;
     }
 

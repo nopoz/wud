@@ -1,7 +1,7 @@
 const Discord = require('./Discord');
 
-// Mock request-promise-native
-jest.mock('request-promise-native', () => jest.fn());
+// Mock axios
+jest.mock('axios', () => jest.fn().mockResolvedValue({ data: {} }));
 
 describe('Discord Trigger', () => {
     let discord;
@@ -44,7 +44,7 @@ describe('Discord Trigger', () => {
     });
 
     test('should trigger with container', async () => {
-        const rp = require('request-promise-native');
+        const axios = require('axios');
         discord.configuration = {
             url: 'https://discord.com/api/webhooks/123/abc',
         };
@@ -58,7 +58,7 @@ describe('Discord Trigger', () => {
     });
 
     test('should trigger batch with containers', async () => {
-        const rp = require('request-promise-native');
+        const axios = require('axios');
         discord.configuration = {
             url: 'https://discord.com/api/webhooks/123/abc',
         };
@@ -72,7 +72,7 @@ describe('Discord Trigger', () => {
     });
 
     test('should send message with custom configuration', async () => {
-        const rp = require('request-promise-native');
+        const axios = require('axios');
         discord.configuration = {
             url: 'https://discord.com/api/webhooks/123/abc',
             botusername: 'CustomBot',
@@ -81,9 +81,8 @@ describe('Discord Trigger', () => {
         };
 
         await discord.sendMessage('Test Title', 'Test Body');
-        expect(rp).toHaveBeenCalledWith({
+        expect(axios).toHaveBeenCalledWith({
             method: 'POST',
-            json: true,
             uri: 'https://discord.com/api/webhooks/123/abc',
             body: {
                 username: 'CustomBot',

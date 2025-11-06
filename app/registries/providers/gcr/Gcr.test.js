@@ -1,8 +1,8 @@
 const Gcr = require('./Gcr');
 
-jest.mock('request-promise-native', () =>
+jest.mock('axios', () =>
     jest.fn().mockImplementation(() => ({
-        token: 'xxxxx',
+        data: { token: 'xxxxx' },
     })),
 );
 
@@ -12,7 +12,7 @@ gcr.configuration = {
     privatekey: 'secretaccesskey',
 };
 
-jest.mock('request-promise-native');
+jest.mock('axios');
 
 test('validatedConfiguration should initialize when configuration is valid', () => {
     expect(

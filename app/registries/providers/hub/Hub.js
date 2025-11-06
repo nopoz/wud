@@ -1,4 +1,4 @@
-const rp = require('request-promise-native');
+const axios = require('axios');
 const Custom = require('../custom/Custom');
 
 /**
@@ -77,24 +77,23 @@ class Hub extends Custom {
      * @returns {Promise<*>}
      */
     async authenticate(image, requestOptions) {
-        const request = {
+        const axiosConfig = {
             method: 'GET',
-            uri: `https://auth.docker.io/token?service=registry.docker.io&scope=repository:${image.name}:pull&grant_type=password`,
+            url: `https://auth.docker.io/token?service=registry.docker.io&scope=repository:${image.name}:pull&grant_type=password`,
             headers: {
                 Accept: 'application/json',
             },
-            json: true,
         };
 
         // Add Authorization if any
         const credentials = this.getAuthCredentials();
         if (credentials) {
-            request.headers.Authorization = `Basic ${credentials}`;
+            axiosConfig.headers.Authorization = `Basic ${credentials}`;
         }
 
-        const response = await rp(request);
+        const response = await axios(axiosConfig);
         const requestOptionsWithAuth = requestOptions;
-        requestOptionsWithAuth.headers.Authorization = `Bearer ${response.token}`;
+        requestOptionsWithAuth.headers.Authorization = `Bearer ${response.data.token}`;
         return requestOptionsWithAuth;
     }
 

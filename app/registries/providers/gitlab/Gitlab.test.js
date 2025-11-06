@@ -1,4 +1,4 @@
-const rp = require('request-promise-native');
+const axios = require('axios');
 const Gitlab = require('./Gitlab');
 
 const gitlab = new Gitlab();
@@ -8,7 +8,7 @@ gitlab.configuration = {
     token: 'abcdef',
 };
 
-jest.mock('request-promise-native');
+jest.mock('axios');
 
 test('validatedConfiguration should initialize when configuration is valid', () => {
     expect(
@@ -74,7 +74,7 @@ test('match should return true when registry url is from custom gitlab', () => {
 });
 
 test('authenticate should perform authenticate request', () => {
-    rp.mockImplementation(() => ({
+    axios.mockImplementation(() => ({
         token: 'token',
     }));
     expect(

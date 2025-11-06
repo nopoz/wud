@@ -1,4 +1,4 @@
-const rp = require('request-promise-native');
+const axios = require('axios');
 const Registry = require('../../Registry');
 
 /**
@@ -62,14 +62,13 @@ class Gitlab extends Registry {
     async authenticate(image, requestOptions) {
         const request = {
             method: 'GET',
-            uri: `${this.configuration.authurl}/jwt/auth?service=container_registry&scope=repository:${image.name}:pull`,
+            url: `${this.configuration.authurl}/jwt/auth?service=container_registry&scope=repository:${image.name}:pull`,
             headers: {
                 Accept: 'application/json',
                 Authorization: `Basic ${Gitlab.base64Encode('', this.configuration.token)}`,
             },
-            json: true,
         };
-        const response = await rp(request);
+        const response = await axios(request);
         const requestOptionsWithAuth = requestOptions;
         requestOptionsWithAuth.headers.Authorization = `Bearer ${response.token}`;
         return requestOptionsWithAuth;

@@ -1,7 +1,7 @@
 const { ValidationError } = require('joi');
-const rp = require('request-promise-native');
+const axios = require('axios');
 
-jest.mock('request-promise-native');
+jest.mock('axios');
 const Apprise = require('./Apprise');
 
 const apprise = new Apprise();
@@ -72,18 +72,19 @@ test('trigger should send POST http request to notify endpoint', async () => {
             semverDiff: 'major',
         },
     };
+    axios.mockResolvedValue({ data: {} });
     await apprise.trigger(container);
-    expect(rp).toHaveBeenCalledWith({
-        body: {
+    expect(axios).toHaveBeenCalledWith({
+        data: {
             urls: 'maito://user:pass@gmail.com',
             title: 'New tag found for container container1',
-            body: 'Container container1 running with tag 1.0.0 can be updated to tag 2.0.0',
+            data: 'Container container1 running with tag 1.0.0 can be updated to tag 2.0.0',
             format: 'text',
             type: 'info',
         },
-        json: true,
+
         method: 'POST',
-        uri: 'http://xxx.com/notify',
+        url: 'http://xxx.com/notify',
     });
 });
 
@@ -98,19 +99,20 @@ test('trigger should use config and tag when configured', async () => {
         name: 'test',
         updateKind: { kind: 'tag', localValue: '1.0', remoteValue: '2.0' },
     };
+    axios.mockResolvedValue({ data: {} });
     await apprise.trigger(container);
 
-    expect(rp).toHaveBeenCalledWith({
-        body: {
+    expect(axios).toHaveBeenCalledWith({
+        data: {
             title: expect.any(String),
-            body: expect.any(String),
+            data: expect.any(String),
             format: 'text',
             type: 'info',
             tag: 'mytag',
         },
-        json: true,
+
         method: 'POST',
-        uri: 'http://xxx.com/notify/myconfig',
+        url: 'http://xxx.com/notify/myconfig',
     });
 });
 
@@ -124,18 +126,19 @@ test('trigger should use config without tag', async () => {
         name: 'test',
         updateKind: { kind: 'tag', localValue: '1.0', remoteValue: '2.0' },
     };
+    axios.mockResolvedValue({ data: {} });
     await apprise.trigger(container);
 
-    expect(rp).toHaveBeenCalledWith({
-        body: {
+    expect(axios).toHaveBeenCalledWith({
+        data: {
             title: expect.any(String),
-            body: expect.any(String),
+            data: expect.any(String),
             format: 'text',
             type: 'info',
         },
-        json: true,
+
         method: 'POST',
-        uri: 'http://xxx.com/notify/myconfig',
+        url: 'http://xxx.com/notify/myconfig',
     });
 });
 
@@ -156,19 +159,20 @@ test('triggerBatch should send batch notification', async () => {
         },
     ];
 
+    axios.mockResolvedValue({ data: {} });
     await apprise.triggerBatch(containers);
 
-    expect(rp).toHaveBeenCalledWith({
-        body: {
+    expect(axios).toHaveBeenCalledWith({
+        data: {
             urls: 'mailto://test@example.com',
             title: expect.any(String),
-            body: expect.any(String),
+            data: expect.any(String),
             format: 'text',
             type: 'info',
         },
-        json: true,
+
         method: 'POST',
-        uri: 'http://xxx.com/notify',
+        url: 'http://xxx.com/notify',
     });
 });
 

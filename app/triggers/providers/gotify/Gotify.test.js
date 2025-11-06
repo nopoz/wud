@@ -1,7 +1,7 @@
 const { ValidationError } = require('joi');
-const rp = require('request-promise-native');
+const axios = require('axios');
 
-jest.mock('request-promise-native');
+jest.mock('axios');
 const Gotify = require('./Gotify');
 
 const gotify = new Gotify();
