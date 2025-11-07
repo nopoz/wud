@@ -140,141 +140,142 @@ test.each(containerData)(
         });
         expect(mqttClientMock.publish).toHaveBeenCalledTimes(15);
 
-    expect(mqttClientMock.publish).toHaveBeenNthCalledWith(
-        1,
-        'homeassistant/sensor/topic_total_count/config',
-        JSON.stringify({
-            unique_id: 'topic_total_count',
-            default_entity_id: 'sensor.topic_total_count',
-            name: 'Total container count',
-            device: {
-                identifiers: ['wud'],
-                manufacturer: 'wud',
-                model: 'wud',
-                name: 'wud',
-                sw_version: 'unknown',
-            },
-            icon: 'mdi:docker',
-            entity_picture:
-                'https://github.com/getwud/wud/raw/main/docs/assets/wud-logo-256.png',
-            state_topic: 'topic/total_count',
-        }),
-        { retain: true },
-    );
+        expect(mqttClientMock.publish).toHaveBeenNthCalledWith(
+            1,
+            'homeassistant/sensor/topic_total_count/config',
+            JSON.stringify({
+                unique_id: 'topic_total_count',
+                default_entity_id: 'sensor.topic_total_count',
+                name: 'Total container count',
+                device: {
+                    identifiers: ['wud'],
+                    manufacturer: 'wud',
+                    model: 'wud',
+                    name: 'wud',
+                    sw_version: 'unknown',
+                },
+                icon: 'mdi:docker',
+                entity_picture:
+                    'https://github.com/getwud/wud/raw/main/docs/assets/wud-logo-256.png',
+                state_topic: 'topic/total_count',
+            }),
+            { retain: true },
+        );
 
-    expect(mqttClientMock.publish).toHaveBeenNthCalledWith(
-        2,
-        'homeassistant/sensor/topic_update_count/config',
-        JSON.stringify({
-            unique_id: 'topic_update_count',
-            default_entity_id: 'sensor.topic_update_count',
-            name: 'Total container update count',
-            device: {
-                identifiers: ['wud'],
-                manufacturer: 'wud',
-                model: 'wud',
-                name: 'wud',
-                sw_version: 'unknown',
-            },
-            icon: 'mdi:docker',
-            entity_picture:
-                'https://github.com/getwud/wud/raw/main/docs/assets/wud-logo-256.png',
-            state_topic: 'topic/update_count',
-        }),
-        { retain: true },
-    );
+        expect(mqttClientMock.publish).toHaveBeenNthCalledWith(
+            2,
+            'homeassistant/sensor/topic_update_count/config',
+            JSON.stringify({
+                unique_id: 'topic_update_count',
+                default_entity_id: 'sensor.topic_update_count',
+                name: 'Total container update count',
+                device: {
+                    identifiers: ['wud'],
+                    manufacturer: 'wud',
+                    model: 'wud',
+                    name: 'wud',
+                    sw_version: 'unknown',
+                },
+                icon: 'mdi:docker',
+                entity_picture:
+                    'https://github.com/getwud/wud/raw/main/docs/assets/wud-logo-256.png',
+                state_topic: 'topic/update_count',
+            }),
+            { retain: true },
+        );
 
-    expect(mqttClientMock.publish).toHaveBeenNthCalledWith(
-        3,
-        'homeassistant/binary_sensor/topic_update_status/config',
-        JSON.stringify({
-            unique_id: 'topic_update_status',
-            default_entity_id: 'binary_sensor.topic_update_status',
-            name: 'Total container update status',
-            device: {
-                identifiers: ['wud'],
-                manufacturer: 'wud',
-                model: 'wud',
-                name: 'wud',
-                sw_version: 'unknown',
-            },
-            icon: 'mdi:docker',
-            entity_picture:
-                'https://github.com/getwud/wud/raw/main/docs/assets/wud-logo-256.png',
-            state_topic: 'topic/update_status',
-            payload_on: 'true',
-            payload_off: 'false',
-        }),
-        { retain: true },
-    );
+        expect(mqttClientMock.publish).toHaveBeenNthCalledWith(
+            3,
+            'homeassistant/binary_sensor/topic_update_status/config',
+            JSON.stringify({
+                unique_id: 'topic_update_status',
+                default_entity_id: 'binary_sensor.topic_update_status',
+                name: 'Total container update status',
+                device: {
+                    identifiers: ['wud'],
+                    manufacturer: 'wud',
+                    model: 'wud',
+                    name: 'wud',
+                    sw_version: 'unknown',
+                },
+                icon: 'mdi:docker',
+                entity_picture:
+                    'https://github.com/getwud/wud/raw/main/docs/assets/wud-logo-256.png',
+                state_topic: 'topic/update_status',
+                payload_on: 'true',
+                payload_off: 'false',
+            }),
+            { retain: true },
+        );
 
-    expect(mqttClientMock.publish).toHaveBeenNthCalledWith(
-        4,
-        'homeassistant/sensor/topic_watcher-name_total_count/config',
-        JSON.stringify({
-            unique_id: 'topic_watcher-name_total_count',
-            default_entity_id: 'sensor.topic_watcher-name_total_count',
-            name: 'Watcher watcher-name container count',
-            device: {
-                identifiers: ['wud'],
-                manufacturer: 'wud',
-                model: 'wud',
-                name: 'wud',
-                sw_version: 'unknown',
-            },
-            icon: 'mdi:docker',
-            entity_picture:
-                'https://github.com/getwud/wud/raw/main/docs/assets/wud-logo-256.png',
-            state_topic: 'topic/watcher-name/total_count',
-        }),
-        { retain: true },
-    );
+        expect(mqttClientMock.publish).toHaveBeenNthCalledWith(
+            4,
+            'homeassistant/sensor/topic_watcher-name_total_count/config',
+            JSON.stringify({
+                unique_id: 'topic_watcher-name_total_count',
+                default_entity_id: 'sensor.topic_watcher-name_total_count',
+                name: 'Watcher watcher-name container count',
+                device: {
+                    identifiers: ['wud'],
+                    manufacturer: 'wud',
+                    model: 'wud',
+                    name: 'wud',
+                    sw_version: 'unknown',
+                },
+                icon: 'mdi:docker',
+                entity_picture:
+                    'https://github.com/getwud/wud/raw/main/docs/assets/wud-logo-256.png',
+                state_topic: 'topic/watcher-name/total_count',
+            }),
+            { retain: true },
+        );
 
-    expect(mqttClientMock.publish).toHaveBeenNthCalledWith(
-        5,
-        'homeassistant/sensor/topic_watcher-name_update_count/config',
-        JSON.stringify({
-            unique_id: 'topic_watcher-name_update_count',
-            default_entity_id: 'sensor.topic_watcher-name_update_count',
-            name: 'Watcher watcher-name container update count',
-            device: {
-                identifiers: ['wud'],
-                manufacturer: 'wud',
-                model: 'wud',
-                name: 'wud',
-                sw_version: 'unknown',
-            },
-            icon: 'mdi:docker',
-            entity_picture:
-                'https://github.com/getwud/wud/raw/main/docs/assets/wud-logo-256.png',
-            state_topic: 'topic/watcher-name/update_count',
-        }),
-        { retain: true },
-    );
+        expect(mqttClientMock.publish).toHaveBeenNthCalledWith(
+            5,
+            'homeassistant/sensor/topic_watcher-name_update_count/config',
+            JSON.stringify({
+                unique_id: 'topic_watcher-name_update_count',
+                default_entity_id: 'sensor.topic_watcher-name_update_count',
+                name: 'Watcher watcher-name container update count',
+                device: {
+                    identifiers: ['wud'],
+                    manufacturer: 'wud',
+                    model: 'wud',
+                    name: 'wud',
+                    sw_version: 'unknown',
+                },
+                icon: 'mdi:docker',
+                entity_picture:
+                    'https://github.com/getwud/wud/raw/main/docs/assets/wud-logo-256.png',
+                state_topic: 'topic/watcher-name/update_count',
+            }),
+            { retain: true },
+        );
 
-    expect(mqttClientMock.publish).toHaveBeenNthCalledWith(
-        6,
-        'homeassistant/binary_sensor/topic_watcher-name_update_status/config',
-        JSON.stringify({
-            unique_id: 'topic_watcher-name_update_status',
-            default_entity_id: 'binary_sensor.topic_watcher-name_update_status',
-            name: 'Watcher watcher-name container update status',
-            device: {
-                identifiers: ['wud'],
-                manufacturer: 'wud',
-                model: 'wud',
-                name: 'wud',
-                sw_version: 'unknown',
-            },
-            icon: 'mdi:docker',
-            entity_picture:
-                'https://github.com/getwud/wud/raw/main/docs/assets/wud-logo-256.png',
-            state_topic: 'topic/watcher-name/update_status',
-            payload_on: 'true',
-            payload_off: 'false',
-        }),
-        { retain: true },
-    );
+        expect(mqttClientMock.publish).toHaveBeenNthCalledWith(
+            6,
+            'homeassistant/binary_sensor/topic_watcher-name_update_status/config',
+            JSON.stringify({
+                unique_id: 'topic_watcher-name_update_status',
+                default_entity_id:
+                    'binary_sensor.topic_watcher-name_update_status',
+                name: 'Watcher watcher-name container update status',
+                device: {
+                    identifiers: ['wud'],
+                    manufacturer: 'wud',
+                    model: 'wud',
+                    name: 'wud',
+                    sw_version: 'unknown',
+                },
+                icon: 'mdi:docker',
+                entity_picture:
+                    'https://github.com/getwud/wud/raw/main/docs/assets/wud-logo-256.png',
+                state_topic: 'topic/watcher-name/update_status',
+                payload_on: 'true',
+                payload_off: 'false',
+            }),
+            { retain: true },
+        );
 
         expect(mqttClientMock.publish).toHaveBeenNthCalledWith(
             7,
