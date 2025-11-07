@@ -356,7 +356,8 @@ class Hass {
      * @return {string}
      */
     getContainerStateTopic({ container }) {
-        return `${this.configuration.topic}/${container.watcher}/${container.name}`;
+        const containerName = container.name.replace(/\./g, '-');
+        return `${this.configuration.topic}/${container.watcher}/${containerName}`;
     }
 
     /**

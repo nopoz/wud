@@ -18,7 +18,8 @@ const hassDefaultPrefix = 'homeassistant';
  * @return {string}
  */
 function getContainerTopic({ baseTopic, container }) {
-    return `${baseTopic}/${container.watcher}/${container.name}`;
+    const containerName = container.name.replace(/\./g, '-');
+    return `${baseTopic}/${container.watcher}/${containerName}`;
 }
 
 /**
