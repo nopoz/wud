@@ -18,7 +18,7 @@ ecr.configuration = {
     region: 'region',
 };
 
-jest.mock('request-promise-native');
+jest.mock('axios');
 
 test('validatedConfiguration should initialize when configuration is valid', () => {
     expect(

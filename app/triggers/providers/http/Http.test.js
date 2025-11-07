@@ -1,7 +1,7 @@
 const Http = require('./Http');
 
-// Mock request-promise-native
-jest.mock('request-promise-native', () => jest.fn());
+// Mock axios
+jest.mock('axios', () => jest.fn());
 
 describe('HTTP Trigger', () => {
     let http;
@@ -36,39 +36,40 @@ describe('HTTP Trigger', () => {
     });
 
     test('should trigger with container', async () => {
-        const rp = require('request-promise-native');
+        const axios = require('axios');
+        axios.mockResolvedValue({ data: {} });
         await http.register('trigger', 'http', 'test', {
             url: 'https://example.com/webhook',
         });
         const container = { name: 'test' };
 
         await http.trigger(container);
-        expect(rp).toHaveBeenCalledWith({
+        expect(axios).toHaveBeenCalledWith({
             method: 'POST',
-            uri: 'https://example.com/webhook',
-            body: container,
-            json: true,
+            url: 'https://example.com/webhook',
+            data: container,
         });
     });
 
     test('should trigger batch with containers', async () => {
-        const rp = require('request-promise-native');
+        const axios = require('axios');
+        axios.mockResolvedValue({ data: {} });
         await http.register('trigger', 'http', 'test', {
             url: 'https://example.com/webhook',
         });
         const containers = [{ name: 'test1' }, { name: 'test2' }];
 
         await http.triggerBatch(containers);
-        expect(rp).toHaveBeenCalledWith({
+        expect(axios).toHaveBeenCalledWith({
             method: 'POST',
-            uri: 'https://example.com/webhook',
-            body: containers,
-            json: true,
+            url: 'https://example.com/webhook',
+            data: containers,
         });
     });
 
     test('should use GET method with query string', async () => {
-        const rp = require('request-promise-native');
+        const axios = require('axios');
+        axios.mockResolvedValue({ data: {} });
         await http.register('trigger', 'http', 'test', {
             url: 'https://example.com/webhook',
             method: 'GET',
@@ -76,15 +77,16 @@ describe('HTTP Trigger', () => {
         const container = { name: 'test' };
 
         await http.trigger(container);
-        expect(rp).toHaveBeenCalledWith({
+        expect(axios).toHaveBeenCalledWith({
             method: 'GET',
-            uri: 'https://example.com/webhook',
-            qs: container,
+            url: 'https://example.com/webhook',
+            params: container,
         });
     });
 
     test('should use BASIC auth', async () => {
-        const rp = require('request-promise-native');
+        const axios = require('axios');
+        axios.mockResolvedValue({ data: {} });
         await http.register('trigger', 'http', 'test', {
             url: 'https://example.com/webhook',
             auth: { type: 'BASIC', user: 'user', password: 'pass' },
@@ -92,17 +94,17 @@ describe('HTTP Trigger', () => {
         const container = { name: 'test' };
 
         await http.trigger(container);
-        expect(rp).toHaveBeenCalledWith({
+        expect(axios).toHaveBeenCalledWith({
             method: 'POST',
-            uri: 'https://example.com/webhook',
-            body: container,
-            json: true,
-            auth: { user: 'user', pass: 'pass' },
+            url: 'https://example.com/webhook',
+            data: container,
+            auth: { username: 'user', password: 'pass' },
         });
     });
 
     test('should use BEARER auth', async () => {
-        const rp = require('request-promise-native');
+        const axios = require('axios');
+        axios.mockResolvedValue({ data: {} });
         await http.register('trigger', 'http', 'test', {
             url: 'https://example.com/webhook',
             auth: { type: 'BEARER', bearer: 'token' },
@@ -110,17 +112,17 @@ describe('HTTP Trigger', () => {
         const container = { name: 'test' };
 
         await http.trigger(container);
-        expect(rp).toHaveBeenCalledWith({
+        expect(axios).toHaveBeenCalledWith({
             method: 'POST',
-            uri: 'https://example.com/webhook',
-            body: container,
-            json: true,
-            auth: { bearer: 'token' },
+            url: 'https://example.com/webhook',
+            data: container,
+            headers: { Authorization: 'Bearer token' },
         });
     });
 
     test('should use proxy', async () => {
-        const rp = require('request-promise-native');
+        const axios = require('axios');
+        axios.mockResolvedValue({ data: {} });
         await http.register('trigger', 'http', 'test', {
             url: 'https://example.com/webhook',
             proxy: 'http://proxy:8080',
@@ -128,12 +130,11 @@ describe('HTTP Trigger', () => {
         const container = { name: 'test' };
 
         await http.trigger(container);
-        expect(rp).toHaveBeenCalledWith({
+        expect(axios).toHaveBeenCalledWith({
             method: 'POST',
-            uri: 'https://example.com/webhook',
-            body: container,
-            json: true,
-            proxy: 'http://proxy:8080',
+            url: 'https://example.com/webhook',
+            data: container,
+            proxy: { host: 'proxy', port: '8080' },
         });
     });
 });

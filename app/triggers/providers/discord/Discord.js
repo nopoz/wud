@@ -1,4 +1,4 @@
-const rp = require('request-promise-native');
+const axios = require('axios');
 
 const Trigger = require('../Trigger');
 
@@ -85,11 +85,11 @@ class Discord extends Trigger {
 
         const options = {
             method: 'POST',
-            json: true,
             uri,
             body,
         };
-        return rp(options);
+        const response = await axios(options);
+        return response.data;
     }
 }
 

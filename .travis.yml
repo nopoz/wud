@@ -88,26 +88,8 @@ script:
   - docker pull homeassistant/home-assistant
   - docker pull homeassistant/home-assistant:2021.6.1
 
-  # Pull omnidb
-  - docker pull omnidbteam/omnidb
-
-  # Pull pihole
-  - docker pull pihole/pihole
-  - docker pull pihole/pihole:v5.7
-
-  # Pull pyload
-  - docker pull writl/pyload
-
   # Pull traefik
-  - docker pull traefik
   - docker pull traefik:2.4.5
-
-  # Pull vaultwarden
-  - docker pull vaultwarden/server
-  - docker pull vaultwarden/server:1.34.1-alpine
-
-  # Pull youtubedl
-  - docker pull jeeaaasustest/youtube-dl
 
   # Run containers for tests
 
@@ -118,8 +100,6 @@ script:
 
   # ECR
   - docker run -d --name ecr_sub_sub_test --label 'wud.watch=true' 229211676173.dkr.ecr.eu-west-1.amazonaws.com/sub/sub/test:1.0.0
-  - docker run -d --name ecr_sub_test     --label 'wud.watch=true' 229211676173.dkr.ecr.eu-west-1.amazonaws.com/sub/test:1.0.0
-  - docker run -d --name ecr_test         --label 'wud.watch=true' 229211676173.dkr.ecr.eu-west-1.amazonaws.com/test:1.0.0
 
   # GCR
   #  - docker run -d --name gcr_test          --label "wud.watch=true" gcr.io/wud-test/test:1.0.0
@@ -139,22 +119,7 @@ script:
   - docker run -d --name hub_nginx_120            --label 'wud.watch=true' --label 'wud.tag.include=^\d+\.\d+-alpine$'                        nginx:1.20-alpine
   - docker run -d --name hub_nginx_latest         --label 'wud.watch=true' --label 'wud.watch.digest=true' --label 'wud.tag.include=^latest$' nginx
 
-  - docker run -d --name hub_omnidb_latest        --label 'wud.watch=true' --label 'wud.watch.digest=true' --label 'wud.tag.include=^latest$' omnidbteam/omnidb
-
-  - docker run -d --name hub_pihole_57            --label 'wud.watch=true' --label 'wud.tag.include=^v\d+\.\d+.\d+$'                          pihole/pihole:v5.7
-  - docker run -d --name hub_pihole_latest        --label 'wud.watch=true' --label 'wud.watch.digest=true' --label 'wud.tag.include=^latest$' pihole/pihole
-
-  - docker run -d --name hub_pyload_latest        --label 'wud.watch=true' --label 'wud.watch.digest=true' --label 'wud.tag.include=^latest$' writl/pyload
-
-#  - docker run -d --name hub_test                 --label 'wud.watch=true' --label 'wud.tag.include=^\d+\.\d+.\d+$'                           fmartinou/test:1.0.0
-
   - docker run -d --name hub_traefik_245          --label 'wud.watch=true' --label 'wud.tag.include=^\d+\.\d+.\d+$'                           traefik:2.4.5
-  - docker run -d --name hub_traefik_latest       --label 'wud.watch=true' --label 'wud.watch.digest=true' --label 'wud.tag.include=^latest$' traefik
-
-  - docker run -d --name hub_vaultwarden_1222     --label 'wud.watch=true' --label 'wud.tag.include=^\d+\.\d+.\d+-alpine$'                    -e I_REALLY_WANT_VOLATILE_STORAGE=true vaultwarden/server:1.34.1-alpine
-  - docker run -d --name hub_vaultwarden_latest   --label 'wud.watch=true' --label 'wud.watch.digest=true' --label 'wud.tag.include=^latest$' -e I_REALLY_WANT_VOLATILE_STORAGE=true vaultwarden/server
-
-  - docker run -d --name hub_youtubedb_latest     --label 'wud.watch=true' --label 'wud.watch.digest=true' --label 'wud.tag.include=^latest$' jeeaaasustest/youtube-dl
 
   # LSCR
   - docker run -d --name lscr_radarr              --label 'wud.watch=true' --label 'wud.tag.include=^\d+\.\d+\.\d+\.\d+-ls\d+$'               lscr.io/linuxserver/radarr:5.14.0.9383-ls245

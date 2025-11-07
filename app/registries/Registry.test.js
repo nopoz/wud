@@ -1,6 +1,6 @@
 const log = require('../log');
 
-jest.mock('request-promise-native');
+jest.mock('axios');
 jest.mock('../prometheus/registry', () => ({
     getSummaryTags: () => ({
         observe: () => {},
@@ -41,7 +41,7 @@ test('getTags should sort tags z -> a', () => {
     registryMocked.log = log;
     registryMocked.callRegistry = () => ({
         headers: {},
-        body: { tags: ['v1', 'v2', 'v3'] },
+        data: { tags: ['v1', 'v2', 'v3'] },
     });
     expect(
         registryMocked.getTags({ name: 'test', registry: { url: 'test' } }),
@@ -274,11 +274,13 @@ test('getImageManifestDigest should throw when no digest found', () => {
     ).rejects.toEqual(new Error('Unexpected error; no manifest found'));
 });
 
-test('callRegistry should call authenticate', () => {
+test('callRegistry should call authenticate', async () => {
+    const axios = require('axios');
+    axios.mockResolvedValue({ data: {} });
     const registryMocked = new Registry();
     registryMocked.log = log;
     const spyAuthenticate = jest.spyOn(registryMocked, 'authenticate');
-    registryMocked.callRegistry({
+    await registryMocked.callRegistry({
         image: {},
         url: 'url',
         method: 'get',

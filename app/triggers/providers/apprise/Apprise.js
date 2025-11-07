@@ -1,4 +1,4 @@
-const rp = require('request-promise-native');
+const axios = require('axios');
 
 const Trigger = require('../Trigger');
 
@@ -45,7 +45,7 @@ class Apprise extends Trigger {
         let uri = `${this.configuration.url}/notify`;
         const body = {
             title: this.renderSimpleTitle(container),
-            body: this.renderSimpleBody(container),
+            data: this.renderSimpleBody(container),
             format: 'text',
             type: 'info',
         };
@@ -63,11 +63,11 @@ class Apprise extends Trigger {
         }
         const options = {
             method: 'POST',
-            json: true,
-            uri,
-            body,
+            url: uri,
+            data: body,
         };
-        return rp(options);
+        const response = await axios(options);
+        return response.data;
     }
 
     /**
@@ -78,17 +78,17 @@ class Apprise extends Trigger {
     async triggerBatch(containers) {
         const options = {
             method: 'POST',
-            uri: `${this.configuration.url}/notify`,
-            json: true,
-            body: {
+            url: `${this.configuration.url}/notify`,
+            data: {
                 urls: this.configuration.urls,
                 title: this.renderBatchTitle(containers),
-                body: this.renderBatchBody(containers),
+                data: this.renderBatchBody(containers),
                 format: 'text',
                 type: 'info',
             },
         };
-        return rp(options);
+        const response = await axios(options);
+        return response.data;
     }
 }
 

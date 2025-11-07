@@ -1,4 +1,4 @@
-const rp = require('request-promise-native');
+const axios = require('axios');
 const Trigger = require('../Trigger');
 
 /**
@@ -80,12 +80,11 @@ class Ntfy extends Trigger {
     async sendHttpRequest(body) {
         const options = {
             method: 'POST',
-            uri: this.configuration.url,
+            url: this.configuration.url,
             headers: {
                 'Content-Type': 'application/json',
             },
-            body,
-            json: true,
+            data: body,
         };
         if (
             this.configuration.auth &&
@@ -102,7 +101,8 @@ class Ntfy extends Trigger {
                 bearer: this.configuration.auth.token,
             };
         }
-        return rp(options);
+        const response = await axios(options);
+        return response.data;
     }
 }
 

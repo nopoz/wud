@@ -1,4 +1,4 @@
-const rp = require('request-promise-native');
+const axios = require('axios');
 const Registry = require('../../Registry');
 
 /**
@@ -65,15 +65,14 @@ class Quay extends Registry {
         if (credentials) {
             const request = {
                 method: 'GET',
-                uri: `https://quay.io/v2/auth?service=quay.io&scope=repository:${image.name}:pull`,
+                url: `https://quay.io/v2/auth?service=quay.io&scope=repository:${image.name}:pull`,
                 headers: {
                     Accept: 'application/json',
                     Authorization: `Basic ${credentials}`,
                 },
-                json: true,
             };
             try {
-                const response = await rp(request);
+                const response = await axios(request);
                 token = response.token;
             } catch (e) {
                 this.log.warn(

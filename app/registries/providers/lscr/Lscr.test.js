@@ -1,8 +1,8 @@
 const Lscr = require('./Lscr');
 
-jest.mock('request-promise-native', () =>
+jest.mock('axios', () =>
     jest.fn().mockImplementation(() => ({
-        token: 'xxxxx',
+        data: { token: 'xxxxx' },
     })),
 );
 
@@ -12,7 +12,7 @@ lscr.configuration = {
     token: 'token',
 };
 
-jest.mock('request-promise-native');
+jest.mock('axios');
 
 test('validatedConfiguration should initialize when configuration is valid', () => {
     expect(

@@ -1,4 +1,4 @@
-const rp = require('request-promise-native');
+const axios = require('axios');
 
 const Trigger = require('../Trigger');
 
@@ -59,30 +59,34 @@ class Http extends Trigger {
     async sendHttpRequest(body) {
         const options = {
             method: this.configuration.method,
-            uri: this.configuration.url,
+            url: this.configuration.url,
         };
         if (this.configuration.method === 'POST') {
-            options.body = body;
-            options.json = true;
+            options.data = body;
         } else if (this.configuration.method === 'GET') {
-            options.qs = body;
+            options.params = body;
         }
         if (this.configuration.auth) {
             if (this.configuration.auth.type === 'BASIC') {
                 options.auth = {
-                    user: this.configuration.auth.user,
-                    pass: this.configuration.auth.password,
+                    username: this.configuration.auth.user,
+                    password: this.configuration.auth.password,
                 };
             } else if (this.configuration.auth.type === 'BEARER') {
-                options.auth = {
-                    bearer: this.configuration.auth.bearer,
+                options.headers = {
+                    Authorization: `Bearer ${this.configuration.auth.bearer}`,
                 };
             }
         }
         if (this.configuration.proxy) {
-            options.proxy = this.configuration.proxy;
+            const proxyUrl = new URL(this.configuration.proxy);
+            options.proxy = {
+                host: proxyUrl.hostname,
+                port: proxyUrl.port,
+            };
         }
-        return rp(options);
+        const response = await axios(options);
+        return response.data;
     }
 }
 

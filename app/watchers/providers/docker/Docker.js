@@ -625,6 +625,7 @@ class Docker extends Component {
             logContainer.error(
                 `Unsupported registry (${container.image.registry.name})`,
             );
+            return result;
         } else {
             // Get all available tags
             const tags = await registryProvider.getTags(container.image);
@@ -682,9 +683,8 @@ class Docker extends Component {
             if (tagsCandidates && tagsCandidates.length > 0) {
                 [result.tag] = tagsCandidates;
             }
-
-            return result;
         }
+        return result;
     }
 
     /**

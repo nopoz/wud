@@ -1,8 +1,8 @@
 const { ValidationError } = require('joi');
-const rp = require('request-promise-native');
+const axios = require('axios');
 const Ntfy = require('./Ntfy');
 
-jest.mock('request-promise-native');
+jest.mock('axios');
 
 const ntfy = new Ntfy();
 
@@ -52,9 +52,10 @@ test('trigger should call http client', async () => {
             remoteValue: '2.0.0',
         },
     };
+    axios.mockResolvedValue({ data: {} });
     await ntfy.trigger(container);
-    expect(rp).toHaveBeenCalledWith({
-        body: {
+    expect(axios).toHaveBeenCalledWith({
+        data: {
             message:
                 'Container container1 running with tag 1.0.0 can be updated to tag 2.0.0',
             priority: 2,
@@ -65,8 +66,8 @@ test('trigger should call http client', async () => {
             'Content-Type': 'application/json',
         },
         method: 'POST',
-        json: true,
-        uri: 'http://xxx.com',
+
+        url: 'http://xxx.com',
     });
 });
 
@@ -83,9 +84,10 @@ test('trigger should use basic auth when configured like that', async () => {
             remoteValue: '2.0.0',
         },
     };
+    axios.mockResolvedValue({ data: {} });
     await ntfy.trigger(container);
-    expect(rp).toHaveBeenCalledWith({
-        body: {
+    expect(axios).toHaveBeenCalledWith({
+        data: {
             message:
                 'Container container1 running with tag 1.0.0 can be updated to tag 2.0.0',
             priority: 2,
@@ -96,8 +98,8 @@ test('trigger should use basic auth when configured like that', async () => {
             'Content-Type': 'application/json',
         },
         method: 'POST',
-        json: true,
-        uri: 'http://xxx.com',
+
+        url: 'http://xxx.com',
         auth: { user: 'user', pass: 'pass' },
     });
 });
@@ -115,9 +117,10 @@ test('trigger should use bearer auth when configured like that', async () => {
             remoteValue: '2.0.0',
         },
     };
+    axios.mockResolvedValue({ data: {} });
     await ntfy.trigger(container);
-    expect(rp).toHaveBeenCalledWith({
-        body: {
+    expect(axios).toHaveBeenCalledWith({
+        data: {
             message:
                 'Container container1 running with tag 1.0.0 can be updated to tag 2.0.0',
             priority: 2,
@@ -128,8 +131,8 @@ test('trigger should use bearer auth when configured like that', async () => {
             'Content-Type': 'application/json',
         },
         method: 'POST',
-        json: true,
-        uri: 'http://xxx.com',
+
+        url: 'http://xxx.com',
         auth: { bearer: 'token' },
     });
 });

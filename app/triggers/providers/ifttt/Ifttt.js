@@ -1,4 +1,4 @@
-const rp = require('request-promise-native');
+const axios = require('axios');
 
 const Trigger = require('../Trigger');
 
@@ -62,14 +62,14 @@ class Ifttt extends Trigger {
     async sendHttpRequest(body) {
         const options = {
             method: 'POST',
-            uri: `https://maker.ifttt.com/trigger/${this.configuration.event}/with/key/${this.configuration.key}`,
+            url: `https://maker.ifttt.com/trigger/${this.configuration.event}/with/key/${this.configuration.key}`,
             headers: {
                 'Content-Type': 'application/json',
             },
-            body,
-            json: true,
+            data: body,
         };
-        return rp(options);
+        const response = await axios(options);
+        return response.data;
     }
 }
 

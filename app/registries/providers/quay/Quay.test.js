@@ -1,9 +1,9 @@
-const rp = require('request-promise-native');
+const axios = require('axios');
 const Quay = require('./Quay');
 const log = require('../../../log');
 
-jest.mock('request-promise-native');
-rp.mockImplementation(() => ({
+jest.mock('axios');
+axios.mockImplementation(() => ({
     token: 'token',
 }));
 

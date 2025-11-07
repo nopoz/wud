@@ -1,10 +1,10 @@
-const rp = require('request-promise-native');
-const Registry = require('../../Registry');
+const axios = require('axios');
+const BaseRegistry = require('../../BaseRegistry');
 
 /**
  * Google Container Registry integration.
  */
-class Gcr extends Registry {
+class Gcr extends BaseRegistry {
     getConfigurationSchema() {
         return this.joi.alternatives([
             this.joi.string().allow(''),
@@ -15,40 +15,16 @@ class Gcr extends Registry {
         ]);
     }
 
-    /**
-     * Sanitize sensitive data
-     * @returns {*}
-     */
     maskConfiguration() {
-        return {
-            ...this.configuration,
-            clientemail: this.configuration.clientemail,
-            privatekey: Gcr.mask(this.configuration.privatekey),
-        };
+        return this.maskSensitiveFields(['privatekey']);
     }
-
-    /**
-     * Return true if image has not registry url.
-     * @param image the image
-     * @returns {boolean}
-     */
 
     match(image) {
-        return /^.*\.?gcr.io$/.test(image.registry.url);
+        return this.matchUrlPattern(image, /^.*\.?gcr.io$/);
     }
 
-    /**
-     * Normalize image according to AWS ECR characteristics.
-     * @param image
-     * @returns {*}
-     */
-
     normalizeImage(image) {
-        const imageNormalized = image;
-        if (!imageNormalized.registry.url.startsWith('https://')) {
-            imageNormalized.registry.url = `https://${imageNormalized.registry.url}/v2`;
-        }
-        return imageNormalized;
+        return this.normalizeImageUrl(image);
     }
 
     async authenticate(image, requestOptions) {
@@ -57,7 +33,7 @@ class Gcr extends Registry {
         }
         const request = {
             method: 'GET',
-            uri: `https://gcr.io/v2/token?scope=repository:${image.name}:pull`,
+            url: `https://gcr.io/v2/token?scope=repository:${image.name}:pull`,
             headers: {
                 Accept: 'application/json',
                 Authorization: `Basic ${Gcr.base64Encode(
@@ -68,12 +44,11 @@ class Gcr extends Registry {
                     }),
                 )}`,
             },
-            json: true,
         };
 
-        const response = await rp(request);
+        const response = await axios(request);
         const requestOptionsWithAuth = requestOptions;
-        requestOptionsWithAuth.headers.Authorization = `Bearer ${response.token}`;
+        requestOptionsWithAuth.headers.Authorization = `Bearer ${response.data.token}`;
         return requestOptionsWithAuth;
     }
 
