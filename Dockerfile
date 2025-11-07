@@ -1,5 +1,5 @@
 # Common Stage
-FROM node:24-slim AS base
+FROM node:24-alpine AS base
 
 LABEL maintainer="fmartinou"
 EXPOSE 3000
@@ -17,9 +17,7 @@ WORKDIR /home/node/app
 RUN mkdir /store
 
 # Add useful stuff
-RUN apt update \
-    && apt install -y tzdata openssl curl git jq \
-    && rm -rf /var/cache/apt/*
+RUN apk add --no-cache tzdata openssl curl git jq bash
 
 # Dependencies stage
 FROM base AS dependencies
@@ -31,7 +29,7 @@ COPY app/package* ./
 RUN npm ci --omit=dev --omit=optional --no-audit --no-fund --no-update-notifier
 
 # Release stage
-FROM base as release
+FROM base AS release
 
 # Default entrypoint
 COPY Docker.entrypoint.sh /usr/bin/entrypoint.sh
