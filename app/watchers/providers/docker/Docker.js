@@ -79,21 +79,30 @@ function getTagCandidates(container, tags, logContainer) {
 
         // If user has not specified custom include regex, default to keep current prefix
         // Prefix is almost-always standardised around "must stay the same" for tags
-        if (! container.includeTags){
-            // Determine current tag prefix
+        if (!container.includeTags) {
             const currentTag = container.image.tag.value;
-            const match = currentTag.match(/^(.*?)(\d+\.\d+\.\d+.*)$/);
+            const match = currentTag.match(/^(.*?)(\d+.*)$/);
             const currentPrefix = match ? match[1] : '';
-    
-            // Retain only tags with the same prefix
+        
             if (currentPrefix) {
+                // Retain only tags with the same non-empty prefix
                 filteredTags = filteredTags.filter(tag => tag.startsWith(currentPrefix));
+            } else {
+                // Retain only tags that start with a number (no prefix)
+                filteredTags = filteredTags.filter(tag => /^\d/.test(tag));
             }
-    
+        
+            // Ensure we throw good errors when we've prefix-related issues
             if (filteredTags.length === 0) {
-                logContainer.warn(
-                   "No tags found with existing prefix: " + currentPrefix + " ; check you regex filters",
-                );
+                if (currentPrefix) {
+                    logContainer.warn(
+                        "No tags found with existing prefix: '" + currentPrefix + "'; check your regex filters",
+                    );
+                } else {
+                    logContainer.warn(
+                        "No tags found starting with a number (no prefix); check your regex filters",
+                    );
+                }
             }
         }
 
