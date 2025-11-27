@@ -60,7 +60,7 @@ function getTagCandidates(container, tags, logContainer) {
         const includeTagsRegex = new RegExp(container.includeTags);
         filteredTags = filteredTags.filter((tag) => includeTagsRegex.test(tag));
     } else {
-        // If no includeTags, filter out tags ending with ".sig"
+        // If no includeTags, filter out tags starting with "sha"
         filteredTags = filteredTags.filter(tag => !tag.startsWith('sha'));
     }
 
