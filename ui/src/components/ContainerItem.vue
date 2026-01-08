@@ -388,35 +388,50 @@ export default {
         this.showUpdateProgress = true;
 
         try {
-            // Wait a bit for backend processes to finish
+            // Wait a bit for the container to fully restart
             await new Promise(resolve => setTimeout(resolve, 2000));
-            
+
             // Clear any existing notifications
             if (this.container.notification) {
                 await axios.post(`/api/containers/${this.container.id}/clear-notification`);
             }
-            
-            // Use our new direct refresh endpoint to force the backend to update
-            // this container's state from Docker
+
+            // Use the refresh endpoint to update container state from Docker
+            // This now uses watchContainer with skipRegistryCheck=true (no rate limiting)
             console.log(`Triggering direct container refresh for ${this.container.name}`);
-            await axios.post('/api/containers/refresh', null, {
+            const refreshResponse = await axios.post('/api/containers/refresh', null, {
                 params: {
                     name: this.container.name,
                     watcher: this.container.watcher
                 }
             });
-            
-            // Now we'll poll for changes to make sure we catch the update
-            // This is a fallback in case the direct refresh doesn't work
-            this.pollForContainerUpdate();
+
+            const refreshedContainer = refreshResponse.data;
+            console.log('Refresh response:', refreshedContainer);
+
+            // Check if the refresh detected the update
+            const updateDetected =
+                // Container was recreated with new ID
+                (refreshedContainer.id !== this.container.id) ||
+                // Container image changed
+                (refreshedContainer.image?.id !== this.container.image?.id) ||
+                // Update flag was reset to false
+                (this.container.updateAvailable && !refreshedContainer.updateAvailable);
+
+            if (updateDetected) {
+                console.log('Update detected from refresh response, finishing update');
+                this.finishUpdate(true);
+            } else {
+                // Refresh didn't detect the update yet - poll as fallback
+                // This handles edge cases where Docker is still processing
+                console.log('Update not detected from refresh, starting poll as fallback');
+                this.pollForContainerUpdate();
+            }
         } catch (error) {
             console.error('Error during update completion:', error);
-            this.showUpdateProgress = false;
-            this.$root.$emit('notify',
-                'Error refreshing container state - please refresh manually',
-                'error',
-                0
-            );
+            // On error, try polling as fallback
+            console.log('Refresh failed, trying poll as fallback');
+            this.pollForContainerUpdate();
         }
     },
 
