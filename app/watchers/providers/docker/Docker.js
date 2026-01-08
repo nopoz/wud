@@ -157,9 +157,18 @@ function pruneOldContainers(newContainers, containersFromTheStore) {
     for (const [key, containersInStore] of Object.entries(storeContainersByKey)) {
         const newContainersForKey = newContainersByKey[key] || [];
         
-        // If there are no new containers for this key, remove all store containers
+        // If there are no new containers for this key, check before removing
         if (newContainersForKey.length === 0) {
             for (const containerItem of containersInStore) {
+                // Don't delete containers that have update info - they might be in the process
+                // of being recreated (race condition during updates)
+                const hasUpdateInfo = containerItem.updateKind &&
+                                     containerItem.updateKind.remoteValue &&
+                                     containerItem.updateAvailable;
+                if (hasUpdateInfo) {
+                    console.log(`Preserving container ${containerItem.id} for ${containerItem.name} - has pending update info`);
+                    continue;
+                }
                 console.log(`Removing orphaned container ${containerItem.id} for ${containerItem.name}`);
                 storeContainer.deleteContainer(containerItem.id);
             }

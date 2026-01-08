@@ -479,25 +479,53 @@ async function refreshContainer(req, res) {
     let updatedContainer;
 
     if (existingRunningContainer) {
-      // Container exists in store - use watchContainer with skipRegistryCheck to update it
-      console.log(`Container ${runningContainer.Id} exists in store, using watchContainer to refresh`);
+      // Container exists in store - try watchContainer first, fallback to addImageDetailsToContainer
+      console.log(`Container ${runningContainer.Id} exists in store, attempting to refresh`);
 
       // Prepare the container with any update info we need to preserve
       const containerToWatch = { ...existingRunningContainer };
 
       // If this container doesn't have update info but another one does, transfer it
-      if (!containerToWatch.updateKind && containerWithUpdateInfo && containerWithUpdateInfo.id !== existingRunningContainer.id) {
+      if ((!containerToWatch.updateKind || !containerToWatch.updateKind.remoteValue) &&
+          containerWithUpdateInfo && containerWithUpdateInfo.id !== existingRunningContainer.id) {
         console.log(`Transferring update info from ${containerWithUpdateInfo.id} to ${existingRunningContainer.id}`);
         containerToWatch.updateKind = containerWithUpdateInfo.updateKind;
         containerToWatch.result = containerWithUpdateInfo.result;
-
-        // Transfer metadata
         transferContainerMetadata(containerWithUpdateInfo, containerToWatch);
       }
 
-      // Use watchContainer with skipRegistryCheck=true to avoid rate limiting
-      const containerReport = await watcherInstance.watchContainer(containerToWatch, true);
-      updatedContainer = containerReport.container;
+      // Check if the existing container has a valid image structure
+      const hasValidImage = existingRunningContainer.image &&
+                           existingRunningContainer.image.tag &&
+                           existingRunningContainer.image.registry;
+
+      if (hasValidImage) {
+        // Use watchContainer with skipRegistryCheck=true to avoid rate limiting
+        try {
+          const containerReport = await watcherInstance.watchContainer(containerToWatch, true);
+          updatedContainer = containerReport.container;
+        } catch (watchError) {
+          console.warn(`watchContainer failed: ${watchError.message}, falling back to addImageDetailsToContainer`);
+          updatedContainer = null;
+        }
+      }
+
+      // If watchContainer failed or container was invalid, rebuild from Docker
+      if (!updatedContainer || updatedContainer.error) {
+        console.log(`Rebuilding container ${runningContainer.Id} from Docker data`);
+        updatedContainer = await watcherInstance.addImageDetailsToContainer(runningContainer);
+
+        if (updatedContainer) {
+          // Transfer update info
+          if (containerWithUpdateInfo) {
+            updatedContainer.updateKind = containerWithUpdateInfo.updateKind;
+            updatedContainer.result = containerWithUpdateInfo.result;
+            transferContainerMetadata(containerWithUpdateInfo, updatedContainer);
+          }
+          // Save to store
+          updatedContainer = storeContainer.updateContainer(updatedContainer);
+        }
+      }
 
       // Check if we should mark as updated (tag matches remote value)
       if (updatedContainer && updatedContainer.updateKind && updatedContainer.updateKind.remoteValue) {

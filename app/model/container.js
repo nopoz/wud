@@ -184,7 +184,7 @@ function addUpdateKindProperty(container) {
                     remoteValue: undefined,
                     semverDiff: undefined,
                 };
-                if (container.image === undefined || container.result === undefined) {
+                if (container.image === undefined || container.image.tag === undefined || container.result === undefined) {
                     return updateKind;
                 }
                 if (!container.updateAvailable) {
@@ -192,6 +192,7 @@ function addUpdateKindProperty(container) {
                 }
 
                 if (container.image !== undefined
+                    && container.image.tag !== undefined
                     && container.result !== undefined
                     && container.updateAvailable
                 ) {
