@@ -15,7 +15,6 @@
   "dependencies": {
     "@slack/web-api": "7.16.0",
     "axios": "1.19.0",
-    "body-parser": "1.20.8",
     "bunyan": "1.8.15",
     "capitalize": "2.0.4",
     "compression": "1.8.1",

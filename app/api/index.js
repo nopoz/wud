@@ -3,7 +3,6 @@ const https = require('https');
 const express = require('express');
 const compression = require('compression');
 const cors = require('cors');
-const bodyParser = require('body-parser');
 const log = require('../log').child({ component: 'api' });
 const auth = require('./auth');
 const apiRouter = require('./api');
@@ -56,7 +55,7 @@ async function init() {
         auth.init(app);
 
         // Parse json payloads
-        app.use(bodyParser.json());
+        app.use(express.json());
 
         // Mount Healthcheck
         app.use('/health', healthRouter.init());
