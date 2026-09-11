@@ -1,3 +1,6 @@
+# Set by BuildKit; declared so a builder without it can pass a value.
+ARG BUILDPLATFORM
+
 # Common Stage
 FROM node:22-alpine as base
 
@@ -24,7 +27,11 @@ RUN apk update \
     && rm -rf /var/cache/apk/*
 
 # Dependencies Stage (Backend)
-FROM base as dependencies
+# Not FROM base: Node under QEMU dies with SIGILL on the arm64 leg, and the
+# tree has no native modules, so install on the build host instead.
+FROM --platform=$BUILDPLATFORM node:22-alpine as dependencies
+
+WORKDIR /home/node/app
 
 # Copy backend package files
 COPY app/package*.json ./
@@ -34,7 +41,7 @@ COPY app/package*.json ./
 RUN npm ci --omit=dev --omit=optional --ignore-scripts --no-audit --no-fund --no-update-notifier
 
 # Frontend Build Stage
-FROM node:22-alpine as ui-builder
+FROM --platform=$BUILDPLATFORM node:22-alpine as ui-builder
 
 # Set working directory to UI folder
 WORKDIR /home/node/ui
