@@ -1,5 +1,5 @@
-const { ECRClient, GetAuthorizationTokenCommand } = require('@aws-sdk/client-ecr');
 const rp = require('../../../request');
+const { getAuthorizationToken } = require('./aws');
 const Registry = require('../../Registry');
 
 const ECR_PUBLIC_GALLERY_HOSTNAME = 'public.ecr.aws';
@@ -62,16 +62,11 @@ class Ecr extends Registry {
         const requestOptionsWithAuth = requestOptions;
         // Private registry
         if (this.configuration.accesskeyid) {
-            const ecr = new ECRClient({
-                credentials: {
-                    accessKeyId: this.configuration.accesskeyid,
-                    secretAccessKey: this.configuration.secretaccesskey,
-                },
+            const tokenValue = await getAuthorizationToken({
+                accessKeyId: this.configuration.accesskeyid,
+                secretAccessKey: this.configuration.secretaccesskey,
                 region: this.configuration.region,
             });
-            const authorizationToken = await ecr.send(new GetAuthorizationTokenCommand({}));
-            const tokenValue = authorizationToken.authorizationData[0].authorizationToken;
-
             requestOptionsWithAuth.headers.Authorization = `Basic ${tokenValue}`;
 
         // Public ECR gallery

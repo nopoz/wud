@@ -13,7 +13,6 @@
   "repository": "nopoz/hosaka",
   "license": "MIT",
   "dependencies": {
-    "@aws-sdk/client-ecr": "3.946.0",
     "@slack/web-api": "7.16.0",
     "axios": "1.19.0",
     "body-parser": "1.20.8",
@@ -52,9 +51,6 @@
     "uuid": "11.1.1",
     "yaml": "2.9.0",
     "shell-escape": "0.2.0"
-  },
-  "overrides": {
-    "fast-xml-parser": "^5.8.0"
   },
   "devDependencies": {
     "babel-jest": "29.7.0",
