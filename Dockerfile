@@ -1,5 +1,5 @@
 # Common Stage
-FROM node:18-alpine as base
+FROM node:22-alpine as base
 
 LABEL maintainer="nopoz"
 EXPOSE 3000
@@ -34,10 +34,7 @@ COPY app/package*.json ./
 RUN npm ci --omit=dev --omit=optional --ignore-scripts --no-audit --no-fund --no-update-notifier
 
 # Frontend Build Stage
-# Vite + vite-plugin-pwa service-worker minification needs a global Web Crypto,
-# which is only available unflagged from Node 19+. Build the UI on Node 20; the
-# release/backend stages stay on the Node 18 base.
-FROM node:20-alpine as ui-builder
+FROM node:22-alpine as ui-builder
 
 # Set working directory to UI folder
 WORKDIR /home/node/ui
