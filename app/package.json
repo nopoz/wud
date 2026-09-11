@@ -13,9 +13,7 @@
   "repository": "nopoz/hosaka",
   "license": "MIT",
   "dependencies": {
-    "@slack/web-api": "7.16.0",
     "axios": "1.19.0",
-    "body-parser": "1.20.8",
     "bunyan": "1.8.15",
     "capitalize": "2.0.4",
     "compression": "1.8.1",
@@ -28,7 +26,6 @@
     "flat": "5.0.2",
     "getmac": "6.6.0",
     "joi": "17.13.6",
-    "joi-cron-expression": "1.0.1",
     "just-debounce": "1.1.0",
     "kafkajs": "2.2.4",
     "lokijs": "1.5.12",

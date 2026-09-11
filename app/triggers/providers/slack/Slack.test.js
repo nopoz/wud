@@ -1,8 +1,8 @@
 const { ValidationError } = require('joi');
-const { WebClient } = require('@slack/web-api');
-
-jest.mock('@slack/web-api');
+const rp = require('../../../request');
 const Slack = require('./Slack');
+
+jest.mock('../../../request');
 
 const slack = new Slack();
 
@@ -42,20 +42,16 @@ test('maskConfiguration should mask sensitive data', () => {
     });
 });
 
-test('initTrigger should init Slack client', async () => {
+test('postMessage should throw when Slack reports an error', async () => {
     slack.configuration = configurationValid;
-    await slack.initTrigger();
-    expect(WebClient).toHaveBeenCalledWith('token');
+    rp.mockResolvedValue({ ok: false, error: 'channel_not_found' });
+    await expect(slack.postMessage('text')).rejects.toThrow('Slack API error: channel_not_found');
 });
 
 test('trigger should format text as expected', async () => {
     slack.configuration = configurationValid;
-    slack.client = {
-        chat: {
-            postMessage: (conf) => (conf),
-        },
-    };
-    const response = await slack.trigger({
+    rp.mockResolvedValue({ ok: true });
+    await slack.trigger({
         id: '31a61a8305ef1fc9a71fa4f20a68d7ec88b28e32303bbc4a5f192e851165b816',
         name: 'homeassistant',
         watcher: 'local',
@@ -87,6 +83,14 @@ test('trigger should format text as expected', async () => {
             remoteValue: '2.0.0',
         },
     });
-    expect(response.text)
-        .toEqual('Container homeassistant running with tag 1.0.0 can be updated to tag 2.0.0\nhttps://test-2.0.0/changelog');
+    expect(rp).toHaveBeenCalledWith({
+        method: 'POST',
+        uri: 'https://slack.com/api/chat.postMessage',
+        auth: { bearer: 'token' },
+        body: {
+            channel: 'channel',
+            text: 'Container homeassistant running with tag 1.0.0 can be updated to tag 2.0.0\nhttps://test-2.0.0/changelog',
+        },
+        json: true,
+    });
 });
