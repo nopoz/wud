@@ -1,15 +1,7 @@
+const rp = require('../../../request');
 const Ecr = require('./Ecr');
 
-jest.mock('@aws-sdk/client-ecr', () => ({
-    ECRClient: jest.fn().mockImplementation(() => ({
-        send: () => Promise.resolve({
-            authorizationData: [
-                { authorizationToken: 'xxxxx' },
-            ],
-        }),
-    })),
-    GetAuthorizationTokenCommand: jest.fn(),
-}));
+jest.mock('../../../request');
 
 const ecr = new Ecr();
 ecr.configuration = {
@@ -17,8 +9,6 @@ ecr.configuration = {
     secretaccesskey: 'secretaccesskey',
     region: 'region',
 };
-
-jest.mock('../../../request');
 
 test('validatedConfiguration should initialize when configuration is valid', () => {
     expect(ecr.validateConfiguration({
@@ -98,10 +88,15 @@ test('normalizeImage should return the proper registry v2 endpoint', () => {
     });
 });
 
-test('authenticate should call ecr auth endpoint', () => {
-    expect(ecr.authenticate(undefined, { headers: {} })).resolves.toEqual({
+test('authenticate should call ecr auth endpoint', async () => {
+    rp.mockResolvedValue({ authorizationData: [{ authorizationToken: 'xxxxx' }] });
+    await expect(ecr.authenticate(undefined, { headers: {} })).resolves.toEqual({
         headers: {
             Authorization: 'Basic xxxxx',
         },
     });
+    expect(rp).toHaveBeenCalledWith(expect.objectContaining({
+        method: 'POST',
+        uri: 'https://api.ecr.region.amazonaws.com/',
+    }));
 });
