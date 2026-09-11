@@ -1,4 +1,4 @@
-const { WebClient } = require('@slack/web-api');
+const rp = require('../../../request');
 const Trigger = require('../Trigger');
 
 /*
@@ -29,13 +29,6 @@ class Slack extends Trigger {
     }
 
     /*
-     * Init trigger.
-     */
-    initTrigger() {
-        this.client = new WebClient(this.configuration.token);
-    }
-
-    /*
      * Post a message with new image version details.
      *
      * @param image the image
@@ -52,13 +45,24 @@ class Slack extends Trigger {
     /**
      * Post a message to a Slack channel.
      * @param text the text to post
-     * @returns {Promise<ChatPostMessageResponse>}
+     * @returns {Promise<*>}
      */
     async postMessage(text) {
-        return this.client.chat.postMessage({
-            channel: this.configuration.channel,
-            text,
+        const response = await rp({
+            method: 'POST',
+            uri: 'https://slack.com/api/chat.postMessage',
+            auth: { bearer: this.configuration.token },
+            body: {
+                channel: this.configuration.channel,
+                text,
+            },
+            json: true,
         });
+        // Slack reports API errors in a 200 body rather than a status code.
+        if (!response.ok) {
+            throw new Error(`Slack API error: ${response.error}`);
+        }
+        return response;
     }
 }
 

@@ -13,7 +13,6 @@
   "repository": "nopoz/hosaka",
   "license": "MIT",
   "dependencies": {
-    "@slack/web-api": "7.16.0",
     "axios": "1.19.0",
     "bunyan": "1.8.15",
     "capitalize": "2.0.4",
