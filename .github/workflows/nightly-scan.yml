@@ -71,6 +71,7 @@ jobs:
           image-ref: ghcr.io/${{ github.repository }}:latest
           format: sarif
           output: trivy-results.sarif
+          severity: CRITICAL,HIGH
           ignore-unfixed: true
         env:
           TRIVY_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-db:2

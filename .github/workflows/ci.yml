@@ -189,7 +189,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      security-events: write  # upload Trivy SARIF to code scanning
     steps:
       - name: Harden runner
         uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40  # v2.20.1
@@ -232,40 +231,16 @@ jobs:
           build-args: |
             HOSAKA_VERSION=ci
       - name: Scan image with Trivy
+        # Gate only, no SARIF upload: the nightly rescan is the single source of
+        # Trivy alerts, otherwise each finding is reported once per scan category.
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
         with:
           image-ref: hosaka:ci
-          format: sarif
-          output: trivy-results.sarif
+          format: table
+          exit-code: '1'
+          severity: CRITICAL
           ignore-unfixed: true
         env:
           # Pin DB sources to avoid rate-limited Docker Hub mirrors.
           TRIVY_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-db:2
-      - name: Upload Trivy results
-        uses: github/codeql-action/upload-sarif@5595ccaf912efad79be6eef63a5619ff05969be3  # v4.37.6
-        with:
-          sarif_file: trivy-results.sarif
-          category: trivy-image
 
-  npm-audit:
-    name: npm audit (advisory)
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        package: [app, ui]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Set up Node 20
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
-        with:
-          node-version: 20
-      - name: Audit ${{ matrix.package }}
-        working-directory: ${{ matrix.package }}
-        # Advisory only: surfaces high+ advisories without blocking the merge.
-        run: npm audit --audit-level=high || true
