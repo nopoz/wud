@@ -77,6 +77,12 @@ test('validatedConfiguration should failed when configuration is invalid', () =>
     }).toThrowError(ValidationError);
 });
 
+test('validatedConfiguration should fail when cron expression is invalid', () => {
+    expect(() => {
+        docker.validateConfiguration({ cron: 'every hour' });
+    }).toThrow('"cron" must be a valid cron expression');
+});
+
 test('initWatcher should create a configured DockerApi instance', () => {
     docker.configuration = docker.validateConfiguration(configurationValid);
     docker.initWatcher();

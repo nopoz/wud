@@ -1,6 +1,5 @@
 const fs = require('fs');
 const Dockerode = require('dockerode');
-const joi = require('joi-cron-expression')(require('joi'));
 const cron = require('node-cron');
 const parse = require('parse-docker-image-name');
 const debounce = require('just-debounce');
@@ -297,14 +296,18 @@ function isDigestToWatch(hosakaWatchDigestLabelValue, isSemver) {
  */
 class Docker extends Component {
     getConfigurationSchema() {
-        return joi.object().keys({
+        return this.joi.object().keys({
             socket: this.joi.string().default('/var/run/docker.sock'),
             host: this.joi.string(),
             port: this.joi.number().port().default(2375),
             cafile: this.joi.string(),
             certfile: this.joi.string(),
             keyfile: this.joi.string(),
-            cron: joi.string().cron().default('0 * * * *'),
+            cron: this.joi.string()
+                .custom((value, helpers) => (cron.validate(value)
+                    ? value
+                    : helpers.message('"cron" must be a valid cron expression')))
+                .default('0 * * * *'),
             watchbydefault: this.joi.boolean().default(true),
             watchall: this.joi.boolean().default(false),
             watchdigest: this.joi.any(),
